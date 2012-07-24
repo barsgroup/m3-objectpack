@@ -1,8 +1,8 @@
 #coding:utf-8
 '''
-Created on May 6, 2011
+Created on July 23, 2012
 
-@author: danil
+@author: pirogov
 '''
 
 from actions import (
@@ -13,11 +13,21 @@ from actions import (
     ObjectSaveAction,
     ObjectRowsAction,
     ObjectDeleteAction,
-    ObjectPack
-    )
+    ObjectPack,
+
+    SelectorWindowAction,
+)
+
+from slave_object_pack import SlavePack
+
 from ui import (
     BaseWindow,
     BaseEditWindow,
     BaseSelectWindow,
     BaseListWindow,
-    )
+
+    ModelEditWindow,
+
+    ColumnsConstructor,
+    model_fields_to_controls,
+)
