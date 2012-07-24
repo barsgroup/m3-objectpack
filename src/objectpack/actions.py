@@ -1,4 +1,9 @@
 #coding: utf-8
+'''
+Created on 23.07.2012
+
+@author: pirogov
+'''
 
 import copy
 import datetime
@@ -6,7 +11,7 @@ import datetime
 from django.db.models import fields as dj_fields
 from django.utils.encoding import force_unicode
 
-from m3.ui import actions as m3actions
+from m3.ui import actions as m3_actions
 
 from m3.ui.actions.interfaces import ISelectablePack
 from m3.core.exceptions import RelatedError, ApplicationLogicException
@@ -16,7 +21,7 @@ from m3.ui.ext.fields.complex import ExtSearchField
 import ui, tools
 
 
-class BaseWindowAction(m3actions.Action):
+class BaseWindowAction(m3_actions.Action):
     '''
     базовый Группа который возвращает окно
     '''
@@ -67,7 +72,7 @@ class BaseWindowAction(m3actions.Action):
         new_self.create_window()
         new_self._apply_windows_params()
         new_self.configure_window()
-        return m3actions.ExtUIScriptResult(
+        return m3_actions.ExtUIScriptResult(
             new_self.win, context=new_self.context)
 
 
@@ -146,7 +151,7 @@ class ObjectEditWindowAction(BaseWindowAction):
             self.win.make_read_only(True, exclude_list)
 
 
-class ObjectSaveAction(m3actions.Action):
+class ObjectSaveAction(m3_actions.Action):
     '''
     Действие выполняет сохранение новой записи в справочник
     в любом месте можно райзить ApplicationLogicException
@@ -190,10 +195,10 @@ class ObjectSaveAction(m3actions.Action):
         new_self.bind_win()
         new_self.bind_to_obj()
         new_self.save_obj()
-        return m3actions.OperationResult()
+        return m3_actions.OperationResult()
 
 
-class ObjectRowsAction(m3actions.Action):
+class ObjectRowsAction(m3_actions.Action):
     '''
     Возвращает данные для грида справочника
     '''
@@ -208,7 +213,7 @@ class ObjectRowsAction(m3actions.Action):
 
     def apply_filter(self):
         '''устанавливает поисковый фильтр'''
-        self.query = m3actions.utils.apply_search_filter(
+        self.query = m3_actions.utils.apply_search_filter(
             self.query,
             self.request.REQUEST.get('filter'),
             self.get_filter_fields()
@@ -247,8 +252,8 @@ class ObjectRowsAction(m3actions.Action):
     def apply_limit(self):
         'обрезает по текущей странице'
         if getattr(self.parent, 'allow_paging', True):
-            offset = m3actions.utils.extract_int(self.request, 'start')
-            limit = m3actions.utils.extract_int(self.request, 'limit')
+            offset = m3_actions.utils.extract_int(self.request, 'start')
+            limit = m3_actions.utils.extract_int(self.request, 'limit')
         else:
             offset = limit = 0
         self.query = tools.QuerySplitter(self.query, offset, limit)
@@ -352,13 +357,13 @@ class ObjectRowsAction(m3actions.Action):
         total_count = new_self.get_total_count()
         new_self.apply_limit()
         rows = new_self.get_rows()
-        return m3actions.PreJsonResult({
+        return m3_actions.PreJsonResult({
             'rows':  rows,
             'total': total_count
         })
 
 
-class ObjectDeleteAction(m3actions.Action):
+class ObjectDeleteAction(m3_actions.Action):
     '''
     экшен удаления
     '''
@@ -387,7 +392,7 @@ class ObjectDeleteAction(m3actions.Action):
         '''
         удаляет обекты
         '''
-        ids = m3actions.utils.extract_int_list(
+        ids = m3_actions.utils.extract_int_list(
             self.request, self.parent.id_param_name)
         for i in ids:
             self.delete_obj(i)
@@ -403,10 +408,10 @@ class ObjectDeleteAction(m3actions.Action):
         new_self.request = request
         new_self.context = context
         new_self.try_delete_objs()
-        return m3actions.OperationResult()
+        return m3_actions.OperationResult()
 
 
-class ObjectPack(m3actions.ActionPack, ISelectablePack):
+class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     '''
     Пакет с действиями, специфичными для работы с редактирование модели
     '''
@@ -709,7 +714,7 @@ class ObjectPack(m3actions.ActionPack, ISelectablePack):
         возвращает tuple (объет, create_new) 
         для создания, редатирования записи
         '''
-        obj_id = m3actions.utils.extract_int(request, self.id_param_name)
+        obj_id = m3_actions.utils.extract_int(request, self.id_param_name)
         create_new = (obj_id == 0)
         record = self.get_row(obj_id)
         return record, create_new
@@ -810,3 +815,82 @@ class ObjectPack(m3actions.ActionPack, ISelectablePack):
 #            desk.Item(u'Name', pack=self) if some_condition else None
 #        '''
 #        pass
+
+
+#===============================================================================
+# SelectorWindowAction
+#===============================================================================
+class SelectorWindowAction(m3_actions.Action):
+    '''
+    Экшн показа окна выбора с пользовательским экшном обработки выбранных
+    элементов. Например, множественный выбор элементов справочника, для
+    последующего создания связок с ними.
+    '''
+    url = r'/selector_window'
+
+    # признак показа окна множественного выбора
+    multi_select = True
+
+    # url экшна обработки результата выбора
+    callback_url = None
+
+    # пак, объекты модели которого выбираются
+    data_pack = None
+
+
+    def configure_action(self, request, context):
+        '''
+        Настройка экшна. Здесь нужно назначать пак и callback
+        '''
+        pass
+
+
+    def configure_context(self, request, context):
+        '''
+        В данном методе происходит конфигурирование контекста для окна выбора.
+        Возвращаемый результат должен быть экземпляром ActionContext.
+        '''
+        return m3_actions.ActionContext()
+
+
+    def configure_window(self, win, request, context):
+        '''
+        В данном методе происходит конфигурирование окна выбора.
+        '''
+        return win
+
+
+    def run(self, request, context):
+        '''
+        Выполнение экшна.
+        Без крайней необходимости не перекрывать!
+        '''
+        new_self = copy.copy(self)
+
+        new_self.configure_action(request, context)
+
+        assert new_self.data_pack, u'Не задан ActionPack-источник данных!'
+        assert new_self.callback_url, u'Не задан Callback!'
+
+        new_context = new_self.configure_context(request, context)
+
+        # вызов экшна показа окна выбора
+        win_result = new_self.data_pack.select_window_action.run(
+            request, context)
+        win = getattr(win_result, 'data', None)
+        if not win:
+            return win_result
+
+        if not isinstance(win, ui.BaseSelectWindow):
+            raise ApplicationLogicException(
+                u'Класс окна выбора должен быть потомком BaseSelectWindow!')
+
+        win = new_self.configure_window(win, request, context)
+
+        win.callback_url = new_self.callback_url
+
+        if new_self.multi_select:
+            win.enable_multi_select()
+
+        return m3_actions.ExtUIScriptResult(win, new_context)
+
