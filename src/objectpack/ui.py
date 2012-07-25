@@ -554,16 +554,19 @@ def _create_dict_select_field(f, **kwargs):
     pack = m3_urls.get_pack(related_model)
     assert pack, 'Cant find pack for field %s (realated model %s)' % (
         f.name, related_model)
-    ctl = ext.ExtDictSelectField(
-        display_field='name',
-        value_field='id',
-        hide_edit_trigger=True,
-        hide_trigger=pack.allow_paging,
-        hide_clear_trigger=not f.blank,
-        hide_dict_select_trigger=False,
-        editable=False,
-        **kwargs
-    )
+
+    params = {
+        'display_field': pack.column_name_on_select,
+        'value_field': 'id',
+        'hide_edit_trigger': True,
+        'hide_trigger': pack.allow_paging,
+        'hide_clear_trigger': not f.blank,
+        'hide_dict_select_trigger': False,
+        'editable': False,
+    }
+    params.update(kwargs)
+
+    ctl = ext.ExtDictSelectField(**params)
     ctl.pack = pack
     return ctl
 
