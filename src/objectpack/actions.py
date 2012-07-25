@@ -464,7 +464,9 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     #т.е в post запросе редактирования будет лужеть {id_param_name:obj.id_field}
     id_field = 'id'
 
-
+    # поле/метод, предоставляющее значение для отображения в DictSelectField
+    # ПОКА НЕ РАБОТАЕТ извлечение вложенных полей - конфликт с ExtJS
+    column_name_on_select = 'name'
 
     # Список дополнительных полей модели по которым будет идти поиск
     # основной список береться из colums по признаку filterable
@@ -553,20 +555,30 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
             self.actions.append(getattr(self, action_attr_name))
 
     def get_autocomplete_url(self):
-        """ Получить адрес для запроса элементов подходящих введенному в поле тексту """
+        """ Получить адрес для запроса элементов
+        подходящих введенному в поле тексту """
         return self.get_rows_url()
 
     def get_display_text(self, key, attr_name=None):
-        """ Получить отображаемое значение записи (или атрибута attr_name) по ключу key """
+        """ Получить отображаемое значение записи
+        (или атрибута attr_name) по ключу key """
         row = self.get_row(key)
         if row is not None:
-            name = attr_name if attr_name else self.column_name_on_select
-            text = getattr(row, name)
+            try:
+                text = getattr(row, attr_name)
+            except AttributeError:
+                try:
+                    text = getattr(row, self.column_name_on_select)
+                except AttributeError:
+                    raise Exception(
+                        u'Не получается получить поле %s для '
+                        u'DictSelectField.pack = %s' % (attr_name, self))
+
             # getattr может возвращать метод, например verbose_name
             if callable(text):
                 return text()
             else:
-                return text
+                return unicode(text)
 
     def get_edit_window_params(self, params, request, context):
         '''
@@ -642,7 +654,8 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         #TODO перенести в Группа грида сделать метод add_search_field
         if self.get_filter_fields():
             #поиск по гриду если есть по чему искать
-            grid.top_bar.search_field = ExtSearchField(empty_text=u'Поиск', width=200, component_for_search=grid)
+            grid.top_bar.search_field = ExtSearchField(
+                empty_text=u'Поиск', width=200, component_for_search=grid)
             grid.top_bar.add_fill()
             grid.top_bar.items.append(grid.top_bar.search_field)
 
