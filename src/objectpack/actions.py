@@ -54,7 +54,7 @@ class BaseWindowAction(m3_actions.Action):
     def configure_window(self):
         '''
         дополнительно конфигурирует окно,
-        только через функции окна, 
+        только через функции окна,
         например self.win.make_read_only()
         никакого self.win.grid.top_bar.items[8].text = u'Ух ты, 9 кнопок'
         '''
@@ -81,7 +81,7 @@ class ObjectListWindowAction(BaseWindowAction):
     Действие, которое возвращает окно со списком элементов справочника.
     '''
     url = '/list-window$'
-    is_select_mode = False #режим показа окна (True - выбор, False - список), 
+    is_select_mode = False #режим показа окна (True - выбор, False - список),
 
     def set_windows_params(self):
         params = self.win_params
@@ -271,8 +271,8 @@ class ObjectRowsAction(m3_actions.Action):
 
     def prepare_object(self, obj):
         '''
-        возвращает словарь для составления результирующего списка 
-        на вход получает объект, полученный из QuerySet'a 
+        возвращает словарь для составления результирующего списка
+        на вход получает объект, полученный из QuerySet'a
         '''
         if hasattr(self.parent, 'prepare_row'):
             obj = self.parent.prepare_row(obj, self.request, self.context)
@@ -425,8 +425,8 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
             repr(self.model))
 
     # Список колонок состоящий из словарей
-    # все параметры словаря передаются в add_column 
-    # список параметров смотри в BaseExtGridColumn 
+    # все параметры словаря передаются в add_column
+    # список параметров смотри в BaseExtGridColumn
     # кроме filterable - признак что колонка будет учавтовать в фильтрации
 
     url = u'/pack'
@@ -601,17 +601,17 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         return "%s: %s" % (self.model._meta.verbose_name, action)
 
 
-    #==================== ФУНКЦИИ ВОЗВРАЩАЮЩИЕ АДРЕСА =====================    
+    #==================== ФУНКЦИИ ВОЗВРАЩАЮЩИЕ АДРЕСА =====================
     def get_list_url(self):
         '''
-        Возвращает адрес формы списка элементов справочника. 
+        Возвращает адрес формы списка элементов справочника.
         Используется для присвоения адресов в прикладном приложении.
         '''
         return self.list_window_action.get_absolute_url()
 
     def get_select_url(self):
         '''
-        Возвращает адрес формы списка элементов справочника. 
+        Возвращает адрес формы списка элементов справочника.
         Используется для присвоения адресов в прикладном приложении.
         '''
         return self.select_window_action.get_absolute_url()
@@ -631,6 +631,10 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     def get_not_found_exception(self):
         '''возвращает Группа исключения "не найден"'''
         return self.model.DoesNotExist
+
+    def get_default_action(self):
+        """docstring for get_default_action"""
+        return self.list_window_action
 
     def configure_grid(self, grid):
         '''
@@ -686,7 +690,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     def create_list_window(self, is_select_mode, request, context):
         '''
         получить окно списка/выбора объектов
-        is_select_mode - режим показа окна (True - выбор, False - список), 
+        is_select_mode - режим показа окна (True - выбор, False - список),
         '''
         if is_select_mode:
             return self.select_window()
@@ -724,7 +728,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 
     def get_obj(self, request, context):
         '''
-        возвращает tuple (объет, create_new) 
+        возвращает tuple (объет, create_new)
         для создания, редатирования записи
         '''
         obj_id = m3_actions.utils.extract_int(request, self.id_param_name)
@@ -788,7 +792,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 #                    menu.Item(u'Reg 2'),
 #                ),
 #            ),
-#            
+#
 #            # добавление пунктов в меню "администрирование"
 #            menu.administry(
 #                menu.Item(u'Admin item 1')
