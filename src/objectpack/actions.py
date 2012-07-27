@@ -432,13 +432,10 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     url = u'/pack'
 
     columns = [
-#        {
-#            'data_index':'fullname',
-#            'width':,
-#            'header':u'',
-#            'filterable':True,
-#            'sortable':True,
-#        },
+       {
+           'header':u'Наименование',
+           'data_index':'__unicode__',
+       },
 #        {
 #            'data_index':'school.name',
 #            'width':200,
@@ -620,7 +617,8 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         '''
         Возвращает адрес формы редактирования элемента справочника.
         '''
-        return self.edit_window_action.get_absolute_url()
+        if self.edit_window_action:
+            return self.edit_window_action.get_absolute_url()
 
     def get_rows_url(self):
         '''
