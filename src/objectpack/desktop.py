@@ -222,7 +222,7 @@ class MainMenu(_UIFabric):
         try:
             assert pack.title
             if getattr(pack, 'add_to_menu', False):
-                return self.dicts(self.Item(name=pack.title, pack=pack))
+                return self.Item(name=pack.title, pack=pack)
             else:
                 return None
         except (AttributeError, AssertionError):
