@@ -17,6 +17,7 @@ def uificate_the_controller(controller, metarole):
     for pack in controller.top_level_packs:
         Desktop.from_pack(pack, for_metarole=metarole)
         MainMenu.from_pack(pack, for_metarole=metarole)
+        TopMenu.from_pack(pack, for_metarole=metarole)
 
 #===============================================================================
 def _add_to(metarole, to_, items):
@@ -41,6 +42,12 @@ def _add_to_menu(metarole, *items):
     Добавление элементов в главное меню
     '''
     _add_to(metarole, app_ui.DesktopLoader.START_MENU, items)
+
+def _add_to_top_menu(metarole, *items):
+    '''
+    Добавление элементов в верхнее меню
+    '''
+    _add_to(metarole, app_ui.DesktopLoader.TOPTOOLBAR, items)
 
 
 #===============================================================================
@@ -147,16 +154,10 @@ class _UIFabric(object):
         # нужно реализовать в потомке
         raise NotImplementedError()
 
-
-#===============================================================================
-# MainMenu
-#===============================================================================
-class MainMenu(_UIFabric):
+class BaseMenu(_UIFabric):
     '''
     Класс для работы с главным меню
     '''
-    pack_method = 'extend_menu'
-
 
     class SubMenu(object):
         '''
@@ -177,6 +178,42 @@ class MainMenu(_UIFabric):
                 return grp
             return None
 
+
+#===============================================================================
+# TopMenu
+#===============================================================================
+class TopMenu(BaseMenu):
+    '''
+    Класс для работы с верхним меню
+    '''
+    pack_method = 'extend_top_menu'
+
+    def _from_dict_pack(self, pack):
+        try:
+            assert pack.title
+            if getattr(pack, 'add_to_top_menu', False):
+                print pack
+                return self.Item(name=pack.title, pack=pack)
+            else:
+                return None
+        except (AttributeError, AssertionError):
+            return None
+
+    def _populate(self, metarole, data):
+        '''
+        Построение интерфейса
+        '''
+        _add_to_top_menu(metarole, *super(TopMenu, self)._populate(data))
+
+
+#===============================================================================
+# MainMenu
+#===============================================================================
+class MainMenu(BaseMenu):
+    '''
+    Класс для работы с главным меню
+    '''
+    pack_method = 'extend_menu'
 
     def __init__(self):
         self._registries_menu = self.SubMenu(
