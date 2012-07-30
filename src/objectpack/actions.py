@@ -472,7 +472,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 
     # поле/метод, предоставляющее значение для отображения в DictSelectField
     # ПОКА НЕ РАБОТАЕТ извлечение вложенных полей - конфликт с ExtJS
-    column_name_on_select = 'name'
+    column_name_on_select = '__unicode__'
 
     # Список дополнительных полей модели по которым будет идти поиск
     # основной список береться из colums по признаку filterable
