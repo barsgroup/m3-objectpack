@@ -595,7 +595,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         Заголовок примет вид "Модель: Действие"
         (например "Сотрудник: Добавление")
         '''
-        return "%s: %s" % (self.model._meta.verbose_name, action)
+        return "%s: %s" % (self.model._meta.verbose_name.capitalize(), action)
 
 
     #==================== ФУНКЦИИ ВОЗВРАЩАЮЩИЕ АДРЕСА =====================
