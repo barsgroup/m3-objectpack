@@ -424,6 +424,12 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
             self.model._meta.verbose_name or
             repr(self.model))
 
+    @property
+    def short_name(self):
+        '''имя пака для поиска в контроллере
+        берется равным имени класса модели'''
+        return self.model.__name__
+
     # Список колонок состоящий из словарей
     # все параметры словаря передаются в add_column
     # список параметров смотри в BaseExtGridColumn
@@ -456,9 +462,12 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     # Настройки вида справочника (задаются конечным разработчиком)
     model = None
 
-    #название поля идентифицирующий объект
-    #это названия параметра, который бедт передоваться в post запрос редактирования, удаления
-    id_param_name = 'id'
+    # название поля, идентифицирующего объект и название параметра,
+    # который будет передаваться в запросе на модификацию/удаление
+    @property
+    def id_param_name(self):
+        return '%s_id' % self.model.__name__.lower()
+
     #data_index колонки, идентифицирующей объект
     #этот параметр будет браться из модели и передаваться как ID в ExtDataStore
     #т.е в post запросе редактирования будет лужеть {id_param_name:obj.id_field}
