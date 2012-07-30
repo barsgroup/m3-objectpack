@@ -8,3 +8,5 @@ docs/_build/*
 src/build/*
 src/dist/*
 src/objectpack.egg-info/*
+reports/*
+tests/objectpack_demo/.coverage

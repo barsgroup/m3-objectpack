@@ -6,19 +6,21 @@ Created on 23.07.2012
 '''
 from django.db import transaction
 
-
-#===============================================================================
+#==============================================================================
 # QuerySplitter
-#===============================================================================
+#==============================================================================
+
+
 class QuerySplitter(object):
     '''
     Порционный загрузчик выборки в итеративном контексте
-    >>> req_mock = type('Mock', (object,), {})()
-    >>> req_mock.REQUEST = {'start': 5, 'limit': 10}
+    >>> from django.test.client import RequestFactory
+    >>> rf = RequestFactory()
+    >>> request = rf.post('', {'start': 5, 'limit': 10})
     >>> QuerySplitter.make_rows(
     ...     query=range(50),
     ...     validator=lambda x: x % 2,
-    ...     request=req_mock)
+    ...     request=request)
     [5, 7, 9, 11, 13, 15, 17, 19, 21, 23]
     '''
 
@@ -33,14 +35,12 @@ class QuerySplitter(object):
         self._chunk = None
         self._cnt = 0
 
-
     def __iter__(self):
         if not self._limit:
             # перекрытие метода пропускания, заглушкой
             self.skip_last = lambda self: None
             return iter(self._data)
         return self
-
 
     def next(self):
         # если уже выдали нужное кол-во, останавливаем итерацию
@@ -50,7 +50,7 @@ class QuerySplitter(object):
         # если порция кончилась, берем следующую
         if not self._chunk:
             self._chunk = list(
-                self._data[self._start : self._start + self._limit])
+                self._data[self._start: self._start + self._limit])
             self._start += self._limit
 
         # отдаём порцию поэлементно
@@ -60,7 +60,6 @@ class QuerySplitter(object):
 
         raise StopIteration()
 
-
     def skip_last(self):
         '''
         Команда "не учитывать прошлое значение"
@@ -68,7 +67,6 @@ class QuerySplitter(object):
         if not self._cnt:
             raise IndexError('Can`t skip any more!')
         self._cnt -= 1
-
 
     @classmethod
     def make_rows(cls, query,
@@ -96,10 +94,11 @@ class QuerySplitter(object):
                 query.skip_last()
         return rows
 
-
-#===============================================================================
+#==============================================================================
 # ModelCache
-#===============================================================================
+#==============================================================================
+
+
 class ModelCache(object):
     '''
     Кэш get-ов объектов одной модели.
@@ -136,9 +135,9 @@ class ModelCache(object):
             self._cache.pop(key, None)
 
 
-#===============================================================================
+#==============================================================================
 # TransactionCM
-#===============================================================================
+#==============================================================================
 class TransactionCM(object):
     '''
     Транизакция в виде ContextManager
@@ -172,6 +171,14 @@ class TransactionCM(object):
 def extract_int(request, key):
     '''
     Нормальный извлекатель списка чисел
+    >>> from django.test.client import RequestFactory
+    >>> rf = RequestFactory()
+    >>> request = rf.post('', {})
+    >>> extract_int(request, 'NaN')
+
+    >>> request = rf.post('', {'int':1})
+    >>> extract_int(request, 'int')
+    1
     '''
     try:
         return int(request.REQUEST.get(key, ''))
@@ -182,6 +189,14 @@ def extract_int(request, key):
 def extract_int_list(request, key):
     '''
     Нормальный извлекатель списка чисел
+    >>> from django.test.client import RequestFactory
+    >>> rf = RequestFactory()
+    >>> request = rf.post('', {})
+    >>> extract_int_list(request, 'list')
+    []
+    >>> request = rf.post('', {'list':'1,2,3,4'})
+    >>> extract_int_list(request, 'list')
+    [1, 2, 3, 4]
     '''
     return map(int, filter(None, request.REQUEST.get(key, '').split(',')))
 
@@ -189,6 +204,12 @@ def extract_int_list(request, key):
 def modify(obj, **kwargs):
     '''
     Массовое дополнение атрибутов для объекта с его (объекта) возвратом
+    >>> class Object(object): pass
+    >>> cls = Object()
+    >>> cls.param1 = 0
+    >>> cls = modify(cls, **{'param1':1, })
+    >>> cls.param1
+    1
     '''
     for attr, val in kwargs.iteritems():
         setattr(obj, attr, val)
@@ -203,6 +224,11 @@ def modifier(**kwargs):
     Пример:
         w10 = modifier(width=10)
         controls = map(w10, controls)
+    >>> class Object(object): pass
+    >>> w10 = modifier(width=10)
+    >>> cls = w10(Object())
+    >>> cls.width
+    10
     '''
 
     return lambda obj: modify(obj, **kwargs)
