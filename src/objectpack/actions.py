@@ -439,8 +439,8 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 
     columns = [
        {
-           'header':u'Наименование',
-           'data_index':'__unicode__',
+           'header': u'Наименование',
+           'data_index': '__unicode__',
        },
 #        {
 #            'data_index':'school.name',
@@ -465,9 +465,10 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     def id_param_name(self):
         return '%s_id' % self.model.__name__.lower()
 
-    #data_index колонки, идентифицирующей объект
-    #этот параметр будет браться из модели и передаваться как ID в ExtDataStore
-    #т.е в post запросе редактирования будет лужеть {id_param_name:obj.id_field}
+    # data_index колонки, идентифицирующей объект
+    # этот параметр будет браться из модели и передаваться как ID в ExtDataStore
+    # т.е в post запросе редактирования будет
+    # присутствовать id_param_name = obj.id_field
     id_field = 'id'
 
     # поле/метод, предоставляющее значение для отображения в DictSelectField
@@ -483,8 +484,11 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     read_only = False
 
     # Порядок сортировки элементов списка. Работает следующим образом:
-    # 1. Если в list_columns модели списка есть поле code, то устанавливается сортировка по возрастанию этого поля;
-    # 2. Если в list_columns модели списка нет поля code, но есть поле name, то устанавливается сортировка по возрастанию поля name;
+    # 1. Если в list_columns модели списка есть поле code,
+    #    то устанавливается сортировка по возрастанию этого поля;
+    # 2. Если в list_columns модели списка нет поля code,
+    #    но есть поле name, то устанавливается сортировка
+    #    по возрастанию поля name;
     # Пример list_sort_order = ['code', '-name']
     list_sort_order = None
 
@@ -767,7 +771,6 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
             raise RelatedError(u'Не удалось удалить элемент %s. '
                 u'Возможно на него есть ссылки.' % obj_id)
         return obj
-
 
     #-----------------------------------------------------------------------
     # По умолчанию ни меню ни десктоп не расширяется
