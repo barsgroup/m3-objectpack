@@ -14,6 +14,9 @@ from django.db import transaction
 class QuerySplitter(object):
     '''
     Порционный загрузчик выборки в итеративном контексте
+    '''
+    Порционный загрузчик выборки в итеративном контексте
+    TODO: придумать тест для покрытия Exception'ов
     >>> from django.test.client import RequestFactory
     >>> rf = RequestFactory()
     >>> request = rf.post('', {'start': 5, 'limit': 10})
