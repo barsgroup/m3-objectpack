@@ -1,4 +1,6 @@
 from django.conf.urls.defaults import patterns, include, url
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from m3.helpers import urls
 
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
@@ -14,4 +16,8 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     # url(r'^admin/', include(admin.site.urls)),
+    url(r'^$', 'demo_app.views.workspace'),
 )
+urlpatterns += staticfiles_urlpatterns()
+urlpatterns += urls.get_app_urlpatterns()
+
