@@ -10,3 +10,4 @@ src/dist/*
 src/objectpack.egg-info/*
 reports/*
 tests/objectpack_demo/.coverage
+glob:tests/env/*
