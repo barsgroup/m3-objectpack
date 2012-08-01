@@ -16,6 +16,7 @@ from actions import (
     ObjectRowsAction,
     ObjectDeleteAction,
     ObjectPack,
+    DictionaryObjectPack,
 
     SelectorWindowAction,
 )

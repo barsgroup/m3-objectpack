@@ -271,7 +271,7 @@ class ObjectRowsAction(m3_actions.Action):
 
     def prepare_object(self, obj):
         '''
-        возвращает словарь для составления результирующего списка
+        возвращает capitalizeя составления результирующего списка
         на вход получает объект, полученный из QuerySet'a
         '''
         if hasattr(self.parent, 'prepare_row'):
@@ -422,20 +422,24 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         return unicode(
             self.model._meta.verbose_name_plural or
             self.model._meta.verbose_name or
-            repr(self.model))
+            repr(self.model)).capitalize()
 
     @property
     def short_name(self):
         '''имя пака для поиска в контроллере
         берется равным имени класса модели'''
-        return self.model.__name__
+        return self.model.__name__.lower()
+
+    @property
+    def url(self):
+        return r'/%s' % self.short_name
 
     # Список колонок состоящий из словарей
     # все параметры словаря передаются в add_column
     # список параметров смотри в BaseExtGridColumn
     # кроме filterable - признак что колонка будет учавтовать в фильтрации
 
-    url = u'/pack'
+    #url = u'/pack'
 
     columns = [
        {
@@ -463,7 +467,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     # который будет передаваться в запросе на модификацию/удаление
     @property
     def id_param_name(self):
-        return '%s_id' % self.model.__name__.lower()
+        return '%s_id' % self.short_name
 
     #data_index колонки, идентифицирующей объект
     #этот параметр будет браться из модели и передаваться как ID в ExtDataStore
@@ -917,4 +921,19 @@ class SelectorWindowAction(m3_actions.Action):
             win.enable_multi_select()
 
         return m3_actions.ExtUIScriptResult(win, new_context)
+
+
+class DictionaryObjectPack(ObjectPack):
+    """docstring for DictionaryObjectPack"""
+    add_to_menu = True
+
+    def __init__(self, *args, **kwargs):
+        """docstring for __init__"""
+        self.edit_window = self.add_window = ui.ModelEditWindow.fabricate(self.model)
+        super(DictionaryObjectPack, self).__init__(*args, **kwargs)
+
+    def extend_menu(self, menu):
+        """docstring for extend_menu"""
+        if self.add_to_menu:
+            return menu.dicts(menu.Item(self.title, self))
 
