@@ -1,9 +1,9 @@
 #coding: utf-8
-'''
+"""
 Created on 23.07.2012
 
 @author: pirogov
-'''
+"""
 
 import copy
 import datetime
@@ -22,48 +22,48 @@ import ui, tools
 
 
 class BaseWindowAction(m3_actions.Action):
-    '''
+    """
     базовый Группа который возвращает окно
-    '''
+    """
     win_params = {} #параметы для формирования окна
     request = None #request выолнения
     context = None #context выполнения, будет возвращен экшеном
     win = None #экземпляр окна которое вернет экшен
 
     def create_window(self):
-        '''
+        """
         создает объект окна
         например self.win = EditWindow()
-        '''
+        """
         raise NotImplementedError()
 
     def set_windows_params(self):
-        '''
+        """
         заполняет словарь win_params
         например self.win_params['title'] = u'Привет из ада'
-        '''
+        """
         pass
 
     def _apply_windows_params(self):
-        '''
+        """
         передает параметры в экземлпяр окна
         перекрывается в крайних случаях
-        '''
+        """
         self.win.set_params(self.win_params)
 
     def configure_window(self):
-        '''
+        """
         дополнительно конфигурирует окно,
         только через функции окна,
         например self.win.make_read_only()
         никакого self.win.grid.top_bar.items[8].text = u'Ух ты, 9 кнопок'
-        '''
+        """
         pass
 
     def run(self, request, context):
-        '''
+        """
         сам обработчки, перекрывает в крайних случаях
-        '''
+        """
         new_self = copy.copy(self)
         new_self.win_params = (self.__class__.win_params or {}).copy()
         new_self.request = request
@@ -77,9 +77,9 @@ class BaseWindowAction(m3_actions.Action):
 
 
 class ObjectListWindowAction(BaseWindowAction):
-    '''
+    """
     Действие, которое возвращает окно со списком элементов справочника.
-    '''
+    """
     url = '/list-window$'
     is_select_mode = False #режим показа окна (True - выбор, False - список),
 
@@ -104,17 +104,17 @@ class ObjectListWindowAction(BaseWindowAction):
 
 
 class ObjectSelectWindowAction(ObjectListWindowAction):
-    '''
+    """
     Действие, возвращающее окно выбора из справочника
-    '''
+    """
     url = '/select-window$'
     is_select_mode = True
 
 
 class ObjectEditWindowAction(BaseWindowAction):
-    '''
+    """
     редактирование элемента справочника
-    '''
+    """
     url = '/edit-window$'
 
     def set_windows_params(self):
@@ -152,10 +152,10 @@ class ObjectEditWindowAction(BaseWindowAction):
 
 
 class ObjectSaveAction(m3_actions.Action):
-    '''
+    """
     Действие выполняет сохранение новой записи в справочник
     в любом месте можно райзить ApplicationLogicException
-    '''
+    """
     url = '/save$'
     request = None
     context = None
@@ -199,55 +199,33 @@ class ObjectSaveAction(m3_actions.Action):
 
 
 class ObjectRowsAction(m3_actions.Action):
-    '''
+    """
     Возвращает данные для грида справочника
-    '''
+    """
     url = '/rows$'
     request = None
     context = None
     query = None
 
     def set_query(self):
-        '''устанавливает запрос к базе'''
+        """устанавливает запрос к базе"""
         self.query = self.parent.get_rows_query(self.request, self.context)
 
     def apply_filter(self):
-        '''устанавливает поисковый фильтр'''
-        self.query = m3_actions.utils.apply_search_filter(
+        """Применяет фильтр поиска"""
+        self.query = self.parent.apply_filter(
             self.query,
-            self.request.REQUEST.get('filter'),
-            self.get_filter_fields()
+            self.request,
+            self.context
         )
 
-    def get_filter_fields(self):
-        '''
-        возвращает список колонок для фильтрации,
-        например, ['school__name']
-        '''
-        if hasattr(self.parent, 'get_filter_fields'):
-            return self.parent.get_filter_fields(self.request, self.context)
-
     def apply_sort_order(self):
-        'устанавливает сортировку'
-
-        direction = self.request.REQUEST.get('dir')
-        sort_order = self.request.REQUEST.get('sort')
-        if sort_order:
-            sort_order = sort_order.replace('.', '__')
-            if direction == 'DESC':
-                sort_order = ['-' + sort_order, ]
-            else:
-                sort_order = [sort_order, ]
-        else:
-            sort_order = self.get_sort_fields()
-        if sort_order:
-            self.query = self.query.order_by(*sort_order)
-
-    def get_sort_fields(self):
-        '''
-        возвращает список колонок для фильтрации
-        '''
-        return getattr(self.parent, 'list_sort_order', [])
+        """Применяет сортировку"""
+        self.query = self.parent.apply_sort_order(
+            self.query,
+            self.request,
+            self.context
+        )
 
     def apply_limit(self):
         'обрезает по текущей странице'
@@ -270,10 +248,10 @@ class ObjectRowsAction(m3_actions.Action):
         return res
 
     def prepare_object(self, obj):
-        '''
+        """
         возвращает словарь для составления результирующего списка
         на вход получает объект, полученный из QuerySet'a
-        '''
+        """
         if hasattr(self.parent, 'prepare_row'):
             obj = self.parent.prepare_row(obj, self.request, self.context)
         if obj is None:
@@ -364,18 +342,18 @@ class ObjectRowsAction(m3_actions.Action):
 
 
 class ObjectDeleteAction(m3_actions.Action):
-    '''
+    """
     экшен удаления
-    '''
+    """
 
     url = '/delete_row$'
     request = None
     context = None
 
     def try_delete_objs(self):
-        '''
+        """
         удаляет обекты и пытается перехватить исключения
-        '''
+        """
         try:
             self.delete_objs()
         except RelatedError, e:
@@ -389,9 +367,9 @@ class ObjectDeleteAction(m3_actions.Action):
                 raise
 
     def delete_objs(self):
-        '''
+        """
         удаляет обекты
-        '''
+        """
         ids = m3_actions.utils.extract_int_list(
             self.request, self.parent.id_param_name)
         for i in ids:
@@ -412,9 +390,9 @@ class ObjectDeleteAction(m3_actions.Action):
 
 
 class ObjectPack(m3_actions.ActionPack, ISelectablePack):
-    '''
+    """
     Пакет с действиями, специфичными для работы с редактирование модели
-    '''
+    """
     # Заголовок окна справочника
     # если не перекрыт в потомках - берется из модели
     @property
@@ -426,8 +404,8 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 
     @property
     def short_name(self):
-        '''имя пака для поиска в контроллере
-        берется равным имени класса модели'''
+        """имя пака для поиска в контроллере
+        берется равным имени класса модели"""
         return self.model.__name__
 
     # Список колонок состоящий из словарей
@@ -443,10 +421,23 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
            'data_index':'__unicode__',
        },
 #        {
-#            'data_index':'school.name',
-#            'width':200,
-#            'header':u'Колонка 1',
-#            'filterable':True
+#            'data_index':'',
+#            'width':,
+#            'header':u'',
+#            'filterable':True,
+#            'sortable':True,
+#            'sort_fields':['foo','bar'],
+#        },
+#        {
+#            'header':u'Группирующая Колонка 1',
+#            'columns': [
+#                {
+#                    'data_index':'school.name',
+#                    'width':200,
+#                    'header':u'Колонка 1',
+#                    'filterable':True
+#                },
+#            ]
 #        },
 #        {
 #            'data_index':'school.parent.name',
@@ -455,6 +446,11 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 #            'renderer':'parent_render'
 #        },
     ]
+
+    # плоский список полей фильтрации
+    _all_filter_fields = None
+    # словарь data_index:sort_order
+    _sort_fields = None
 
     # Настройки вида справочника (задаются конечным разработчиком)
     model = None
@@ -551,19 +547,46 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         else:
             self.delete_action = None
 
+        # построение плоского списка колонок
+        self._all_filter_fields = self.filter_fields
+        self._sort_fields = {}
+        def flatify(cols):
+            for c in cols:
+                sub_cols = c.get('columns', None)
+                if not sub_cols is None:
+                    flatify(sub_cols)
+                else:
+                    data_index = c['data_index']
+                    field = data_index.replace('.', '__')
+                    # поле(поля) для сортировки
+                    if c.get('sortable', False):
+                        sort_fields = c.get('sort_fields', field)
+                        try:
+                            sort_fields = list(sort_fields)
+                        except:
+                            sort_fields = [sort_fields]
+                        self._sort_fields[data_index] = sort_fields
+                    # поле для фильтрации
+                    if c.get('filterable'):
+                        self._all_filter_fields.append(field)
+        flatify(self.columns)
+
 
     def replace_action(self, action_attr_name, new_action):
-        '''заменяет экшен в паке'''
+        """заменяет экшен в паке"""
         if getattr(self, action_attr_name, None):
             self.actions.remove(getattr(self, action_attr_name))
         setattr(self, action_attr_name, new_action)
         if getattr(self, action_attr_name):
             self.actions.append(getattr(self, action_attr_name))
 
-    def get_autocomplete_url(self):
-        """ Получить адрес для запроса элементов
-        подходящих введенному в поле тексту """
-        return self.get_rows_url()
+
+    def get_default_action(self):
+        """Воздвращает действие по умолчанию
+        (действие для значка на раб.столе/пункта меню)
+        Используется пи упрощенном встраивании в UI (add_to_XXX=True)"""
+        return self.list_window_action
+
 
     def get_display_text(self, key, attr_name=None):
         """ Получить отображаемое значение записи
@@ -587,67 +610,69 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                 return unicode(text)
 
     def get_edit_window_params(self, params, request, context):
-        '''
+        """
         возвращает словарь параметров которые будут переданы окну редактирования
-        '''
+        """
         return params
 
     def get_list_window_params(self, params, request, context):
-        '''
+        """
         возвращает словарь параметров которые будут переданы окну списка
-        '''
+        """
         return params
 
     def format_window_title(self, action):
-        '''
+        """
         Форматирование заголовка окна.
         Заголовок примет вид "Модель: Действие"
         (например "Сотрудник: Добавление")
-        '''
+        """
         return "%s: %s" % (self.model._meta.verbose_name.capitalize(), action)
 
 
     #==================== ФУНКЦИИ ВОЗВРАЩАЮЩИЕ АДРЕСА =====================
     def get_list_url(self):
-        '''
+        """
         Возвращает адрес формы списка элементов справочника.
         Используется для присвоения адресов в прикладном приложении.
-        '''
+        """
         return self.list_window_action.get_absolute_url()
 
     def get_select_url(self):
-        '''
+        """
         Возвращает адрес формы списка элементов справочника.
         Используется для присвоения адресов в прикладном приложении.
-        '''
+        """
         return self.select_window_action.get_absolute_url()
 
     def get_edit_url(self):
-        '''
+        """
         Возвращает адрес формы редактирования элемента справочника.
-        '''
+        """
         if self.edit_window_action:
             return self.edit_window_action.get_absolute_url()
 
     def get_rows_url(self):
-        '''
+        """
         Возвращает адрес по которому запрашиваются элементы грида
-        '''
+        """
         return self.rows_action.get_absolute_url()
 
+    def get_autocomplete_url(self):
+        """ Получить адрес для запроса элементов
+        подходящих введенному в поле тексту """
+        return self.get_rows_url()
+
+
     def get_not_found_exception(self):
-        '''возвращает Группа исключения "не найден"'''
+        """возвращает Группа исключения 'не найден'"""
         return self.model.DoesNotExist
 
-    def get_default_action(self):
-        """docstring for get_default_action"""
-        return self.list_window_action
-
     def configure_grid(self, grid):
-        '''
+        """
         конфигурирования grid для работы с этим паком
         создает колонки и задает экшены
-        '''
+        """
         get_url = lambda x: x.get_absolute_url() if x else None
         grid.url_data = get_url(self.rows_action)
         if not self.read_only:
@@ -674,59 +699,81 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         grid.allow_paging = self.allow_paging
         grid.store.remote_sort = self.allow_paging
 
-    def get_filter_fields(self, request=None, context=None):
-        'возвращает список data_index колонок по которым будет вестить поиск'
-        #софрмируем полный список колонок для фильтрации
-        _all_filter_fields = []
-        for col in self.columns:
-            if col.get('filterable'):
-                _all_filter_fields.append(col['data_index'])
-        _all_filter_fields.extend(self.filter_fields)
-        _all_filter_fields = map(lambda x:x.replace('.', '__'), _all_filter_fields)
-        return _all_filter_fields
-
     def create_edit_window(self, create_new, request, context):
-        '''
-        получить окно редактирования/создания объекта
-        '''
+        """
+        получить окно редактирования / создания объекта
+        """
         if create_new:
             return self.add_window()
         else:
             return self.edit_window()
 
     def create_list_window(self, is_select_mode, request, context):
-        '''
-        получить окно списка/выбора объектов
-        is_select_mode - режим показа окна (True - выбор, False - список),
-        '''
+        """
+        получить окно списка / выбора объектов
+        is_select_mode - режим показа окна (True -выбор, False -список),
+        """
         if is_select_mode:
             return self.select_window()
         else:
             return self.list_window()
 
     def get_rows_query(self, request, context):
-        '''
-        возвращает кварисет для получения списка данных
-        '''
+        """
+        возвращает выборку из БД для получения списка данных
+        """
         #q = super(,self).get_rows_query(request, context)
         #return q
         return self.model.objects.all().select_related()
 
+    def get_filter_fields(self, request=None, context=None):
+        """Возвращает список data_index колонок по которым будет
+        производиться поиск"""
+        return self._all_filter_fields[:]
+
+    def get_sort_order(self, data_index, reverse=False):
+        """Возвращает ключи сортировки для указанного data_index"""
+        sort_order = self._sort_fields[data_index]
+        if reverse:
+            sort_order = ['-%s' % s for s in sort_order]
+        return sort_order
+
+    def apply_filter(self, query, request, context):
+        """Возвращает переданную выборку
+        отфильторованной по параметрам запроса"""
+        return m3_actions.utils.apply_search_filter(
+            query,
+            request.REQUEST.get('filter'),
+            self.get_filter_fields()
+        )
+
+    def apply_sort_order(self, query, request, context):
+        """Возвращает переданную выборку
+        отсортированной по параметрам запроса"""
+        sorting_key = request.REQUEST.get('sort')
+        if sorting_key:
+            reverse = request.REQUEST.get('dir') == 'DESC'
+            sort_order = self.get_sort_order(
+                data_index=sorting_key,
+                reverse=reverse)
+            query = query.order_by(*sort_order)
+        return query
+
     def prepare_row(self, obj, request, context):
-        '''
+        """
         установка дополнительный атрибутов объекта
         перед возвратом json'a строк грида
         или может вернуть proxy_object
         obj из for obj in query из get_rows_query
-        '''
+        """
         return obj
 
     def get_row(self, row_id):
-        '''
+        """
         функция возвращает объект по иди
         используется в dictselectfield'ax
         Если id нет, значит нужно создать новый объект
-        '''
+        """
         if row_id == 0:
             record = self.model()
         else:
@@ -734,27 +781,27 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         return record
 
     def get_obj(self, request, context):
-        '''
+        """
         возвращает tuple (объет, create_new)
         для создания, редатирования записи
-        '''
+        """
         obj_id = m3_actions.utils.extract_int(request, self.id_param_name)
         create_new = (obj_id == 0)
         record = self.get_row(obj_id)
         return record, create_new
 
     def save_row(self, obj, create_new, request, context):
-        '''
+        """
         сохраняет объект
         при необходимости делается raise ApplicationLogicException
-        '''
+        """
         obj.save()
 
     def delete_row(self, obj_id, request, context):
-        '''
+        """
         удаление объекта
         если вернет модель то она отдасться аудитору
-        '''
+        """
 
         obj = self.model.objects.get(id=obj_id)
         result = True
@@ -779,7 +826,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     #
     # Методы extend_X приоритетны
 #    def extend_menu(self, menu):
-#        '''
+#        """
 #        Расширение главного меню.
 #
 #        Возвращаемый результат должен иметь вид:
@@ -822,12 +869,12 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 #            menu.Item(u'Name', url='/') if some_condition else None
 #
 #        Пустые подменю автоматически "схлопываются" (не видны в Главном Меню)
-#        '''
+#        """
 #        pass
 #
 #
 #    def extend_desktop(self, desk):
-#        '''
+#        """
 #        Расширение Рабочего Стола.
 #        Результат должен иметь вид:
 #        return (
@@ -837,7 +884,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 #        любой из элементов можно отключить вернув вместо него None.
 #        например:
 #            desk.Item(u'Name', pack=self) if some_condition else None
-#        '''
+#        """
 #        pass
 
 
@@ -845,11 +892,11 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 # SelectorWindowAction
 #===============================================================================
 class SelectorWindowAction(m3_actions.Action):
-    '''
+    """
     Экшн показа окна выбора с пользовательским экшном обработки выбранных
     элементов. Например, множественный выбор элементов справочника, для
     последующего создания связок с ними.
-    '''
+    """
     url = r'/selector_window'
 
     # признак показа окна множественного выбора
@@ -863,32 +910,32 @@ class SelectorWindowAction(m3_actions.Action):
 
 
     def configure_action(self, request, context):
-        '''
+        """
         Настройка экшна. Здесь нужно назначать пак и callback
-        '''
+        """
         pass
 
 
     def configure_context(self, request, context):
-        '''
+        """
         В данном методе происходит конфигурирование контекста для окна выбора.
         Возвращаемый результат должен быть экземпляром ActionContext.
-        '''
+        """
         return m3_actions.ActionContext()
 
 
     def configure_window(self, win, request, context):
-        '''
+        """
         В данном методе происходит конфигурирование окна выбора.
-        '''
+        """
         return win
 
 
     def run(self, request, context):
-        '''
+        """
         Выполнение экшна.
         Без крайней необходимости не перекрывать!
-        '''
+        """
         new_self = copy.copy(self)
 
         new_self.configure_action(request, context)
