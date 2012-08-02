@@ -304,6 +304,10 @@ class ObjectRowsAction(m3_actions.Action):
                 if isinstance(obj, datetime.date):
                     obj = obj.strftime('%d.%m.%Y')
 
+                if obj is None:
+                    # None выводится пустой строкой
+                    obj = u''
+
                 result[col] = force_unicode(obj)
 
         #заполним объект данными по дата индексам
