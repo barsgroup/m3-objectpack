@@ -5,12 +5,13 @@ Author: Rinat F Sabitov
 Description:
 '''
 from django.conf import urls
-from objectpack_demo.demo_app.controller import action_controller
+
 from m3_users import metaroles, GENERIC_USER
-import actions
-
-
 from objectpack import desktop
+
+from objectpack_demo.demo_app.controller import action_controller
+
+import actions
 
 
 def register_urlpatterns():
@@ -22,7 +23,10 @@ def register_urlpatterns():
 
 def register_actions():
     """ регистрация экшенов"""
-    action_controller.packs.append(actions.PersonObjectPack())
+    action_controller.packs.extend([
+        actions.PersonObjectPack(),
+        actions.BandedColumnPack(),
+    ])
 
 def register_desktop_menu():
     """
@@ -32,4 +36,5 @@ def register_desktop_menu():
     desktop.uificate_the_controller(
         action_controller,
         GENERIC_USER_METAROLE,
-        menu_root=desktop.MainMenu.TO_REGISTRIES)
+        menu_root=desktop.MainMenu.SubMenu(u'Демо-паки')
+    )
