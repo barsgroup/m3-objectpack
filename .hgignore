@@ -11,3 +11,4 @@ src/objectpack.egg-info/*
 reports/*
 tests/objectpack_demo/.coverage
 glob:tests/env/*
+glob:tests/objectpack_demo/*.sqlt
