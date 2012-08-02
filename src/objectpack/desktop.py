@@ -220,7 +220,7 @@ class BaseMenu(_UIFabric):
 
         def pack_to(sub_menu):
             def extend(*items):
-                sub_menu._items.extend(items)
+                sub_menu._items = items
                 return sub_menu
             return extend
 
