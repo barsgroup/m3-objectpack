@@ -10,14 +10,17 @@ from m3.ui import app_ui, actions
 #===============================================================================
 # uificate_the_controller
 #===============================================================================
-def uificate_the_controller(controller, metarole):
+def uificate_the_controller(controller, metarole,
+        icon_collection=None, menu_root=None, top_menu_root=None):
     '''
     Интеграция в интерфейс рабочего стола паков контроллера
     '''
     for pack in controller.top_level_packs:
-        Desktop.from_pack(pack, for_metarole=metarole)
-        MainMenu.from_pack(pack, for_metarole=metarole)
-        TopMenu.from_pack(pack, for_metarole=metarole)
+        Desktop.from_pack(pack, for_metarole=metarole, icons=icon_collection)
+        MainMenu.from_pack(pack, for_metarole=metarole, icons=icon_collection,
+            menu_root=menu_root)
+        TopMenu.from_pack(pack, for_metarole=metarole, icons=icon_collection,
+            menu_root=top_menu_root)
 
 #===============================================================================
 def _add_to(metarole, to_, items):
@@ -95,7 +98,10 @@ class _UIFabric(object):
     '''
     Прототип построителя UI
     '''
-    pack_method = ''
+    pack_method = '' # для метода для расширения UI
+    pack_flag = '' # флаг расширения UI простым путём (напр.для справочников)
+    # метод расширения UI (_add_to_XXX, обернутый в staticmethod, если нужно)
+    ui_extend_method = None
 
 
     class LauncherItem(object):
@@ -123,13 +129,16 @@ class _UIFabric(object):
             return DesktopItem(**self._args)
 
 
-    def _populate(self, data):
+    def _populate(self, metarole, data):
         #Делаем данные всегда итерируемыми
         try:
             data = list(data)
         except TypeError:
             data = [data]
-        return map(lambda o: o._populate(), filter(None, data))
+        return self.ui_extend_method(
+            metarole,
+            map(lambda o: o._populate(), filter(None, data))
+        )
 
 
     @classmethod
@@ -147,13 +156,23 @@ class _UIFabric(object):
             ui_fabric._populate(for_metarole, data)
 
 
-    def _from_dict_pack(self):
+    def _from_dict_pack(self, pack):
         '''
         Расширение UI из пака справочника
         '''
-        # нужно реализовать в потомке
-        raise NotImplementedError()
+        try:
+            assert pack.title
+            if getattr(pack, self.pack_flag, False):
+                return self.Item(name=pack.title, pack=pack)
+            else:
+                return None
+        except (AttributeError, AssertionError):
+            return None
 
+
+#===============================================================================
+# BaseMenu
+#===============================================================================
 class BaseMenu(_UIFabric):
     '''
     Класс для работы с главным меню
@@ -178,6 +197,37 @@ class BaseMenu(_UIFabric):
                 return grp
             return None
 
+    def __init__(self, menu_root=None):
+        # упаковщик элементов ("корень" меню)
+        self._menu_root = menu_root
+        # заготовки подменю (константа:упаковщик)
+        self._submenu_presets = {
+            None: self._root
+        }
+
+
+    @staticmethod
+    def _root(*items):
+        '''
+        Упаковщик по умолчанию. Помещает элементы в корень
+        '''
+        return items
+
+
+    def _populate(self, metarole, data):
+
+        def pack_to(sub_menu):
+            def extend(*items):
+                sub_menu._items.extend(items)
+                return sub_menu
+            return extend
+
+        data = self._submenu_presets.get(
+            self._menu_root,
+            pack_to(self._menu_root))
+
+        return super(BaseMenu, self)._populate(metarole, data)
+
 
 #===============================================================================
 # TopMenu
@@ -187,22 +237,8 @@ class TopMenu(BaseMenu):
     Класс для работы с верхним меню
     '''
     pack_method = 'extend_top_menu'
-
-    def _from_dict_pack(self, pack):
-        try:
-            assert pack.title
-            if getattr(pack, 'add_to_top_menu', False):
-                return self.Item(name=pack.title, pack=pack)
-            else:
-                return None
-        except (AttributeError, AssertionError):
-            return None
-
-    def _populate(self, metarole, data):
-        '''
-        Построение интерфейса
-        '''
-        _add_to_top_menu(metarole, *super(TopMenu, self)._populate(data))
+    pack_flag = 'add_to_top_menu'
+    ui_extend_method = staticmethod(_add_to_top_menu)
 
 
 #===============================================================================
@@ -213,8 +249,23 @@ class MainMenu(BaseMenu):
     Класс для работы с главным меню
     '''
     pack_method = 'extend_menu'
+    pack_flag = 'add_to_menu'
+    ui_extend_method = staticmethod(_add_to_menu)
 
-    def __init__(self):
+    TO_ROOT = None
+    TO_DICTS = 1
+    TO_REGISTRIES = 2
+    TO_ADMINISTRY = 3
+
+    def __init__(self, *args, **kwargs):
+
+        super(MainMenu, self).__init__(*args, **kwargs)
+        self._submenu_presets.update({
+            self.TO_DICTS: self.dicts,
+            self.TO_REGISTRIES: self.registries,
+            self.TO_ADMINISTRY: self.administry
+        })
+
         self._registries_menu = self.SubMenu(
             u'Реестры', icon='menu-dicts-16', index=1)
         self._dicts_menu = self.SubMenu(
@@ -247,24 +298,6 @@ class MainMenu(BaseMenu):
         return self._administry_menu
 
 
-    def _populate(self, metarole, data):
-        '''
-        Построение интерфейса
-        '''
-        _add_to_menu(metarole, *super(MainMenu, self)._populate(data))
-
-
-    def _from_dict_pack(self, pack):
-        try:
-            assert pack.title
-            if getattr(pack, 'add_to_menu', False):
-                return self.Item(name=pack.title, pack=pack)
-            else:
-                return None
-        except (AttributeError, AssertionError):
-            return None
-
-
 #===============================================================================
 # Desktop
 #===============================================================================
@@ -273,19 +306,5 @@ class Desktop(_UIFabric):
     Класс для работы с Рабочим Столом
     '''
     pack_method = 'extend_desktop'
-
-    def _populate(self, metarole, data):
-        '''
-        Построение интерфейса
-        '''
-        _add_to_desktop(metarole, *super(Desktop, self)._populate(data))
-
-    def _from_dict_pack(self, pack):
-        try:
-            assert pack.title
-            if getattr(pack, 'add_to_desktop', False):
-                return self.Item(name=pack.title, pack=pack)
-            else:
-                return None
-        except (AttributeError, AssertionError):
-            return None
+    pack_flag = 'add_to_desktop'
+    ui_extend_method = staticmethod(_add_to_desktop)

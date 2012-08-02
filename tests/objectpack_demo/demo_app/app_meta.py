@@ -10,7 +10,7 @@ from m3_users import metaroles, GENERIC_USER
 import actions
 
 
-from objectpack.desktop import uificate_the_controller
+from objectpack import desktop
 
 
 def register_urlpatterns():
@@ -29,5 +29,7 @@ def register_desktop_menu():
     регистрация элеметов рабочего стола
     """
     GENERIC_USER_METAROLE = metaroles.get_metarole(GENERIC_USER)
-    uificate_the_controller(action_controller, GENERIC_USER_METAROLE)
-
+    desktop.uificate_the_controller(
+        action_controller,
+        GENERIC_USER_METAROLE,
+        menu_root=desktop.MainMenu.TO_REGISTRIES)
