@@ -15,7 +15,6 @@ def uificate_the_controller(controller, metarole):
     Интеграция в интерфейс рабочего стола паков контроллера
     '''
     for pack in controller.top_level_packs:
-        print pack
         Desktop.from_pack(pack, for_metarole=metarole)
         MainMenu.from_pack(pack, for_metarole=metarole)
         TopMenu.from_pack(pack, for_metarole=metarole)

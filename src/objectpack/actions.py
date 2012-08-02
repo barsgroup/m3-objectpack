@@ -360,7 +360,8 @@ class ObjectDeleteAction(m3_actions.Action):
             raise ApplicationLogicException(e.args[0])
         except Exception, e:
             if e.__class__.__name__ == 'IntegrityError':
-                message = u'Не удалось удалить элемент. Возможно на него есть ссылки.'
+                message = (u'Не удалось удалить элемент. '
+                    u'Возможно на него есть ссылки.')
                 raise ApplicationLogicException(message)
             else:
                 # все левые ошибки выпускаем наверх
@@ -672,9 +673,6 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         """возвращает Группа исключения 'не найден'"""
         return self.model.DoesNotExist
 
-    def get_default_action(self):
-        """docstring for get_default_action"""
-        return self.list_window_action
 
     def configure_grid(self, grid):
         """
@@ -706,17 +704,6 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         grid.row_id_name = self.id_param_name
         grid.allow_paging = self.allow_paging
         grid.store.remote_sort = self.allow_paging
-
-    def get_filter_fields(self, request=None, context=None):
-        'возвращает список data_index колонок по которым будет вестить поиск'
-        #софрмируем полный список колонок для фильтрации
-        _all_filter_fields = []
-        for col in self.columns:
-            if col.get('filterable'):
-                _all_filter_fields.append(col['data_index'])
-        _all_filter_fields.extend(self.filter_fields)
-        _all_filter_fields = map(lambda x:x.replace('.', '__'), _all_filter_fields)
-        return _all_filter_fields
 
     def create_edit_window(self, create_new, request, context):
         """
