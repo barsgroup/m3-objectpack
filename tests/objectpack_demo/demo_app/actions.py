@@ -19,6 +19,13 @@ class PersonObjectPack(objectpack.ObjectPack):
     add_to_desktop = True
     add_to_menu = True
 
+    edit_window = add_window = objectpack.ui.ModelEditWindow.fabricate(model)
+
+    columns = [
+        {'data_index': 'fullname', 'header': u'ФИО'},
+        {'data_index': 'date_of_birth', 'header': u'Дата рождения'},
+    ]
+
 
 #===============================================================================
 # PersonObjectPack

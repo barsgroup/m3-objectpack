@@ -298,7 +298,9 @@ class ColumnsConstructor(object):
             items - подчинённые колонки
             **kwargs - передаются в конструктор ExtGridColumn
             """
-            self._column = ext.ExtGridColumn(**kwargs)
+            params = {'header': ''}
+            params.update(kwargs)
+            self._column = ext.ExtGridColumn(**params)
             self.items = list(items or [])
 
 
@@ -360,7 +362,9 @@ class ColumnsConstructor(object):
         Простая колонка
         """
         def __init__(self, **kwargs):
-            self._column = ext.ExtGridColumn(**kwargs)
+            params = {'header': 'None'}
+            params.update(kwargs)
+            self._column = ext.ExtGridColumn(**params)
 
         def _cleaned(self):
             return self
@@ -541,7 +545,7 @@ def _create_control_for_field(f, **kwargs):
         raise GenerationError(u'Не могу сгенирировать контрол для %s' % f)
 
     ctl.name = name
-    ctl.label = f.verbose_name
+    ctl.label = f.verbose_name.capitalize()
     ctl.allow_blank = f.blank
     return ctl
 

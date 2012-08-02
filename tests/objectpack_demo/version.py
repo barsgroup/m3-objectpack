@@ -14,8 +14,9 @@ __require__ = {
     'kladr': '1.1',
     'm3_audit': '1.0',
     'm3_users': '1.0',
-    'objectpack': 'default',
+    #'objectpack': 'default',
 }
 
 __require_local__ = {
+    'objectpack': '../../'
 }
