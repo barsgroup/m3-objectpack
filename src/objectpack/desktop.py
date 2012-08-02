@@ -10,7 +10,7 @@ from m3.ui import app_ui, actions
 # uificate_the_controller
 #===============================================================================
 def uificate_the_controller(controller, metarole,
-        icon_collection=None, menu_root=None):
+        icon_collection=None, menu_root=None, top_menu_root=None):
     '''
     Интеграция в интерфейс рабочего стола паков контроллера
     '''
@@ -19,7 +19,7 @@ def uificate_the_controller(controller, metarole,
         MainMenu.from_pack(pack, for_metarole=metarole, icons=icon_collection,
             menu_root=menu_root)
         TopMenu.from_pack(pack, for_metarole=metarole, icons=icon_collection,
-            menu_root=menu_root)
+            menu_root=top_menu_root)
 
 #===============================================================================
 def _add_to(metarole, to_, items):
