@@ -406,14 +406,18 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     def short_name(self):
         """имя пака для поиска в контроллере
         берется равным имени класса модели"""
-        return self.model.__name__
+        return self.model.__name__.lower()
+
+    @property
+    def url(self):
+        return r'/%s' % self.short_name
 
     # Список колонок состоящий из словарей
     # все параметры словаря передаются в add_column
     # список параметров смотри в BaseExtGridColumn
     # кроме filterable - признак что колонка будет учавтовать в фильтрации
 
-    url = u'/pack'
+    #url = u'/pack'
 
     columns = [
        {
@@ -459,7 +463,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     # который будет передаваться в запросе на модификацию/удаление
     @property
     def id_param_name(self):
-        return '%s_id' % self.model.__name__.lower()
+        return '%s_id' % self.short_name
 
     #data_index колонки, идентифицирующей объект
     #этот параметр будет браться из модели и передаваться как ID в ExtDataStore
@@ -668,6 +672,10 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         """возвращает Группа исключения 'не найден'"""
         return self.model.DoesNotExist
 
+    def get_default_action(self):
+        """docstring for get_default_action"""
+        return self.list_window_action
+
     def configure_grid(self, grid):
         """
         конфигурирования grid для работы с этим паком
@@ -698,6 +706,17 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         grid.row_id_name = self.id_param_name
         grid.allow_paging = self.allow_paging
         grid.store.remote_sort = self.allow_paging
+
+    def get_filter_fields(self, request=None, context=None):
+        'возвращает список data_index колонок по которым будет вестить поиск'
+        #софрмируем полный список колонок для фильтрации
+        _all_filter_fields = []
+        for col in self.columns:
+            if col.get('filterable'):
+                _all_filter_fields.append(col['data_index'])
+        _all_filter_fields.extend(self.filter_fields)
+        _all_filter_fields = map(lambda x:x.replace('.', '__'), _all_filter_fields)
+        return _all_filter_fields
 
     def create_edit_window(self, create_new, request, context):
         """
@@ -964,4 +983,19 @@ class SelectorWindowAction(m3_actions.Action):
             win.enable_multi_select()
 
         return m3_actions.ExtUIScriptResult(win, new_context)
+
+
+class DictionaryObjectPack(ObjectPack):
+    """docstring for DictionaryObjectPack"""
+    add_to_menu = True
+
+    def __init__(self, *args, **kwargs):
+        """docstring for __init__"""
+        self.edit_window = self.add_window = ui.ModelEditWindow.fabricate(self.model)
+        super(DictionaryObjectPack, self).__init__(*args, **kwargs)
+
+    def extend_menu(self, menu):
+        """docstring for extend_menu"""
+        if self.add_to_menu:
+            return menu.dicts(menu.Item(self.title, self))
 

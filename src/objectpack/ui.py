@@ -16,8 +16,8 @@ import tools
 
 class _BaseWindowExtender(object):
     '''
-    Группа для описания методов 
-    конструирования и настройки окна 
+    Группа для описания методов
+    конструирования и настройки окна
     '''
 
     def _initialize(self):
@@ -112,7 +112,7 @@ class BaseEditWindow(ext_windows.ExtEditWindow, _BaseWindowExtender):
 # BaseListWindow
 #===============================================================================
 class BaseListWindow(BaseWindow):
-    ''' 
+    '''
     окно для отображения линейного справочника
     '''
     def _init_components(self):
@@ -242,38 +242,38 @@ class BaseSelectWindow(BaseListWindow):
 class ColumnsConstructor(object):
     '''
     Конструктор колонок для сложных гридов с banded-колонками
-    
+
     Имеет 2 дочерних класса:
     - Col - простая колонка
     - BandedCol - группирующая колонка.
-    
+
     Пример использования:
-    
+
         # создание колонок inline
 
         cc = ColumnsConstructor()
         cc.add(
             cc.Col(header='1'),
-    
+
             cc.BandedCol(header='2', items=(
                 cc.Col(header='3'),
                 cc.Col(header='4'),
-    
+
                 cc.BandedCol(header='5', items=(
                     cc.Col(header='6'),
-    
+
                     cc.BandedCol(header='7', items=(
                         cc.Col(header='8'),
                         cc.Col(header='9'),
                         cc.BandedCol(),
                     )),
-    
+
                     cc.Col(header='10')
                 ))
             )),
             cc.Col(header='11')
         )
-        
+
         # динамическое создание колонок
         for grp_idx in 'ABCD':
             grp = cc.BandedCol(header=grp_idx)
@@ -648,3 +648,8 @@ deny_blank.__doc__ = '''
     Пример использования:
         controls = map(allow_blank, controls)
     '''
+
+
+class DictionaryModelEditWindow(ModelEditWindow):
+    """docstring for DictionaryModelEditWindow"""
+    pass
