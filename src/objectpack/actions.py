@@ -680,12 +680,25 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
             grid.url_edit = get_url(self.edit_window_action)
             grid.url_delete = get_url(self.delete_action)
 
-        for col in self.columns:
-            temp = {}
-            temp.update(col)
-            if temp.has_key('filterable'):
-                temp.pop('filterable')
-            grid.add_column(**temp)
+        # построение колонок
+        cc = ui.ColumnsConstructor()
+        def populate(root, cols):
+            for c in cols:
+                sub_cols = c.get('columns', None)
+                # параметры создаваемой колонки
+                params = {}
+                params.update(c)
+                params.pop('columns', None)
+                params.pop('filterable', None)
+
+                if not sub_cols is None:
+                    new_root = cc.BandedCol(**params)
+                    root.add(new_root)
+                    populate(new_root, sub_cols)
+                else:
+                    root.add(cc.Col(**params))
+        populate(cc, self.columns)
+        cc.configure_grid(grid)
 
         #TODO перенести в Группа грида сделать метод add_search_field
         if self.get_filter_fields():
