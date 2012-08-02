@@ -526,7 +526,9 @@ def _create_control_for_field(f, **kwargs):
     elif isinstance(f, (
             django_models.DateTimeField,
             django_models.DateField)):
-        ctl = ext.ExtDateField(**kwargs)
+        params = {'format': 'd.m.Y'}
+        params.update(kwargs)
+        ctl = ext.ExtDateField(**params)
 
     elif isinstance(f, django_models.ForeignKey):
         ctl = _create_dict_select_field(f, **kwargs)
