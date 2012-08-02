@@ -401,7 +401,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         return unicode(
             self.model._meta.verbose_name_plural or
             self.model._meta.verbose_name or
-            repr(self.model))
+            repr(self.model)).capitalize()
 
     @property
     def short_name(self):
