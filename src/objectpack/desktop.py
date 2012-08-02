@@ -103,6 +103,7 @@ class _UIFabric(object):
     # метод расширения UI (_add_to_XXX, обернутый в staticmethod, если нужно)
     ui_extend_method = None
 
+    icons = None
 
     class LauncherItem(object):
         '''
@@ -137,16 +138,17 @@ class _UIFabric(object):
             data = [data]
         return self.ui_extend_method(
             metarole,
-            map(lambda o: o._populate(), filter(None, data))
+            *map(lambda o: o._populate(), filter(None, data))
         )
 
 
     @classmethod
-    def from_pack(cls, pack, for_metarole):
+    def from_pack(cls, pack, for_metarole, icons=None, **kwargs):
         '''
         Расширение UI из пака
         '''
-        ui_fabric = cls()
+        ui_fabric = cls(**kwargs)
+        ui_fabric.icons = icons
         method = getattr(pack, cls.pack_method, None)
         if callable(method):
             data = method(ui_fabric)
@@ -224,7 +226,7 @@ class BaseMenu(_UIFabric):
 
         data = self._submenu_presets.get(
             self._menu_root,
-            pack_to(self._menu_root))
+            pack_to(self._menu_root))(data)
 
         return super(BaseMenu, self)._populate(metarole, data)
 
