@@ -320,7 +320,7 @@ class ObjectRowsAction(m3_actions.Action):
     def get_column_data_indexes(self):
         'список дата индеков для формирования jsona'
         res = []
-        for col in getattr(self.parent, 'columns', []):
+        for col in getattr(self.parent, '_columns_flat', []):
             res.append(col['data_index'])
         res.append(self.parent.id_field)
         return res
@@ -548,14 +548,16 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
             self.delete_action = None
 
         # построение плоского списка колонок
+        self._columns_flat = []
         self._all_filter_fields = self.filter_fields
         self._sort_fields = {}
         def flatify(cols):
             for c in cols:
                 sub_cols = c.get('columns', None)
-                if not sub_cols is None:
+                if sub_cols is not None:
                     flatify(sub_cols)
                 else:
+                    self._columns_flat.append(c)
                     data_index = c['data_index']
                     field = data_index.replace('.', '__')
                     # поле(поля) для сортировки
