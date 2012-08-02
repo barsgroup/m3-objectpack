@@ -985,17 +985,3 @@ class SelectorWindowAction(m3_actions.Action):
         return m3_actions.ExtUIScriptResult(win, new_context)
 
 
-class DictionaryObjectPack(ObjectPack):
-    """docstring for DictionaryObjectPack"""
-    add_to_menu = True
-
-    def __init__(self, *args, **kwargs):
-        """docstring for __init__"""
-        self.edit_window = self.add_window = ui.ModelEditWindow.fabricate(self.model)
-        super(DictionaryObjectPack, self).__init__(*args, **kwargs)
-
-    def extend_menu(self, menu):
-        """docstring for extend_menu"""
-        if self.add_to_menu:
-            return menu.dicts(menu.Item(self.title, self))
-

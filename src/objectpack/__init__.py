@@ -16,12 +16,12 @@ from actions import (
     ObjectRowsAction,
     ObjectDeleteAction,
     ObjectPack,
-    DictionaryObjectPack,
 
     SelectorWindowAction,
 )
 
 from slave_object_pack import SlavePack
+from dictionary_object_pack import DictionaryObjectPack
 
 from ui import (
     BaseWindow,
