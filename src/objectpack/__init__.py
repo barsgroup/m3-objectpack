@@ -34,3 +34,8 @@ from ui import (
     ColumnsConstructor,
     model_fields_to_controls,
 )
+
+from tools import (
+    VirtualModel,
+    VirtualModelManager,
+)
