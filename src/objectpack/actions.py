@@ -7,6 +7,7 @@ Created on 23.07.2012
 
 import copy
 import datetime
+from django.db import models
 
 from django.db.models import fields as dj_fields
 from django.utils.encoding import force_unicode
@@ -17,6 +18,7 @@ from m3.ui.actions.interfaces import ISelectablePack
 from m3.core.exceptions import RelatedError, ApplicationLogicException
 from m3.db import safe_delete
 from m3.ui.ext.fields.complex import ExtSearchField
+from django.utils import simplejson
 
 import ui, tools
 
@@ -211,8 +213,17 @@ class ObjectRowsAction(m3_actions.Action):
         """устанавливает запрос к базе"""
         self.query = self.parent.get_rows_query(self.request, self.context)
 
-    def apply_filter(self):
+    def apply_search(self):
         """Применяет фильтр поиска"""
+        self.query = self.parent.apply_search(
+            self.query,
+            self.request,
+            self.context
+        )
+
+
+    def apply_filter(self):
+        """применяет фильтр"""
         self.query = self.parent.apply_filter(
             self.query,
             self.request,
@@ -334,6 +345,7 @@ class ObjectRowsAction(m3_actions.Action):
         new_self.request = request
         new_self.context = context
         new_self.set_query()
+        new_self.apply_search()
         new_self.apply_filter()
         new_self.apply_sort_order()
         total_count = new_self.get_total_count()
@@ -420,7 +432,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     # Список колонок состоящий из словарей
     # все параметры словаря передаются в add_column
     # список параметров смотри в BaseExtGridColumn
-    # кроме filterable - признак что колонка будет учавтовать в фильтрации
+    # кроме searchable - признак что колонка будет учавтовать в фильтрации
 
     #url = u'/pack'
 
@@ -433,7 +445,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 #            'data_index':'',
 #            'width':,
 #            'header':u'',
-#            'filterable':True,
+#            'serchable':True,
 #            'sortable':True,
 #            'sort_fields':['foo','bar'],
 #        },
@@ -444,7 +456,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 #                    'data_index':'school.name',
 #                    'width':200,
 #                    'header':u'Колонка 1',
-#                    'filterable':True
+#                    'searchable':True
 #                },
 #            ]
 #        },
@@ -457,7 +469,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     ]
 
     # плоский список полей фильтрации
-    _all_filter_fields = None
+    _all_search_fields = None
     # словарь data_index:sort_order
     _sort_fields = None
 
@@ -480,8 +492,8 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     column_name_on_select = '__unicode__'
 
     # Список дополнительных полей модели по которым будет идти поиск
-    # основной список береться из colums по признаку filterable
-    filter_fields = []
+    # основной список береться из colums по признаку searchable
+    search_fields = []
     allow_paging = True
 
     #пак будет настраивать грид на возможность редактирования
@@ -558,7 +570,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 
         # построение плоского списка колонок
         self._columns_flat = []
-        self._all_filter_fields = self.filter_fields
+        self._all_search_fields = self.search_fields
         self._sort_fields = {}
         def flatify(cols):
             for c in cols:
@@ -578,8 +590,8 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                             sort_fields = [sort_fields]
                         self._sort_fields[data_index] = sort_fields
                     # поле для фильтрации
-                    if c.get('filterable'):
-                        self._all_filter_fields.append(field)
+                    if c.get('searchable'):
+                        self._all_search_fields.append(field)
         flatify(self.columns)
 
 
@@ -701,7 +713,8 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                 params = {}
                 params.update(c)
                 params.pop('columns', None)
-                params.pop('filterable', None)
+                params.pop('searchable', None)
+                params.pop('filter', None)
 
                 if not sub_cols is None:
                     new_root = cc.BandedCol(**params)
@@ -713,7 +726,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         cc.configure_grid(grid)
 
         #TODO перенести в Группа грида сделать метод add_search_field
-        if self.get_filter_fields():
+        if self.get_search_fields():
             #поиск по гриду если есть по чему искать
             grid.top_bar.search_field = ExtSearchField(
                 empty_text=u'Поиск', width=200, component_for_search=grid)
@@ -723,6 +736,8 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         grid.row_id_name = self.id_param_name
         grid.allow_paging = self.allow_paging
         grid.store.remote_sort = self.allow_paging
+
+        grid.plugins.append(self.get_filter_plugin())
 
     def create_edit_window(self, create_new, request, context):
         """
@@ -751,10 +766,10 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         #return q
         return self.model.objects.all().select_related()
 
-    def get_filter_fields(self, request=None, context=None):
+    def get_search_fields(self, request=None, context=None):
         """Возвращает список data_index колонок по которым будет
         производиться поиск"""
-        return self._all_filter_fields[:]
+        return self._all_search_fields[:]
 
     def get_sort_order(self, data_index, reverse=False):
         """Возвращает ключи сортировки для указанного data_index"""
@@ -764,12 +779,56 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         return sort_order
 
     def apply_filter(self, query, request, context):
+        """docstring for apply_filter"""
+
+        if hasattr(context,'q'):
+            request_filter = simplejson.loads(context.q)
+            for item in request_filter:
+                # Для дат
+                if item['data']['value'] is basestring:
+                    m = re.match(r"([0-9]{2})\.([0-9]{2})\.([0-9]{4})$",
+                        item['data']['value'])
+                    if m:
+                        item['data']['value'] = '{0}-{1}-{2}'.format(
+                            *m.group(3, 2, 1)
+                        )
+
+                custom = None
+                col = filter(lambda col: col['data_index']==item["field"], self.columns)[:1]
+                if col:
+                    custom = col[0]['filter'].get('custom_field')
+                if custom:
+                    #к нам пришел кастомный обработчик для фильтра
+                    if callable(custom):
+                        #если это метод, тады сразу фильтруем по его результату
+                        q = custom(item['data']['value'])
+                    else:
+                        #в другом случае ожидается список полей
+                        if item['data']['type'] == 'list':
+                            params = [models.Q(**dict(zip(
+                                ("%s__icontains" % custom_fld, ),
+                                item['data']['value']
+                        ))) for custom_fld in custom]
+                        else:
+                            params = [models.Q(**{
+                            "%s__icontains" % custom_fld : item['data']['value']
+                        }) for custom_fld in custom]
+
+                        q = reduce(lambda q1, q2: q1|q2, params)
+                    query = query.filter(q)
+                else:
+                    query = query.filter(**{
+                        "%s__icontains" % item['field']:item['data']['value']
+                    })
+        return query
+
+    def apply_search(self, query, request, context):
         """Возвращает переданную выборку
         отфильторованной по параметрам запроса"""
         return m3_actions.utils.apply_search_filter(
             query,
             request.REQUEST.get('filter'),
-            self.get_filter_fields()
+            self.get_search_fields()
         )
 
     def apply_sort_order(self, query, request, context):
@@ -839,6 +898,35 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
             raise RelatedError(u'Не удалось удалить элемент %s. '
                 u'Возможно на него есть ссылки.' % obj_id)
         return obj
+
+    def get_filter_plugin(self):
+        """
+        построение плагина фильтрации
+        """
+        filter_items = []
+        list_columns_filter = dict([(column['data_index'], column['filter']) for column in self.columns])
+
+        for k, v in list_columns_filter.items():
+            params = dict(
+                type=v.get('type', 'string'),
+                data_index=k
+            )
+            f_options = v.get('options', [])
+            if callable(f_options):
+                f_options = f_options()
+            params['options'] = "[%s]" % ','.join((("'%s'" % item)
+                if isinstance(item, basestring)
+                else ("['%s','%s']" % item) if item is not None else '[]')
+                for item in f_options)
+            filter_items.append("""{
+                type:'%(type)s',
+                dataIndex:'%(data_index)s',
+                options:%(options)s
+            }""" % params)
+        return  """
+             new Ext.ux.grid.GridFilters({filters:[%s]})
+        """ % ','.join(filter_items)
+
 
 
     #-----------------------------------------------------------------------

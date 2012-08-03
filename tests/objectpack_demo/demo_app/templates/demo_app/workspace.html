@@ -2,6 +2,23 @@
 
 {% block content_head %}
 
+	<style type="text/css" title="currentStyle" media="screen">
+		@import "{{ STATIC_URL }}css/filter/style.css";
+	</style>
+
+
+    <script type="text/javascript" src="{{ STATIC_URL }}js/menu/EditableItem.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/menu/RangeMenu.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/GridFilters.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/jquery-1.7.2.min.js"></script>
+
+    <script type="text/javascript" src="{{ STATIC_URL }}js/filter/Filter.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/filter/BooleanFilter.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/filter/DateFilter.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/filter/ListFilter.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/filter/NumericFilter.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/filter/StringFilter.js"></script>
+
 
     <script type="text/javascript">
 

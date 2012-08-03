@@ -22,8 +22,12 @@ class PersonObjectPack(objectpack.ObjectPack):
     edit_window = add_window = objectpack.ui.ModelEditWindow.fabricate(model)
 
     columns = [
-        {'data_index': 'fullname', 'header': u'ФИО'},
-        {'data_index': 'date_of_birth', 'header': u'Дата рождения'},
+        {'data_index': 'fullname', 'header': u'ФИО', 'filter': {
+            'type': 'string', 'custom_field':('name', )
+        }},
+        {'data_index': 'date_of_birth', 'header': u'Дата рождения', 'filter': {
+            'type': 'date'
+        }},
     ]
 
 
