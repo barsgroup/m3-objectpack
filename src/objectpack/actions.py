@@ -904,7 +904,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         построение плагина фильтрации
         """
         filter_items = []
-        list_columns_filter = dict([(column['data_index'], column['filter']) for column in self.columns])
+        list_columns_filter = dict([(column['data_index'], column['filter']) for column in self.columns if column.get('filter')])
 
         for k, v in list_columns_filter.items():
             params = dict(
