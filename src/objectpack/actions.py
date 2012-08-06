@@ -737,7 +737,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         grid.allow_paging = self.allow_paging
         grid.store.remote_sort = self.allow_paging
 
-        grid.plugins.append(self.get_filter_plugin())
+        grid.plugins.append(self.get_filter_plugin() or '')
 
     def create_edit_window(self, create_new, request, context):
         """
@@ -904,28 +904,28 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         построение плагина фильтрации
         """
         filter_items = []
-        list_columns_filter = dict([(column['data_index'], column['filter']) for column in self.columns if column.get('filter')])
-
-        for k, v in list_columns_filter.items():
-            params = dict(
-                type=v.get('type', 'string'),
-                data_index=k
-            )
-            f_options = v.get('options', [])
-            if callable(f_options):
-                f_options = f_options()
-            params['options'] = "[%s]" % ','.join((("'%s'" % item)
-                if isinstance(item, basestring)
-                else ("['%s','%s']" % item) if item is not None else '[]')
-                for item in f_options)
-            filter_items.append("""{
-                type:'%(type)s',
-                dataIndex:'%(data_index)s',
-                options:%(options)s
-            }""" % params)
-        return  """
-             new Ext.ux.grid.GridFilters({filters:[%s]})
-        """ % ','.join(filter_items)
+        list_columns_filter = dict([(column['data_index'], column['filter']) for column in self.columns if column.get('filter') and not column.get('columns')])
+        if list_columns_filter:
+            for k, v in list_columns_filter.items():
+                params = dict(
+                    type=v.get('type', 'string'),
+                    data_index=k
+                )
+                f_options = v.get('options', [])
+                if callable(f_options):
+                    f_options = f_options()
+                params['options'] = "[%s]" % ','.join((("'%s'" % item)
+                    if isinstance(item, basestring)
+                    else ("['%s','%s']" % item) if item is not None else '[]')
+                    for item in f_options)
+                filter_items.append("""{
+                    type:'%(type)s',
+                    dataIndex:'%(data_index)s',
+                    options:%(options)s
+                }""" % params)
+            return  """
+                 new Ext.ux.grid.GridFilters({filters:[%s]})
+            """ % ','.join(filter_items)
 
 
 
