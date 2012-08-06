@@ -577,6 +577,176 @@ def _create_dict_select_field(f, **kwargs):
     return ctl
 
 
+#===============================================================================
+# WindowTab
+#===============================================================================
+class WindowTab(object):
+    '''
+    Прототип конструктора таба для карточки сотрудника
+    '''
+    # заголовок таба
+    title = u''
+
+    template = None # js-шаблон для вкладки
+
+    def _create_tab(self):
+        return ext.ExtPanel(
+            body_cls='x-window-mc',
+            padding='5px',
+            layout='form',
+            title=self.title,
+        )
+
+    def init_components(self, win):
+        '''
+        Здесь создаются компоненты, но не задаётся расположение
+        Компоненты создаются, как атрибуты окна win
+        '''
+        pass
+
+
+    def do_layout(self, win, tab):
+        '''
+        Здесь задаётся расположение компонентов. Компоненты должны
+        быть расположены на табе tab окна win
+        '''
+        pass
+
+
+    def set_params(self, win, params):
+        '''
+        Установка параметров
+        '''
+        pass
+
+
+#===============================================================================
+# TabbedWindow
+#===============================================================================
+class TabbedWindow(BaseWindow):
+    '''
+    Окно со вкладками
+    '''
+    # список вкладок (экземпляров WindowTab)
+    tabs = []
+
+
+    def _init_components(self):
+        super(TabbedWindow, self)._init_components()
+
+        # контейнер для вкладок
+        self._tab_container = ext.ExtTabPanel(deferred_render=False)
+
+        # создание компонентов для вкладок
+        for con in self.tabs:
+            con.init_components(win=self)
+
+
+    def _do_layout(self):
+        super(TabbedWindow, self)._do_layout()
+
+        # настройка отображения окна
+        self.layout = 'fit'
+        self.width, self.height = 600, 450
+        self.min_width, self.min_height = self.width, self.height
+
+        self.maximizable = self.minimizable = True
+
+        # размещение контролов во вкладках
+        for con in self.tabs:
+            tab = con._create_tab()
+            con.do_layout(win=self, tab=tab)
+            self._tab_container.items.append(tab)
+
+        # размещение контейнера вкладок на форму
+        tc = self._tab_container
+        tc.anchor = '100%'
+        tc.layout = 'fit'
+        tc.auto_scroll = True
+        self.items.append(tc)
+
+
+    def set_params(self, params):
+        super(TabbedWindow, self).set_params(params)
+
+        self.template_globals = 'tabbed-window.js'
+
+        # установка параметров вкладок, формирование списка шаблонов вкладок
+        self.tabs_templates = []
+        for con in self.tabs:
+            if con.template:
+                self.tabs_templates.append(con.template)
+            con.set_params(win=self, params=params)
+
+
+#===============================================================================
+# TabbedEditWindow
+#===============================================================================
+class TabbedEditWindow(BaseEditWindow):
+    '''
+    Окно редактирования с вкладками
+    '''
+    # список вкладок (экземпляров WindowTab)
+    tabs = []
+
+
+    def _init_components(self):
+        super(TabbedEditWindow, self)._init_components()
+
+        # контейнер для вкладок
+        self._tab_container = ext.ExtTabPanel(deferred_render=False)
+
+        # создание компонентов для вкладок
+        for con in self.tabs:
+            con.init_components(win=self)
+
+
+    def _do_layout(self):
+        super(TabbedEditWindow, self)._do_layout()
+
+        # настройка отображения окна
+        self.layout = 'fit'
+        self.form.layout = 'fit'
+        self.width, self.height = 600, 450
+        self.min_width, self.min_height = self.width, self.height
+        self.modal = True
+        self.maximizable = True
+
+        # размещение контролов во вкладках
+        for con in self.tabs:
+            tab = con._create_tab()
+            con.do_layout(win=self, tab=tab)
+            self._tab_container.items.append(tab)
+
+        # размещение контейнера вкладок на форму
+        tc = self._tab_container
+        tc.anchor = '100%'
+        tc.layout = 'fit'
+        tc.auto_scroll = True
+        self.form.items.append(tc)
+
+
+    def set_params(self, params):
+        super(TabbedEditWindow, self).set_params(params)
+
+        # установка параметров вкладок
+        for con in self.tabs:
+            con.set_params(win=self, params=params)
+        self.check_tab_controls()
+
+    def check_tab_controls(self):
+        '''
+        проверим содержажиеся втабе гриддыи отлючим сеарч бар
+        '''
+        for grid in tools.find_element_by_type(
+                self._tab_container, ext.ExtObjectGrid):
+            if hasattr(grid.top_bar, 'search_grid'):
+                grid.top_bar.search_grid.hidden = True
+
+
+#===============================================================================
+# ComboBoxWithStore
+#===============================================================================
 class ComboBoxWithStore(ext.ExtComboBox):
     """
     Потомок m3-комбобокса со втроенным стором

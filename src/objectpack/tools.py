@@ -235,6 +235,20 @@ def modifier(**kwargs):
     return lambda obj: modify(obj, **kwargs)
 
 
+def find_element_by_type(container, cls):
+    '''
+    посик экземлпяров элементов во всех вложенных контейнерах
+    '''
+    res = []
+    for item in container.items:
+        if isinstance(item, cls):
+            res.append(item)
+
+        if hasattr(item, 'items'):
+            res.extend(find_element_by_type(item, cls))
+    return res
+
+
 #===============================================================================
 # VirtualModelManager
 #===============================================================================
