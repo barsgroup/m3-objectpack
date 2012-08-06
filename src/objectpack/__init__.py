@@ -31,6 +31,10 @@ from ui import (
 
     ModelEditWindow,
 
+    TabbedWindow,
+    TabbedEditWindow,
+    WindowTab,
+
     ColumnsConstructor,
     model_fields_to_controls,
 )
