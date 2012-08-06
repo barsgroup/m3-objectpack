@@ -9,9 +9,9 @@ from django.conf import urls
 from m3_users import metaroles, GENERIC_USER
 from objectpack import desktop
 
-from objectpack_demo.demo_app.controller import action_controller
-
 import actions
+import controller
+
 
 
 def register_urlpatterns():
@@ -19,14 +19,16 @@ def register_urlpatterns():
     Регистрация конфигурации урлов для приложения
     """
     return urls.defaults.patterns("",
-        (r"^actions/", action_controller.process_request))
+        (r"^actions/", controller.action_controller.process_request))
+
 
 def register_actions():
     """ регистрация экшенов"""
-    action_controller.packs.extend([
+    controller.action_controller.packs.extend([
         actions.PersonObjectPack(),
         actions.BandedColumnPack(),
     ])
+
 
 def register_desktop_menu():
     """
@@ -34,7 +36,7 @@ def register_desktop_menu():
     """
     GENERIC_USER_METAROLE = metaroles.get_metarole(GENERIC_USER)
     desktop.uificate_the_controller(
-        action_controller,
+        controller.action_controller,
         GENERIC_USER_METAROLE,
         menu_root=desktop.MainMenu.SubMenu(u'Демо-паки')
     )

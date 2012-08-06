@@ -48,5 +48,6 @@ class FakeModel(objectpack.VirtualModel):
         self = cls()
         self.id = id_obj
         for i in xrange(1, 12):
+            setattr(self, 'field%s' % i, ['', '*'][i == id_obj])
             setattr(self, 'field%s' % i, ['', '*'][i <= id_obj])
         return self

@@ -30,6 +30,10 @@ class PersonObjectPack(objectpack.ObjectPack):
         }},
     ]
 
+    def __init__(self):
+        super(PersonObjectPack, self).__init__()
+        self.list_window_action.short_name = 'foo'
+
 
 #===============================================================================
 # PersonObjectPack
