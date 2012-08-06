@@ -39,3 +39,5 @@ from tools import (
     VirtualModel,
     VirtualModelManager,
 )
+
+import observer
