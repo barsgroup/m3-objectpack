@@ -586,7 +586,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                         sort_fields = c.get('sort_fields', field)
                         try:
                             sort_fields = list(sort_fields)
-                        except:
+                        except TypeError:
                             sort_fields = [sort_fields]
                         self._sort_fields[data_index] = sort_fields
                     # поле для фильтрации
@@ -714,6 +714,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                 params.update(c)
                 params.pop('columns', None)
                 params.pop('searchable', None)
+                params.pop('sort_fields', None)
                 params.pop('filter', None)
 
                 if not sub_cols is None:
@@ -794,7 +795,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                         )
 
                 custom = None
-                col = filter(lambda col: col['data_index'] == item["field"], self.columns)[:1]
+                col = filter(lambda col: col['data_index'] == item["field"], self._columns_flat)[:1]
                 if col:
                     custom = col[0]['filter'].get('custom_field')
                 if custom:
@@ -904,7 +905,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         построение плагина фильтрации
         """
         filter_items = []
-        list_columns_filter = dict([(column['data_index'], column['filter']) for column in self.columns if column.get('filter') and not column.get('columns')])
+        list_columns_filter = dict([(column['data_index'], column['filter']) for column in self._columns_flat if column.get('filter') and not column.get('columns')])
         if list_columns_filter:
             for k, v in list_columns_filter.items():
                 params = dict(
