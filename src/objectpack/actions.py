@@ -7,18 +7,18 @@ Created on 23.07.2012
 
 import copy
 import datetime
-from django.db import models
+import re
 
+from django.db import models
 from django.db.models import fields as dj_fields
 from django.utils.encoding import force_unicode
+from django.utils import simplejson
 
 from m3.ui import actions as m3_actions
-
 from m3.ui.actions.interfaces import ISelectablePack
+from m3.ui.ext.fields.complex import ExtSearchField
 from m3.core.exceptions import RelatedError, ApplicationLogicException
 from m3.db import safe_delete
-from m3.ui.ext.fields.complex import ExtSearchField
-from django.utils import simplejson
 
 import ui, tools
 
@@ -781,7 +781,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     def apply_filter(self, query, request, context):
         """docstring for apply_filter"""
 
-        if hasattr(context,'q'):
+        if hasattr(context, 'q'):
             request_filter = simplejson.loads(context.q)
             for item in request_filter:
                 # Для дат
@@ -794,7 +794,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                         )
 
                 custom = None
-                col = filter(lambda col: col['data_index']==item["field"], self.columns)[:1]
+                col = filter(lambda col: col['data_index'] == item["field"], self.columns)[:1]
                 if col:
                     custom = col[0]['filter'].get('custom_field')
                 if custom:
@@ -806,7 +806,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                         #в другом случае ожидается список полей
                         if item['data']['type'] == 'list':
                             params = [models.Q(**dict(zip(
-                                ("%s__icontains" % custom_fld, ),
+                                ("%s__icontains" % custom_fld,),
                                 item['data']['value']
                         ))) for custom_fld in custom]
                         else:
@@ -814,7 +814,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                             "%s__icontains" % custom_fld : item['data']['value']
                         }) for custom_fld in custom]
 
-                        q = reduce(lambda q1, q2: q1|q2, params)
+                        q = reduce(lambda q1, q2: q1 | q2, params)
                     query = query.filter(q)
                 else:
                     query = query.filter(**{
