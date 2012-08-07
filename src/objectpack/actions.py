@@ -392,6 +392,10 @@ class ObjectDeleteAction(m3_actions.Action):
         for i in ids:
             self.delete_obj(i)
 
+    def audit(self, obj):
+        """docstring for audit"""
+        pass
+
 
     def delete_obj(self, id_):
         'удаление конкретного объекта'
@@ -716,6 +720,8 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                 params.pop('searchable', None)
                 params.pop('sort_fields', None)
                 params.pop('filter', None)
+
+                params['header'] = unicode(params.pop('header', ''))
 
                 if not sub_cols is None:
                     new_root = cc.BandedCol(**params)

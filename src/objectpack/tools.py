@@ -372,3 +372,42 @@ class VirtualModel(object):
         return cls(id_obj)
 
     objects = VirtualModelManager()
+
+
+def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
+    '''
+    Возвращает список объектов из указанной выборки, которые пересекаются
+    с указанным объектом по указанным полям начала и конца интервала
+    '''
+    obj_bgn = getattr(obj, attr_begin, None)
+    obj_end = getattr(obj, attr_end, None)
+
+    if obj_bgn is None or obj_end is None: raise ValueError(
+        u'Объект интервальной модели должен иметь непустые границы интервала!')
+
+    if obj.id: queryset = queryset.exclude(id=obj.id)
+
+    result = []
+    for o in queryset.iterator():
+        bgn = getattr(o, attr_begin, None)
+        end = getattr(o, attr_end, None)
+        if bgn is None or end is None:
+            raise ValueError(
+                u'Среди объектов выборки присутствуют некорректные!')
+
+        def add():
+            if any((
+                    bgn <= obj_bgn <= end,
+                    bgn <= obj_end <= end,
+                    obj_bgn <= bgn <= obj_end,
+                    obj_bgn <= end <= obj_end,
+                )): result.append(o)
+
+        try:
+            add()
+        except TypeError:
+            if isinstance(obj_bgn, datetime.datetime) and isinstance(obj_end, datetime.datetime):
+                obj_bgn = obj_bgn.date()
+                obj_end = obj_end.date()
+                add()
+    return result
