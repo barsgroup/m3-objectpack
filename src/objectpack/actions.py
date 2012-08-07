@@ -23,7 +23,23 @@ from m3.db import safe_delete
 import ui, tools
 
 
-class BaseWindowAction(m3_actions.Action):
+class BaseAction(m3_actions.Action):
+    """
+    Предок, необходимый для actions ObjectPack`а, чтобы они могли работать
+    в контроллере, не реализующем механизм подписки. 
+    """
+    @staticmethod
+    def handle(verb, arg):
+        return arg
+
+    @staticmethod
+    def handler_for(verb):
+        def wrapper(fn):
+            return fn
+        return wrapper
+
+
+class BaseWindowAction(BaseAction):
     """
     базовый Группа который возвращает окно
     """
@@ -83,7 +99,7 @@ class ObjectListWindowAction(BaseWindowAction):
     Действие, которое возвращает окно со списком элементов справочника.
     """
     url = '/list-window$'
-    is_select_mode = False #режим показа окна (True - выбор, False - список),
+    is_select_mode = False #режим показа окна (True - выбор, False - список)
 
     def set_windows_params(self):
         params = self.win_params
@@ -153,7 +169,14 @@ class ObjectEditWindowAction(BaseWindowAction):
             self.win.make_read_only(True, exclude_list)
 
 
-class ObjectSaveAction(m3_actions.Action):
+class ObjectAddWindowAction(ObjectEditWindowAction):
+    """
+    Отдельный action для уникальности short_name
+    """
+    pass
+
+
+class ObjectSaveAction(BaseAction):
     """
     Действие выполняет сохранение новой записи в справочник
     в любом месте можно райзить ApplicationLogicException
@@ -167,12 +190,14 @@ class ObjectSaveAction(m3_actions.Action):
 
     def create_window(self):
         'вернем окно для создания или редактирования'
-        self.win = self.parent.create_edit_window(self.create_new, self.request, self.context)
+        self.win = self.parent.create_edit_window(
+            self.create_new, self.request, self.context)
 
     def create_obj(self):
         'создание объекта'
         try:
-            self.obj, self.create_new = self.parent.get_obj(self.request, self.context)
+            self.obj, self.create_new = self.parent.get_obj(
+                self.request, self.context)
         except self.parent.get_not_found_exception():
             raise ApplicationLogicException(self.parent.MSG_DOESNOTEXISTS)
 
@@ -186,7 +211,8 @@ class ObjectSaveAction(m3_actions.Action):
 
     def save_obj(self):
         'сохранеие объекта'
-        self.parent.save_row(self.obj, self.create_new, self.request, self.context)
+        self.parent.save_row(
+            self.obj, self.create_new, self.request, self.context)
 
     def run(self, request, context):
         new_self = copy.copy(self)
@@ -200,7 +226,7 @@ class ObjectSaveAction(m3_actions.Action):
         return m3_actions.OperationResult()
 
 
-class ObjectRowsAction(m3_actions.Action):
+class ObjectRowsAction(BaseAction):
     """
     Возвращает данные для грида справочника
     """
@@ -211,32 +237,35 @@ class ObjectRowsAction(m3_actions.Action):
 
     def set_query(self):
         """устанавливает запрос к базе"""
-        self.query = self.parent.get_rows_query(self.request, self.context)
+        self.query = self.handle('query',
+            self.parent.get_rows_query(self.request, self.context))
 
     def apply_search(self):
         """Применяет фильтр поиска"""
-        self.query = self.parent.apply_search(
-            self.query,
-            self.request,
-            self.context
-        )
-
+        self.query = self.handle('apply_search',
+            self.parent.apply_search(
+                self.query,
+                self.request,
+                self.context
+            ))
 
     def apply_filter(self):
         """применяет фильтр"""
-        self.query = self.parent.apply_filter(
-            self.query,
-            self.request,
-            self.context
-        )
+        self.query = self.handle('apply_filter',
+            self.parent.apply_filter(
+                self.query,
+                self.request,
+                self.context
+            ))
 
     def apply_sort_order(self):
         """Применяет сортировку"""
-        self.query = self.parent.apply_sort_order(
-            self.query,
-            self.request,
-            self.context
-        )
+        self.query = self.handle('apply_sort_order',
+            self.parent.apply_sort_order(
+                self.query,
+                self.request,
+                self.context
+            ))
 
     def apply_limit(self):
         'обрезает по текущей странице'
@@ -256,7 +285,7 @@ class ObjectRowsAction(m3_actions.Action):
                 res.append(prep_obj)
             else:
                 self.query.skip_last()
-        return res
+        return self.handle('get_rows', res)
 
     def prepare_object(self, obj):
         """
@@ -325,7 +354,7 @@ class ObjectRowsAction(m3_actions.Action):
         for col in self.get_column_data_indexes():
             parse_data_indexes(obj, col, result_dict)
 
-        return result_dict
+        return self.handle('prepare_obj', result_dict)
 
 
     def get_total_count(self):
@@ -357,9 +386,9 @@ class ObjectRowsAction(m3_actions.Action):
         })
 
 
-class ObjectDeleteAction(m3_actions.Action):
+class ObjectDeleteAction(BaseAction):
     """
-    экшен удаления
+    Действие по удалению объекта
     """
 
     url = '/delete_row$'
@@ -383,6 +412,7 @@ class ObjectDeleteAction(m3_actions.Action):
                 # все левые ошибки выпускаем наверх
                 raise
 
+
     def delete_objs(self):
         """
         удаляет обекты
@@ -394,9 +424,12 @@ class ObjectDeleteAction(m3_actions.Action):
 
 
     def delete_obj(self, id_):
-        'удаление конкретного объекта'
+        """
+        Удаление объекта по идентификатору @id_
+        """
         obj = self.parent.delete_row(id_, self.request, self.context)
         self.audit(obj)
+
 
     def run(self, request, context):
         new_self = copy.copy(self)
@@ -542,7 +575,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
             self.rows_action
         ])
         if self.add_window and not self.read_only:
-            self.new_window_action = ObjectEditWindowAction()
+            self.new_window_action = ObjectAddWindowAction()
             self.actions.append(self.new_window_action)
         else:
             self.new_window_action = None
@@ -794,7 +827,8 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                         )
 
                 custom = None
-                col = filter(lambda col: col['data_index'] == item["field"], self.columns)[:1]
+                col = filter(lambda col: col['data_index'] == item["field"],
+                    self._columns_flat)[:1]
                 if col:
                     custom = col[0]['filter'].get('custom_field')
                 if custom:
@@ -893,7 +927,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
             result = obj.safe_delete()
         else:
             result = safe_delete(obj)
-        #в случе успеха safe_delete возвращет true
+        #в случае успеха safe_delete возвращет true
         if not result:
             raise RelatedError(u'Не удалось удалить элемент %s. '
                 u'Возможно на него есть ссылки.' % obj_id)
@@ -904,7 +938,10 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         построение плагина фильтрации
         """
         filter_items = []
-        list_columns_filter = dict([(column['data_index'], column['filter']) for column in self.columns if column.get('filter') and not column.get('columns')])
+        list_columns_filter = dict(
+            (column['data_index'], column['filter'])
+            for column in self._columns_flat
+            if column.get('filter') and not column.get('columns'))
         if list_columns_filter:
             for k, v in list_columns_filter.items():
                 params = dict(
@@ -926,7 +963,6 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
             return  """
                  new Ext.ux.grid.GridFilters({filters:[%s]})
             """ % ','.join(filter_items)
-
 
 
     #-----------------------------------------------------------------------
@@ -1004,7 +1040,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 #===============================================================================
 # SelectorWindowAction
 #===============================================================================
-class SelectorWindowAction(m3_actions.Action):
+class SelectorWindowAction(BaseAction):
     """
     Экшн показа окна выбора с пользовательским экшном обработки выбранных
     элементов. Например, множественный выбор элементов справочника, для
