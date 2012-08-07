@@ -9,39 +9,6 @@ import re
 from m3.ui import actions as m3_actions
 
 
-class _BeforAfterPack:
-    """
-    Обертка для списка слушателей, реализующая вызов before/after
-    в соответствии с приоритетом, определяемым порякрм слушателей
-    """
-
-
-    def __init__(self, listeners):
-        self._listeners = listeners
-
-    @staticmethod
-    def lazy_chain(methods, *args):
-        for m in methods:
-            result = m(*args)
-            if result:
-                return result
-
-    def _execute(self, verb, *args):
-        # реакция слушателей на действие @verb=(before|after)
-        for m in filter(None, (
-                getattr(l(), verb, None)
-                for l in self._listeners)):
-            result = m(*args)
-            if result:
-                return result
-
-    def pre_run(self, *args):
-        return self._execute('before', *args)
-
-    def post_run(self, *args):
-        return self._execute('after', *args)
-
-
 #===============================================================================
 # ControllerMixin
 #===============================================================================
@@ -91,11 +58,72 @@ class Observer(object):
     """
     Реестр слушателей, реализующий подписку последних на действия в actions
     """
+    # уровни детализации отладочного логировния
+    LOG_NONE, LOG_CALLS, LOG_MORE = 0, 1, 2
 
-    def __init__(self):
+
+    class _BeforAfterPack:
+        """
+        Обертка для списка слушателей, реализующая вызов before/after
+        в соответствии с приоритетом, определяемым порякрм слушателей
+        """
+
+        def __init__(self, action, listeners, logger):
+            self._listeners = listeners
+            self._action = action
+            self._logger = logger
+
+        @staticmethod
+        def lazy_chain(methods, *args):
+            for m in methods:
+                result = m(*args)
+                if result:
+                    return result
+
+        def _execute(self, verb, *args):
+            # реакция слушателей на действие @verb=(before|after)
+            for listener in self._listeners:
+                # слушатель должен иметь метод с именем из verb
+                method = getattr(listener, verb, None)
+                if method:
+                    # слушатель инстанцируется каждый раз
+                    listener = listener()
+                    # инжекция action в слушателя
+                    listener.action = self._action
+                    # вызывается метод слушателя для нового экземпляра слушателя
+                    result = method(listener, *args)
+                    if result:
+                        return result
+
+        def pre_run(self, *args):
+            return self._execute('before', *args)
+
+        def post_run(self, *args):
+            return self._execute('after', *args)
+
+
+    def __init__(self, logger=lambda msg: None, verbose_level=None):
+        """
+        Создание наблюдателя.
+        @logger - метод логирования: callable-объект,
+            вызываемый для каждого сообщения (параметр - текст сообщения)
+        @verbose_level - уровень подробности логирования:
+            одна из констант Observer.LOG_xxx
+        """
+        self._logger = logger
+        self._verbose_level = verbose_level
+
         self._registered_listeners = []
         self._action_listeners = {}
         self._actions = {}
+
+
+    def _log(self, level, message):
+        """
+        Логирование действий с проверкой уровня подробности
+        """
+        if self._verbose_level >= level:
+            self._logger(message)
 
 
     def _name_action(self, action):
@@ -119,6 +147,10 @@ class Observer(object):
             # short_name проставляется в экземпляр action
             action.short_name = short_name
 
+            self._log(self.LOG_MORE,
+                'short_name gererated:\n\tAction\t\t %r\n\tshort_name\t "%s"'
+                % (action, short_name))
+
         return short_name
 
 
@@ -136,6 +168,9 @@ class Observer(object):
             for is_listen, listener in listeners:
                 if is_listen(name):
                     action_listeners.append(listener)
+                    self._log(self.LOG_MORE,
+                        'Action linked:\n\tshort_name\t "%s"'
+                        '\n\tListener\t %r' % (name, listener))
             self._action_listeners[name] = action_listeners
 
 
@@ -144,15 +179,22 @@ class Observer(object):
         Подписка зарегистрированных слушателей на @pack.actions 
         """
         for action in pack.actions:
-            self._actions[self._name_action(action)] = action
+            short_name = self._name_action(action)
+            # возбуждение исключения при коллизии short_names
+            if short_name in self._actions:
+                raise AssertionError(
+                    'Action %r have short_name="%s", '
+                    ' already registered with vs %r!'
+                    % (action, short_name, self._actions[short_name]))
+            self._actions[short_name] = action
         self._reconfigure()
 
 
-    def subscribe(self, listener, priority=None):
+    def subscribe(self, listener):
         """
         Декоратор, регистрирующий слушателя @listener в реестре слушателей
         """
-        priority = getattr(listener, 'priority', priority) or 0
+        priority = getattr(listener, 'priority', 0) or 0
 
         # matcher`ы по списку рег.выр. в параметре "from" слушателя 
         matchers = map(
@@ -167,37 +209,51 @@ class Observer(object):
         self._registered_listeners.append(
             (priority, (is_listen, listener))
         )
+        self._log(self.LOG_MORE,
+            'Listener registered:\n\tListener %r' % listener)
+
         self._reconfigure()
 
         return listener
 
 
-    @staticmethod
-    def _make_handlers(listeners):
+    def _configure_action(self, action, listeners):
         """
-        Генератор методов, инжектируемых в action
+        Конфигурирует @action, инжектируя в него методы handle и handler_for,
+        взаимрдействующие со слушателями @listeners
         """
         def handle(verb, arg):
             """
-            Обработка данных подписанными слушателями
+            Обработка данных @arg подписанными слушателями, которые имеют
+            обработчик @verb
             """
-            for listener_cls in (l[1] for l in listeners):
-                handler = getattr(listener_cls(), verb, None)
+            for listener in listeners:
+                handler = getattr(listener, verb, None)
                 if handler:
-                    arg = handler(arg)
+                    self._log(self.LOG_CALLS,
+                        'Listener call:\n\t'
+                        'Action\t %r\n\tListener %r\n\tVerb\t "%s"' %
+                        (action, listener, verb))
+                    # слушатель инстанцируется каждый раз
+                    listener = listener()
+                    # инжекция action в слушателя
+                    listener.action = action
+                    # вызывается метод слушателя для нового экземпляра слушателя
+                    arg = handler(listener, arg)
             return arg
 
         def handler_for(verb):
             """
             Декоратор для обертки пользовательской функции
-            обработчиком на стороне слушателей
+            обработчиком (с именем @verb) на стороне слушателей
             """
             def wrapper(fn):
                 def inner(*args, **kwargs):
                     return handle(verb, fn(*args, **kwargs))
             return wrapper
 
-        return handle, handler_for
+        action.handle = handle
+        action.handler_for = handler_for
 
 
     def _prepare_for_listening(self, action, stack):
@@ -210,9 +266,13 @@ class Observer(object):
         # в action инжектируются методы для работы подписки,
         # причем инжектирование производится и в случае,
         # когда подписчиков нет - для консистентности
-        action.handle, action.handler_for = self._make_handlers(listeners)
+        self._configure_action(action, listeners)
 
         # если подписчики есть, в стек паков добавляется "пак",
         # реализующий подписку на before/after
         if listeners:
-            stack.insert(0, _BeforAfterPack(listeners))
+            stack.insert(0, self._BeforAfterPack(
+                action, listeners,
+                # инжекция логирования
+                logger=lambda msg: self._log(self.LOG_CALLS, msg)
+            ))
