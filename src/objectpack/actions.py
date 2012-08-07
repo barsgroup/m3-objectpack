@@ -26,7 +26,7 @@ import ui, tools
 class BaseAction(m3_actions.Action):
     """
     Предок, необходимый для actions ObjectPack`а, чтобы они могли работать
-    в контроллере, не реализующем механизм подписки. 
+    в контроллере, не реализующем механизм подписки.
     """
     @staticmethod
     def handle(verb, arg):
@@ -422,6 +422,10 @@ class ObjectDeleteAction(BaseAction):
         for i in ids:
             self.delete_obj(i)
 
+    def audit(self, obj):
+        """docstring for audit"""
+        pass
+
 
     def delete_obj(self, id_):
         """
@@ -747,8 +751,10 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                 params.update(c)
                 params.pop('columns', None)
                 params.pop('searchable', None)
+                params.pop('sort_fields', None)
                 params.pop('filter', None)
 
+                params['header'] = unicode(params.pop('header', ''))
                 if not sub_cols is None:
                     new_root = cc.BandedCol(**params)
                     root.add(new_root)
