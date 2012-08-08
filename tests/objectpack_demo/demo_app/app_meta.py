@@ -19,7 +19,8 @@ def register_urlpatterns():
     Регистрация конфигурации урлов для приложения
     """
     return urls.defaults.patterns("",
-        (r"^actions/", controller.action_controller.process_request))
+        controller.action_controller.urlpattern
+    )
 
 
 def register_actions():

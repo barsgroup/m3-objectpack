@@ -16,7 +16,7 @@ def logger(msg):
 obs = observer.Observer(logger=logger, verbose_level=observer.Observer.LOG_MORE)
 
 
-action_controller = observer.ObservableController(obs, "/actions")
+action_controller = observer.ObservableController(obs, "/controller")
 
 
 @obs.subscribe
