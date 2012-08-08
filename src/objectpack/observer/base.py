@@ -5,6 +5,7 @@ Created on 03.08.2012
 @author: pirogov
 '''
 import re
+import inspect
 
 from m3.ui import actions as m3_actions
 
@@ -88,6 +89,11 @@ class Observer(object):
                 if method:
                     # слушатель инстанцируется каждый раз
                     listener = listener()
+                    # логирование
+                    self._logger(
+                        'Listener call:\n\t'
+                        'Action\t %r\n\tListener %r\n\tVerb\t "%s"' %
+                        (self._action, listener, verb))
                     # инжекция action в слушателя
                     listener.action = self._action
                     # вызывается метод слушателя для нового экземпляра слушателя
@@ -128,30 +134,25 @@ class Observer(object):
 
     def _name_action(self, action):
         """
-        Получение / генерация нового short_name для @action
+        Получение / генерация полного имени для @action
         """
-        def get_name(obj):
-            name = getattr(obj, "short_name", None)
-            if name and not isinstance(name, basestring):
-                raise ValueError(
-                    "The short_name must be a string! (%s)" % obj)
-            return name
-
-        short_name = get_name(action)
-        if not short_name:
-            # если у action нет short_name, генерируется новое имя по умолчанию
-            cls_name = lambda obj: obj.__class__.__name__.lower()
-            pack_name = get_name(action.parent) or cls_name(action.parent)
-            action_name = get_name(action) or cls_name(action)
-            short_name = '%s/%s' % (pack_name, action_name)
-            # short_name проставляется в экземпляр action
-            action.short_name = short_name
+        name = getattr(action, '_observing_name', None)
+        if not name:
+            pack_cls = action.parent.__class__
+            # имя подписки будет иметь вид "пакет/КлассПака/КлассAction"
+            name = '%s/%s/%s' % (
+                inspect.getmodule(pack_cls).__package__,
+                pack_cls.__name__,
+                action.__class__.__name__,
+            )
+            # название подписки проставляется в экземпляр action
+            action._observing_name = name
 
             self._log(self.LOG_MORE,
-                'short_name gererated:\n\tAction\t\t %r\n\tshort_name\t "%s"'
-                % (action, short_name))
+                'Name gererated:\n\tAction\t %r\n\tname\t "%s"'
+                % (action, name))
 
-        return short_name
+        return name
 
 
     def _reconfigure(self):
@@ -178,15 +179,17 @@ class Observer(object):
         """
         Подписка зарегистрированных слушателей на @pack.actions 
         """
+        # регистрация пак, как основного для модели
+
         for action in pack.actions:
-            short_name = self._name_action(action)
+            name = self._name_action(action)
             # возбуждение исключения при коллизии short_names
-            if short_name in self._actions:
+            if name in self._actions:
                 raise AssertionError(
-                    'Action %r have short_name="%s", '
-                    ' already registered with vs %r!'
-                    % (action, short_name, self._actions[short_name]))
-            self._actions[short_name] = action
+                    'Name="%s" can not be registered for action %r,\n'
+                    'because this name ristered for %r!'
+                    % (action, name, self._actions[name]))
+            self._actions[name] = action
         self._reconfigure()
 
 
@@ -260,8 +263,7 @@ class Observer(object):
         """
         Подготовка action к прослушиванию (инжекция методов)
         """
-        short_name = getattr(action, 'short_name', self._name_action(action))
-        listeners = self._action_listeners.get(short_name, [])
+        listeners = self._action_listeners.get(self._name_action(action), [])
 
         # в action инжектируются методы для работы подписки,
         # причем инжектирование производится и в случае,
