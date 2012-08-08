@@ -8,6 +8,7 @@ Created on 23.07.2012
 import copy
 import datetime
 import re
+import inspect
 
 from django.db import models
 from django.db.models import fields as dj_fields
@@ -447,6 +448,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     """
     Пакет с действиями, специфичными для работы с редактирование модели
     """
+
     # Заголовок окна справочника
     # если не перекрыт в потомках - берется из модели
     @property
@@ -456,11 +458,20 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
             self.model._meta.verbose_name or
             repr(self.model)).capitalize()
 
+    @classmethod
+    def get_short_name(cls):
+        """
+        Имя пака для поиска в ControllerCache
+        """
+        return '%s/%s' % (
+            inspect.getmodule(cls).__name__.replace('.actions', ''),
+            cls.__name__)
+
     @property
     def short_name(self):
-        """имя пака для поиска в контроллере
-        берется равным имени класса модели"""
-        return self.model.__name__.lower()
+        # имя пака для поиска в ControllerCache в виде атрибута
+        # для совместимости с m3
+        return self.get_short_name()
 
     @property
     def url(self):
