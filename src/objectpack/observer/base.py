@@ -42,6 +42,20 @@ class ControllerMixin(object):
         self._observer._populate_pack(pack)
 
 
+    @property
+    def urlpattern(self):
+        """
+        Возвращает кортеж вида (pattern, method), пригодный для регистрации
+        в urlpatterns Django
+        """
+        url = self.url
+        if url.startswith('/'):
+            url = url[1:]
+        if url.endswith('/'):
+            url = url[:-2]
+        return (r'^%s/' % url, self.process_request)
+
+
 #===============================================================================
 # ObservableController
 #===============================================================================
