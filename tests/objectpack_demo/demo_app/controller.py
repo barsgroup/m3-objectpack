@@ -22,7 +22,7 @@ action_controller = observer.ObservableController(obs, "/actions")
 @obs.subscribe
 class Listener(object):
 
-    listen = ['foo']
+    listen = ['.*/.*/ObjectListWindowAction']
 
     def after(self, request, context, response):
         # подмена заголовка окна
@@ -32,7 +32,7 @@ class Listener(object):
 @obs.subscribe
 class StarToHash(object):
 
-    listen = ['fakemodel/.*']
+    listen = ['.*/BandedColumnPack/.*']
 
     def prepare_obj(self, obj):
         if obj.get('field1', None) == u'*':
