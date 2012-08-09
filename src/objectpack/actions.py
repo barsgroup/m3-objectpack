@@ -463,9 +463,14 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         """
         Имя пака для поиска в ControllerCache
         """
-        return '%s/%s' % (
-            inspect.getmodule(cls).__name__.replace('.actions', ''),
-            cls.__name__)
+        name = getattr(cls, '_auto_short_name', None)
+        if not name:
+            name = '%s/%s' % (
+                inspect.getmodule(cls).__name__.replace('.actions', ''
+                    ).replace('.', '/').lower(),
+                cls.__name__.lower())
+            cls._auto_short_name = name
+        return name
 
     @property
     def short_name(self):
