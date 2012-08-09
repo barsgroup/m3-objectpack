@@ -137,6 +137,17 @@ class Observer(object):
         self._action_listeners = {}
         self._actions = {}
 
+        self._model_register = {}
+
+
+    def get(self, model_name):
+        """
+        Поиск экземпляра ActionPack для модели по имени её класса.
+        Поиск производится среди зарегистрированных Pack`ов, которые являются
+        основными для своих моделей (и привязаны к модели)
+        """
+        return self._model_register.get(model_name)
+
 
     def _log(self, level, message):
         """
@@ -193,7 +204,22 @@ class Observer(object):
         """
         Подписка зарегистрированных слушателей на @pack.actions 
         """
-        # регистрация пак, как основного для модели
+        # регистрация ActionPack, как основного для модели
+        try:
+            if pack._is_primary_for_model and pack.model:
+                model_name = pack.model.__name__
+                try:
+                    # если для модели уже зарегистрирован ActionPack
+                    # возбуждается исключение
+                    raise AssertionError(
+                        "For model %s already registered primary pack: %r"
+                        % (model_name, self._model_register[model_name]))
+                except KeyError:
+                    # модель ещё не регистрировалась - регистрируется
+                    self._model_register[model_name] = pack
+        except AttributeError:
+            # Если Pack не основной, или не имеет модели - игнорируется
+            pass
 
         for action in pack.actions:
             name = self._name_action(action)

@@ -4,6 +4,8 @@ Created on 23.07.2012
 
 @author: pirogov
 '''
+import datetime
+
 from itertools import ifilter, islice, imap
 
 from django.db import transaction
@@ -406,7 +408,8 @@ def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
         try:
             add()
         except TypeError:
-            if isinstance(obj_bgn, datetime.datetime) and isinstance(obj_end, datetime.datetime):
+            if isinstance(obj_bgn, datetime.datetime) and isinstance(
+                    obj_end, datetime.datetime):
                 obj_bgn = obj_bgn.date()
                 obj_end = obj_end.date()
                 add()

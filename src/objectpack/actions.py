@@ -526,6 +526,11 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     # словарь data_index:sort_order
     _sort_fields = None
 
+    # признак того, что Pack является основным для модели
+    # (по основному паку строятся контролы DictSelectField
+    # при автогонерации окон редактирования)
+    _is_primary_for_model = True
+
     # Настройки вида справочника (задаются конечным разработчиком)
     model = None
 

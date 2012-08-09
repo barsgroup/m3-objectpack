@@ -428,7 +428,8 @@ class ModelEditWindow(BaseEditWindow):
         class Pack(...):
             add_window = ModelEditWindow.fabricate(
                 SomeModel,
-                field_list=['code', 'name']
+                field_list=['code', 'name'],
+                model_register=observer,
             )
         """
         return type('%sEditWindow' % model.__name__, (cls,), {
@@ -438,11 +439,17 @@ class ModelEditWindow(BaseEditWindow):
 #===============================================================================
 def model_fields_to_controls(model, window,
         fields_prefix=None, field_list=[],
-        exclude_list=[], **kwargs):
+        exclude_list=[], model_register=None, **kwargs):
     """
     Добавление на окно полей по полям модели,
-    начинающимся с указанного префикса
-    kwargs - передача доп параметров в конструктор элементов
+    - начинающимся с префикса @field_prefix
+    - входящим в список (строк) @field_list
+    - не входящим в список (строк) @exclude_list
+    @kwargs - передача доп параметров в конструктор элементов
+    
+    При создании полей для связанных моделей ActionPack для модели ищется
+    в реестре моделей @model_register по имени класса модели
+    (передачей имени в метод "get" реестра)
     """
     # ПОКА ВСЁ ОЧЕНЬ ПРИМИТИВНО
     # контроля перекрытия имен нет!
@@ -463,7 +470,7 @@ def model_fields_to_controls(model, window,
                 if f.name.startswith(prefix)))): continue
 
         try:
-            ctl = _create_control_for_field(f, **kwargs)
+            ctl = _create_control_for_field(f, model_register, **kwargs)
         except GenerationError:
             continue
 
@@ -499,7 +506,7 @@ class GenerationError(Exception):
     pass
 
 
-def _create_control_for_field(f, **kwargs):
+def _create_control_for_field(f, model_register=None, **kwargs):
     """
     содает контроль для поля f = models.Field from model
     """
@@ -535,7 +542,7 @@ def _create_control_for_field(f, **kwargs):
         ctl = ext.ExtDateField(**params)
 
     elif isinstance(f, django_models.ForeignKey):
-        ctl = _create_dict_select_field(f, **kwargs)
+        ctl = _create_dict_select_field(f, model_register, **kwargs)
 
     elif isinstance(f, django_models.ImageField):
         ctl = ext.ExtImageUploadField(**kwargs)
@@ -552,12 +559,14 @@ def _create_control_for_field(f, **kwargs):
     return ctl
 
 
-def _create_dict_select_field(f, **kwargs):
+def _create_dict_select_field(f, model_register=None, **kwargs):
     """
-    создает dictselectfield по заданному полю
+    Создает ExtDictSelectField по заданному ForeignKey-полю модели
+    ActionPack предоставляется объектом @model_register через метод
+    "get", в качестве параметра принимающий имя связанной модели.
     """
     related_model = f.rel.to.__name__
-    pack = m3_urls.get_pack(related_model)
+    pack = (model_register or {}).get(related_model)
     assert pack, 'Cant find pack for field %s (realated model %s)' % (
         f.name, related_model)
 

@@ -63,3 +63,8 @@ class SlavePack(objectpack.ObjectPack):
         except ValueError:
             q = self.model.objects.none()
         return q
+
+
+    # SlavePack обычно не является основным для модели
+    _is_primary_for_model = False
+
