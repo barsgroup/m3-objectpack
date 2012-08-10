@@ -4,7 +4,6 @@
 '''
 
 from m3.ui.actions import utils
-from m3.helpers import urls
 
 import objectpack
 
@@ -15,7 +14,6 @@ class SlavePack(objectpack.ObjectPack):
     окна редактирования объекта, отображающего объеты,
     связанные с редактируемым 
     '''
-
     # parents - список полей в модели которые должны браться из контекста
     # например: parents = ['employer', 'subject']
     parents = []
@@ -28,12 +26,14 @@ class SlavePack(objectpack.ObjectPack):
         result = self.__parents_cached = []
         for parent in self.parents:
             f = self.model._meta.get_field(parent)
-            pack = urls.get_pack_instance(f.rel.to.__name__)
-            result.append((
-                pack.id_param_name,
-                pack.title,
-                parent
-            ))
+            # pack ищется в реестре "модель-pack", который должен
+            pack = self._get_model_pack(f.rel.to.__name__)
+            if pack:
+                result.append((
+                    pack.id_param_name,
+                    pack.title,
+                    parent
+                ))
         return result
 
 

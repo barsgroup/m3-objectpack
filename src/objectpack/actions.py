@@ -16,6 +16,7 @@ from django.utils.encoding import force_unicode
 from django.utils import simplejson
 
 from m3.ui import actions as m3_actions
+from m3.helpers import urls as m3_urls
 from m3.ui.actions.interfaces import ISelectablePack
 from m3.ui.ext.fields.complex import ExtSearchField
 from m3.core.exceptions import RelatedError, ApplicationLogicException
@@ -521,16 +522,6 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 #        },
     ]
 
-    # плоский список полей фильтрации
-    _all_search_fields = None
-    # словарь data_index:sort_order
-    _sort_fields = None
-
-    # признак того, что Pack является основным для модели
-    # (по основному паку строятся контролы DictSelectField
-    # при автогонерации окон редактирования)
-    _is_primary_for_model = True
-
     # Настройки вида справочника (задаются конечным разработчиком)
     model = None
 
@@ -580,10 +571,28 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 
     # права доступа для базовых справочников
     PERM_EDIT = 'edit'
-    sub_permissions = {PERM_EDIT: u'Редактирование'}
+    sub_permissions = {
+        PERM_EDIT: u'Редактирование'
+    }
 
     MSG_DOESNOTEXISTS = (u'Запись не найдена в базе данных.<br/>' +
         u'Возможно, она была удалена. Пожалуйста, обновите таблицу.')
+
+    # плоский список полей фильтрации
+    _all_search_fields = None
+    # словарь data_index:sort_order
+    _sort_fields = None
+
+    # признак того, что Pack является основным для модели
+    # (по основному паку строятся контролы DictSelectField
+    # при автогонерации окон редактирования)
+    _is_primary_for_model = True
+
+    # функция, возвращающая экземпляр Pack дл укзанной по имени модели.
+    # Реализация функции инжектируется при регистрации в Observable контроллер.
+    @staticmethod
+    def _get_model_pack(model_name):
+        return None
 
     def __init__(self):
         super(ObjectPack, self).__init__()
