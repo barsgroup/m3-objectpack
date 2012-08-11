@@ -13,13 +13,13 @@ from m3.ui import actions as m3_actions
 #===============================================================================
 # ControllerMixin
 #===============================================================================
-class ControllerMixin(object):
+class ObservableMixin(object):
     """
     Наблюдатель за вызовом actions и кода в точках их (actions) расшрения
     """
 
     def __init__(self, observer, *args, **kwargs):
-        super(ControllerMixin, self).__init__(*args, **kwargs)
+        super(ObservableMixin, self).__init__(*args, **kwargs)
         self._observer = observer
 
 
@@ -31,14 +31,14 @@ class ControllerMixin(object):
         self._observer._prepare_for_listening(action, stack)
 
         # обработка контроллером
-        return super(ControllerMixin, self)._invoke(request, action, stack)
+        return super(ObservableMixin, self)._invoke(request, action, stack)
 
 
     def append_pack(self, pack):
         """
         Добавление ActioPack`а с регистрацией его action`ов в ObserVer`е
         """
-        super(ControllerMixin, self).append_pack(pack)
+        super(ObservableMixin, self).append_pack(pack)
         self._observer._populate_pack(pack)
 
 
@@ -59,7 +59,7 @@ class ControllerMixin(object):
 #===============================================================================
 # ObservableController
 #===============================================================================
-class ObservableController(ControllerMixin, m3_actions.ActionController):
+class ObservableController(ObservableMixin, m3_actions.ActionController):
     """
     Контроллер, поддерживающий механизм подписки через Observer
     """
