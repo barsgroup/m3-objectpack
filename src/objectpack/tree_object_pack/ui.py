@@ -6,7 +6,11 @@ Description:
 '''
 
 from objectpack.ui import BaseListWindow
-from m3.ui.ext.containers.trees import ExtTree
+from m3.ui.ext.panels import ExtObjectTree
+from m3.ui.ext import misc
+
+class BaseObjectTree(ExtObjectTree):
+    pass
 
 class BaseTreeListWindow(BaseListWindow):
     """docstring for BaseTreeListWindow"""
@@ -15,7 +19,8 @@ class BaseTreeListWindow(BaseListWindow):
         создание компонентов
         """
         super(BaseTreeListWindow, self)._init_components()
-        self.grid = ExtTree
+        self.grid = BaseObjectTree()
 
 class BaseTreeSelectWindow(BaseTreeListWindow):
     pass
+

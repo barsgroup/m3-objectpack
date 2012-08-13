@@ -446,7 +446,7 @@ def model_fields_to_controls(model, window,
     - входящим в список (строк) @field_list
     - не входящим в список (строк) @exclude_list
     @kwargs - передача доп параметров в конструктор элементов
-    
+
     При создании полей для связанных моделей ActionPack для модели ищется
     в реестре моделей @model_register по имени класса модели
     (передачей имени в метод "get" реестра)
@@ -582,7 +582,7 @@ def _create_dict_select_field(f, model_register=None, **kwargs):
     params.update(kwargs)
 
     ctl = ext.ExtDictSelectField(**params)
-    ctl.pack = pack
+    ctl._pack = pack
     return ctl
 
 
