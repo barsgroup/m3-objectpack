@@ -12,6 +12,11 @@ from m3.ui.ext import misc
 class BaseObjectTree(ExtObjectTree):
     pass
 
+    def __init__(self, *args, **kwargs):
+        super(BaseObjectTree, self).__init__(*args, **kwargs)
+        self.store = misc.ExtJsonStore(auto_load=True, root='rows', id_property='id')
+
+
 class BaseTreeListWindow(BaseListWindow):
     """docstring for BaseTreeListWindow"""
     def _init_components(self):

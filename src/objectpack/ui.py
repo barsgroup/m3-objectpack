@@ -582,7 +582,7 @@ def _create_dict_select_field(f, model_register=None, **kwargs):
     params.update(kwargs)
 
     ctl = ext.ExtDictSelectField(**params)
-    ctl._pack = pack
+    ctl.url = pack.get_select_url()
     return ctl
 
 
