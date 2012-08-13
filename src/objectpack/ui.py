@@ -10,6 +10,7 @@ from m3.ui.ext import all_components as ext
 from m3.ui.ext import windows as ext_windows
 from m3.ui.ext .misc import store as ext_store
 from m3.helpers import urls as m3_urls
+from m3.ui.ext.containers.grids import ExtGridColumn
 
 import tools
 
@@ -227,6 +228,8 @@ class BaseSelectWindow(BaseListWindow):
             handler='selectValue', text=u'Выбрать')
         self.buttons.insert(0, self.select_btn)
         self._mro_exclude_list.append(self.select_btn)
+        self.grid.columns.append(ExtGridColumn(data_index='__unicode__',
+            hidden=True))
 
     def set_params(self, params):
         """
