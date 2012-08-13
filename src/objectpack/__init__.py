@@ -50,6 +50,11 @@ from ui import (
 from tools import (
     VirtualModel,
     VirtualModelManager,
+
+    extract_int,
+    extract_int_list,
+    modify,
+    modifier,
 )
 
 import observer
