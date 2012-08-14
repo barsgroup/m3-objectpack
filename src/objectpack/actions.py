@@ -16,7 +16,6 @@ from django.utils.encoding import force_unicode
 from django.utils import simplejson
 
 from m3.ui import actions as m3_actions
-from m3.helpers import urls as m3_urls
 from m3.ui.actions.interfaces import ISelectablePack
 from m3.ui.ext.fields.complex import ExtSearchField
 from m3.core.exceptions import RelatedError, ApplicationLogicException
@@ -25,6 +24,9 @@ from m3.db import safe_delete
 import ui, tools
 
 
+#===============================================================================
+# BaseAction
+#===============================================================================
 class BaseAction(m3_actions.Action):
     """
     Предок, необходимый для actions ObjectPack`а, чтобы они могли работать
@@ -41,6 +43,9 @@ class BaseAction(m3_actions.Action):
         return wrapper
 
 
+#===============================================================================
+# BaseWindowAction
+#===============================================================================
 class BaseWindowAction(BaseAction):
     """
     базовый Группа который возвращает окно
@@ -96,6 +101,9 @@ class BaseWindowAction(BaseAction):
             new_self.win, context=new_self.context)
 
 
+#===============================================================================
+# ObjectListWindowAction
+#===============================================================================
 class ObjectListWindowAction(BaseWindowAction):
     """
     Действие, которое возвращает окно со списком элементов справочника.
@@ -123,6 +131,9 @@ class ObjectListWindowAction(BaseWindowAction):
             context=self.context)
 
 
+#===============================================================================
+# ObjectSelectWindowAction
+#===============================================================================
 class ObjectSelectWindowAction(ObjectListWindowAction):
     """
     Действие, возвращающее окно выбора из справочника
@@ -131,6 +142,9 @@ class ObjectSelectWindowAction(ObjectListWindowAction):
     is_select_mode = True
 
 
+#===============================================================================
+# ObjectEditWindowAction
+#===============================================================================
 class ObjectEditWindowAction(BaseWindowAction):
     """
     редактирование элемента справочника
@@ -171,6 +185,9 @@ class ObjectEditWindowAction(BaseWindowAction):
             self.win.make_read_only(True, exclude_list)
 
 
+#===============================================================================
+# ObjectAddWindowAction
+#===============================================================================
 class ObjectAddWindowAction(ObjectEditWindowAction):
     """
     Отдельный action для уникальности short_name
@@ -178,6 +195,9 @@ class ObjectAddWindowAction(ObjectEditWindowAction):
     pass
 
 
+#===============================================================================
+# ObjectSaveAction
+#===============================================================================
 class ObjectSaveAction(BaseAction):
     """
     Действие выполняет сохранение новой записи в справочник
@@ -228,6 +248,9 @@ class ObjectSaveAction(BaseAction):
         return m3_actions.OperationResult()
 
 
+#===============================================================================
+# ObjectRowsAction
+#===============================================================================
 class ObjectRowsAction(BaseAction):
     """
     Возвращает данные для грида справочника
@@ -388,6 +411,9 @@ class ObjectRowsAction(BaseAction):
         })
 
 
+#===============================================================================
+# ObjectDeleteAction
+#===============================================================================
 class ObjectDeleteAction(BaseAction):
     """
     Действие по удалению объекта
@@ -445,6 +471,9 @@ class ObjectDeleteAction(BaseAction):
         return m3_actions.OperationResult()
 
 
+#===============================================================================
+# ObjectPack
+#===============================================================================
 class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     """
     Пакет с действиями, специфичными для работы с редактирование модели
