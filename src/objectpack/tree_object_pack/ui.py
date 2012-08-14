@@ -28,7 +28,7 @@ class BaseTreeListWindow(BaseListWindow):
         self.grid = BaseObjectTree()
 
 class BaseTreeSelectWindow(BaseSelectWindow):
-    column_name_on_select = 'shortname'
+    #column_name_on_select = 'shortname'
     def _init_components(self):
         """
         создание компонентов
@@ -37,7 +37,7 @@ class BaseTreeSelectWindow(BaseSelectWindow):
         self.grid = BaseObjectTree()
         self.grid.dblclick_handler = 'selectValue'
         self.grid.columns.append(ExtGridColumn(data_index='__unicode__',
-            hidden=False, header='test'))
+            hidden=True))
 
     def set_params(self, params):
         """
