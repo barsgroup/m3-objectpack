@@ -21,6 +21,7 @@ class ObservableMixin(object):
     def __init__(self, observer, *args, **kwargs):
         super(ObservableMixin, self).__init__(*args, **kwargs)
         self._observer = observer
+        self._already_registered = set()
 
 
     def _invoke(self, request, action, stack):
@@ -38,8 +39,9 @@ class ObservableMixin(object):
         """
         Добавление ActioPack`а с регистрацией его action`ов в ObserVer`е
         """
-        super(ObservableMixin, self).append_pack(pack)
-        self._observer._populate_pack(pack)
+        if self._observer._is_pack_populated(pack):
+            # регистрация Pack`а в контроллере
+            super(ObservableMixin, self).append_pack(pack)
 
 
     @property
@@ -74,7 +76,7 @@ class Observer(object):
     Реестр слушателей, реализующий подписку последних на действия в actions
     """
     # уровни детализации отладочного логировния
-    LOG_NONE, LOG_CALLS, LOG_MORE = 0, 1, 2
+    LOG_NONE, LOG_WARNINGS, LOG_CALLS, LOG_MORE = 0, 1, 2, 3
 
 
     class _BeforAfterPack:
@@ -139,6 +141,9 @@ class Observer(object):
 
         self._model_register = {}
 
+        # набор имен ActionPacks, уже зарегистрированных в Observer
+        self._already_registered_pack_names = set()
+
 
     def get(self, model_name):
         """
@@ -157,19 +162,24 @@ class Observer(object):
             self._logger(message)
 
 
-    def _name_action(self, action):
+    @staticmethod
+    def _name_class(clazz):
+        """
+        Генерация имени для класса
+        """
+        return '%s/%s' % (
+            inspect.getmodule(clazz).__package__, clazz.__name__)
+
+
+    def _name_action(self, action, pack_name=None):
         """
         Получение / генерация полного имени для @action
         """
         name = getattr(action, '_observing_name', None)
         if not name:
-            pack_cls = action.parent.__class__
+            pack_name = pack_name or self._name_class(action.parent.__class__)
             # имя подписки будет иметь вид "пакет/КлассПака/КлассAction"
-            name = '%s/%s/%s' % (
-                inspect.getmodule(pack_cls).__package__,
-                pack_cls.__name__,
-                action.__class__.__name__,
-            )
+            name = '%s/%s' % (pack_name, action.__class__.__name__)
             # название подписки проставляется в экземпляр action
             action._observing_name = name
 
@@ -200,10 +210,29 @@ class Observer(object):
             self._action_listeners[name] = action_listeners
 
 
-    def _populate_pack(self, pack):
+    def _is_pack_populated(self, pack):
         """
-        Подписка зарегистрированных слушателей на @pack.actions 
+        Подписка зарегистрированных слушателей на @pack.actions
+        Возвращает True, если обработка Pack`а прошла нормально
         """
+        # каждый отдельный Pack должен регистрироваться ровно один раз
+        # уникльность Pack определяется следующим ключем
+        pack_name = self._name_class(pack.__class__)
+        if pack_name in self._already_registered_pack_names:
+            # попытка перерегистрации отмечается предупреждением
+            self._log(self.LOG_WARNINGS,
+                'WARNING! Pack reregistration blocked!:\n\tPack: %s'
+                % pack_name)
+
+            return False
+
+        else:
+            # ActionPack запоминается, как уже зарегистрированный
+            self._already_registered_pack_names.add(pack_name)
+            self._log(self.LOG_MORE,
+                'Pack reregistered:\n\tPack: %s'
+                % pack_name)
+
         # регистрация ActionPack, как основного для модели
         try:
             if pack._is_primary_for_model and pack.model:
@@ -226,7 +255,7 @@ class Observer(object):
             pass
 
         for action in pack.actions:
-            name = self._name_action(action)
+            name = self._name_action(action, pack_name)
             # возбуждение исключения при коллизии short_names
             if name in self._actions:
                 raise AssertionError(
@@ -235,6 +264,8 @@ class Observer(object):
                     % (action, name, self._actions[name]))
             self._actions[name] = action
         self._reconfigure()
+
+        return True
 
 
     def subscribe(self, listener):
