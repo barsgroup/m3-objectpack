@@ -49,6 +49,19 @@ class TreeObjectPack(objectpack.ObjectPack):
 class TreeObjectRowsAction(objectpack.ObjectRowsAction):
     """docstring for TreeObjectRowsAction"""
 
+    def set_query(self):
+        """docstring for set_query"""
+        super(TreeObjectRowsAction, self).set_query()
+        self._parents = self.parent.model.objects.filter(
+            parent__isnull=False,
+        ).values_list('parent__id', flat=True)
+
+    def prepare_object(self, obj):
+        """docstring for prepare_object"""
+        obj = super(TreeObjectRowsAction, self).prepare_object(obj)
+        obj['leaf'] = int(obj['id']) not in self._parents
+        return obj
+
     def run(self, *args, **kwargs):
         result = super(TreeObjectRowsAction, self).run(*args, **kwargs)
         data = result.data.get('rows',[])
