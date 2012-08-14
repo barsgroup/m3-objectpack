@@ -542,7 +542,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 
     # Список дополнительных полей модели по которым будет идти поиск
     # основной список береться из colums по признаку searchable
-    search_fields = []
+    search_fields = None
     allow_paging = True
 
     #пак будет настраивать грид на возможность редактирования
@@ -637,7 +637,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 
         # построение плоского списка колонок
         self._columns_flat = []
-        self._all_search_fields = self.search_fields
+        self._all_search_fields = self.search_fields or []
         self._sort_fields = {}
         def flatify(cols):
             for c in cols:
