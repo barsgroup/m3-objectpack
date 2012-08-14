@@ -20,7 +20,7 @@ class DictionaryObjectPack(objectpack.ObjectPack):
 
     def __init__(self, *args, **kwargs):
         """docstring for __init__"""
-        if any(self.edit_window, self.add_window):
+        if not any(self.edit_window, self.add_window):
             self.edit_window = self.add_window = objectpack.ui.ModelEditWindow.fabricate(self.model)
         super(DictionaryObjectPack, self).__init__(*args, **kwargs)
 
