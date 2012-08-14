@@ -260,8 +260,8 @@ class Observer(object):
             if name in self._actions:
                 raise AssertionError(
                     'Name="%s" can not be registered for action %r,\n'
-                    'because this name ristered for %r!'
-                    % (action, name, self._actions[name]))
+                    'because this name registered for %r!'
+                    % (name, action, self._actions[name]))
             self._actions[name] = action
         self._reconfigure()
 
