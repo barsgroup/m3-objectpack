@@ -216,7 +216,7 @@ class BaseSelectWindow(BaseListWindow):
     """
     окно выбора из линейного справочника
     """
-    column_name_on_select = 'name'
+    column_name_on_select = '__unicode__'
 
     def __init__(self, *args, **kwargs):
         super(BaseSelectWindow, self).__init__(*args, **kwargs)
@@ -573,7 +573,6 @@ def _create_dict_select_field(f, model_register=None, **kwargs):
     pack = (model_register or {}).get(related_model)
     assert pack, 'Cant find pack for field %s (realated model %s)' % (
         f.name, related_model)
-
     params = {
         'display_field': pack.column_name_on_select,
         'value_field': 'id',
@@ -584,9 +583,9 @@ def _create_dict_select_field(f, model_register=None, **kwargs):
         'editable': False,
     }
     params.update(kwargs)
-
     ctl = ext.ExtDictSelectField(**params)
     ctl.url = pack.get_select_url()
+    ctl.pack = pack.__class__
     return ctl
 
 

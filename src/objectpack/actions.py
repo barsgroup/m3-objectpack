@@ -365,7 +365,7 @@ class ObjectRowsAction(BaseAction):
 
     def get_column_data_indexes(self):
         'список дата индеков для формирования jsona'
-        res = []
+        res = ['__unicode__', ]
         for col in getattr(self.parent, '_columns_flat', []):
             res.append(col['data_index'])
         res.append(self.parent.id_field)
