@@ -441,8 +441,8 @@ class ModelEditWindow(BaseEditWindow):
 
 #===============================================================================
 def model_fields_to_controls(model, window,
-        fields_prefix=None, field_list=[],
-        exclude_list=[], model_register=None, **kwargs):
+        fields_prefix=None, field_list=None,
+        exclude_list=None, model_register=None, **kwargs):
     """
     Добавление на окно полей по полям модели,
     - начинающимся с префикса @field_prefix
@@ -456,6 +456,7 @@ def model_fields_to_controls(model, window,
     """
     # ПОКА ВСЁ ОЧЕНЬ ПРИМИТИВНО
     # контроля перекрытия имен нет!
+    exclude_list = exclude_list or []
     exclude_prefixes = [x[:-1] for x in exclude_list if x.endswith('*')]
     exclude_list = [x for x in exclude_list if not x.endswith('*')]
     exclude_list += ['created', 'modified']
