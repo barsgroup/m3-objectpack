@@ -557,7 +557,8 @@ def _create_control_for_field(f, model_register=None, **kwargs):
     else:
         raise GenerationError(u'Не могу сгенирировать контрол для %s' % f)
 
-    ctl.name = name
+    if not ctl.name:
+        ctl.name = name
     ctl.label = f.verbose_name.capitalize()
     ctl.allow_blank = f.blank
     return ctl
@@ -586,6 +587,7 @@ def _create_dict_select_field(f, model_register=None, **kwargs):
     ctl = ext.ExtDictSelectField(**params)
     ctl.url = pack.get_select_url()
     ctl.pack = pack.__class__
+    ctl.name = "%s_id" % f.name
     return ctl
 
 
