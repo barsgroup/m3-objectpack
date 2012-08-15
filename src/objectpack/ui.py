@@ -421,6 +421,14 @@ class ModelEditWindow(BaseEditWindow):
 
     def _do_layout(self):
         super(ModelEditWindow, self)._do_layout()
+
+        # автовысота окна
+        self.height = None
+        self.layout = 'form'
+        self.layout_config = {'autoHeight': True}
+        self.form.layout_config = {'autoHeight': True}
+
+        # все поля добавляются на форму растянутыми по ширине         
         self.form.items.extend(map(anchor100, self._controls))
 
     @classmethod
