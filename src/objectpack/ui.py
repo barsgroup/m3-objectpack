@@ -587,7 +587,7 @@ def _create_dict_select_field(f, model_register=None, **kwargs):
     ctl = ext.ExtDictSelectField(**params)
     ctl.url = pack.get_select_url()
     ctl.pack = pack.__class__
-    ctl.name = "%s_id" % f.name
+    ctl.name = "%s_id" % f.attname
     return ctl
 
 
