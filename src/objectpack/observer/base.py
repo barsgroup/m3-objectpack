@@ -246,13 +246,14 @@ class Observer(object):
                 except KeyError:
                     # модель ещё не регистрировалась - регистрируется
                     self._model_register[model_name] = pack
-                    # в Pack инжектируется функция получения Pack`а
-                    # для указанной по имени модели
-                    pack._get_model_pack = self.get
 
         except AttributeError:
             # Если Pack не основной, или не имеет модели - игнорируется
             pass
+
+        # в Pack инжектируется функция получения Pack`а
+        # для указанной по имени модели
+        pack._get_model_pack = self.get
 
         for action in pack.actions:
             name = self._name_action(action, pack_name)
