@@ -8,8 +8,7 @@ from django.db import models as django_models
 
 from m3.ui.ext import all_components as ext
 from m3.ui.ext import windows as ext_windows
-from m3.ui.ext .misc import store as ext_store
-from m3.helpers import urls as m3_urls
+from m3.ui.ext.misc import store as ext_store
 from m3.ui.ext.containers.grids import ExtGridColumn
 
 import tools
@@ -449,66 +448,57 @@ class ModelEditWindow(BaseEditWindow):
 
 #===============================================================================
 def model_fields_to_controls(model, window,
-        fields_prefix=None, field_list=None,
-        exclude_list=None, model_register=None, **kwargs):
+        field_list=None, exclude_list=None,
+        model_register=None, **kwargs):
     """
     Добавление на окно полей по полям модели,
-    - начинающимся с префикса @field_prefix
     - входящим в список (строк) @field_list
     - не входящим в список (строк) @exclude_list
     @kwargs - передача доп параметров в конструктор элементов
-
+    
+    Списки врлючения/исключения полей могут содержать
+    wildcards вида 'x*' или '*x', которые трактуются как префиксы и суффиксы.
+    
     При создании полей для связанных моделей ActionPack для модели ищется
     в реестре моделей @model_register по имени класса модели
     (передачей имени в метод "get" реестра)
     """
-    # ПОКА ВСЁ ОЧЕНЬ ПРИМИТИВНО
-    # контроля перекрытия имен нет!
-    exclude_list = exclude_list or []
-    exclude_prefixes = [x[:-1] for x in exclude_list if x.endswith('*')]
-    exclude_list = [x for x in exclude_list if not x.endswith('*')]
-    exclude_list += ['created', 'modified']
+    def make_checker(patterns):
+        matchers = []
+        for pattern in patterns:
+            if pattern.endswith('*'):
+                fn = (lambda p: lambda s: s.startswith(p))(pattern[:-1])
+            elif pattern.startswith('*'):
+                fn = (lambda p: lambda s: s.endswith(p))(pattern[1:])
+            else:
+                fn = (lambda p: lambda s: s == p)(pattern)
+            matchers.append(fn)
+        if matchers:
+            return (lambda s: any(fn(s) for fn in matchers))
+        else:
+            return lambda s: True
+
+    # генерация функции, разрешающей обработку поля
+    include = make_checker(field_list or [])
+
+    # генерация функции, запрещающей обработку поля
+    exclude = make_checker((exclude_list or []) + [
+        'created', 'modified',
+        '*.created', '*.modified'
+    ])
+
     controls = []
+    for f in model._meta.fields:
+        if include(f.attname) and not exclude(f.attname):
+            try:
+                ctl = _create_control_for_field(f, model_register, **kwargs)
+            except GenerationError:
+                continue
 
-    if field_list:
-        fields = map(model._meta.get_field, field_list)
-    else:
-        fields = model._meta.fields
-
-    for f in fields:
-        if fields_prefix and not f.name.startswith(fields_prefix): continue
-        if exclude_list and f.name in exclude_list: continue
-        if (exclude_prefixes and any((True for prefix in exclude_prefixes
-                if f.name.startswith(prefix)))): continue
-
-        try:
-            ctl = _create_control_for_field(f, model_register, **kwargs)
-        except GenerationError:
-            continue
-
-        setattr(window, 'field_%s' % f.name, ctl)
-        controls.append(ctl)
+            setattr(window, 'field__%s' % f.attname.replace('.', '__'), ctl)
+            controls.append(ctl)
 
     return controls
-
-
-def _get_field_from_model(field_name, model):
-    """
-    ищет поле по модели и создает котнро для него
-    """
-    for f in model._meta.fields: #@UndefinedVariable
-        if field_name in (f.name, f.attname):
-            return f
-    raise Exception(u'Не смогли найти поле %s в %s (был выбор из %s)' % (
-        field_name, model, ','.join(map(lambda x:x.name, model._meta.fields))))
-
-
-def _create_control_for_field_in_model(field_name, model, **kwargs):
-    """
-    создает контроль для указнного поля из модели
-    """
-    f = _get_field_from_model(field_name, model)
-    return _create_control_for_field(f, **kwargs)
 
 
 class GenerationError(Exception):
@@ -594,6 +584,10 @@ def _create_dict_select_field(f, model_register=None, **kwargs):
     ctl = ext.ExtDictSelectField(**params)
     ctl.url = pack.get_select_url()
     ctl.pack = pack.__class__
+    ctl.name = f.attname
+    if not ctl.name.endswith('_id'):
+        ctl.name = '%s_id' % ctl.name
+
     return ctl
 
 

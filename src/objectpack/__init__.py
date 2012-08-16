@@ -48,13 +48,18 @@ from ui import (
 )
 
 from tools import (
-    VirtualModel,
-    VirtualModelManager,
-
     extract_int,
     extract_int_list,
     modify,
     modifier,
+)
+
+from models import (
+    VirtualModel,
+    VirtualModelManager,
+
+    ModelProxy,
+    model_proxy_metaclass,
 )
 
 import observer

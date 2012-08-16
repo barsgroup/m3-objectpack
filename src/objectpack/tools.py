@@ -1,12 +1,10 @@
 #coding: utf-8
-'''
+"""
 Created on 23.07.2012
 
 @author: pirogov
-'''
+"""
 import datetime
-
-from itertools import ifilter, islice, imap
 
 from django.db import transaction
 
@@ -252,130 +250,8 @@ def find_element_by_type(container, cls):
 
 
 #===============================================================================
-# VirtualModelManager
+# collect_overlaps
 #===============================================================================
-class VirtualModelManager(object):
-
-    _operators = {
-        'iexact': lambda val: lambda x, y = val.lower(): x.lower() == y,
-        'icontains': lambda val: lambda x, y = val.lower(): y in x.lower(),
-        'lte': lambda val: lambda x: x <= val,
-        'gte': lambda val: lambda x: x >= val,
-        'lt': lambda val: lambda x: x < val,
-        'gt': lambda val: lambda x: x > val,
-        'isnull': lambda val: lambda x: bool(x) == val,
-    }
-
-    def __init__(self, model_clz=None, procs=None, **kwargs):
-        if not model_clz:
-            return
-        self._clz = model_clz
-        self._procs = procs or []
-        self._ids_getter_kwargs = kwargs
-
-    def __get__(self, inst, clz):
-        if inst:
-            raise TypeError("Manager can not be accessed from model instance!")
-        return self.__class__(clz)
-
-    def all(self):
-        return self._fork_with(self._procs[:])
-
-    def __getitem__(self, arg):
-        if isinstance(arg, slice):
-            procs = self._procs[:]
-            procs.append(
-                lambda data: islice(data, arg.start, arg.stop, arg.step))
-            return self._fork_with(procs)
-        return list(self)[arg]
-
-    def __iter__(self):
-        return reduce(lambda arg, fn: fn(arg), self._procs,
-            imap(self._clz._from_id, self._clz._get_ids(
-                **self._ids_getter_kwargs)))
-
-    def _fork_with(self, procs=None, **kwargs):
-        kw = self._ids_getter_kwargs.copy()
-        kw.update(kwargs)
-        if not procs:
-            procs = self._procs[:]
-        return self.__class__(self._clz, procs, **kw)
-
-    def configure(self, **kwargs):
-        return self._fork_with(**kwargs)
-
-    @classmethod
-    def _make_getter(cls, key, val=None, allow_op=False):
-        folder = lambda fn, attr: lambda obj: fn(getattr(obj, attr))
-        default_op = lambda op: lambda val: lambda obj: val == getattr(obj, op)
-        key = key.split('__')
-        if allow_op:
-            if len(key) > 1:
-                op = key.pop()
-                op = cls._operators.get(op, default_op(op))(val)
-            else:
-                op = (lambda val: lambda obj: obj == val)(val)
-        else:
-            op = lambda obj: obj
-        return reduce(folder, reversed(key), op)
-
-    def filter(self, **kwargs): #@ReservedAssignment
-        procs = self._procs[:]
-        if kwargs:
-            fns = [self._make_getter(key, val, allow_op=True)
-                for key, val in kwargs.iteritems()]
-            procs.append(
-                lambda items: ifilter(
-                    lambda obj: all(fn(obj) for fn in fns), items))
-        return self._fork_with(procs)
-
-    def order_by(self, *args):
-        procs = self._procs[:]
-        if args:
-            getters = map(self._make_getter, args)
-            key_fn = lambda obj: tuple(g(obj) for g in getters)
-            procs.append(lambda data: iter(sorted(data, key=key_fn)))
-        return self._fork_with(procs)
-
-    def get(self, *args, **kwargs):
-        if not kwargs and args:
-            kwargs['id'] = args[0]
-        result = list(self.filter(**kwargs))
-        if not result:
-            raise self._clz.DoesNotExist()
-        elif len(result) > 1:
-            raise self._clz.MultipleObjectsReturned()
-        return result[0]
-
-    def select_related(self):
-        return self
-
-    def count(self):
-        return len(list(self))
-
-
-#===============================================================================
-# VirtualModel
-#===============================================================================
-class VirtualModel(object):
-
-    class DoesNotExist(Exception):
-        pass
-
-    class MultipleObjectsReturned(Exception):
-        pass
-
-    @classmethod
-    def _get_ids(cls):
-        return NotImplemented
-
-    @classmethod
-    def _from_id(cls, id_obj):
-        return cls(id_obj)
-
-    objects = VirtualModelManager()
-
-
 def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
     '''
     Возвращает список объектов из указанной выборки, которые пересекаются
