@@ -877,8 +877,10 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         return sort_order
 
     def apply_filter(self, query, request, context):
-        """docstring for apply_filter"""
-
+        """
+        Применение фильтрации к выборке @query.
+        Фильтрация может опираться на параметры запроса (@request/@context)
+        """
         if hasattr(context, 'q'):
             request_filter = simplejson.loads(context.q)
             for item in request_filter:
@@ -968,7 +970,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         возвращает tuple (объет, create_new)
         для создания, редатирования записи
         """
-        obj_id = m3_actions.utils.extract_int(request, self.id_param_name)
+        obj_id = tools.extract_int(request, self.id_param_name) or 0
         create_new = (obj_id == 0)
         record = self.get_row(obj_id)
         return record, create_new
