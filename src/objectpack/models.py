@@ -307,7 +307,7 @@ class ModelProxy(object):
             new_src = getattr(src, steps[0], None)
             setattr(dest, steps[0], new_src)
             if new_src and len(steps) > 1:
-                set_by_path(src, new_src, steps[:1])
+                set_by_path(src, new_src, steps[1:])
         for rel in self.relations:
             set_by_path(self, obj, rel.split('.'))
 
