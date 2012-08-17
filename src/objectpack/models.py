@@ -303,13 +303,9 @@ class ModelProxy(object):
 
         setattr(self, self.model.__name__.lower(), obj)
         # заполнение атрибутов proxy по заданным связям вглубь (xxx.yyy)
-        def set_by_path(dest, src, steps):
-            new_src = getattr(src, steps[0], None)
-            setattr(dest, steps[0], new_src)
-            if new_src and len(steps) > 1:
-                set_by_path(src, new_src, steps[1:])
         for rel in self.relations:
-            set_by_path(self, obj, rel.split('.'))
+            attr = rel.split('.', 1)[0]
+            setattr(self, attr, getattr(obj, attr, None))
 
     def save(self):
         raise NotImplementedError()
