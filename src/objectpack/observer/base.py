@@ -29,7 +29,7 @@ class ObservableMixin(object):
         Вызов action под наблюдением
         """
         stack = stack[:]
-        self._observer._prepare_for_listening(action, stack)
+        self._observer._prepare_for_listening(action, request, stack)
 
         # обработка контроллером
         return super(ObservableMixin, self)._invoke(request, action, stack)
@@ -140,9 +140,7 @@ class Observer(object):
         self._actions = {}
 
         self._model_register = {}
-
-        # набор имен ActionPacks, уже зарегистрированных в Observer
-        self._already_registered_pack_names = set()
+        self._pack_instances_by_name = {}
 
 
     def get(self, model_name):
@@ -152,6 +150,18 @@ class Observer(object):
         основными для своих моделей (и привязаны к модели)
         """
         return self._model_register.get(model_name)
+
+
+    def get_pack_instance(self, pack):
+        """
+        Возвращает экземпляр зарегистрированного ActionPack.
+        @pack может быть:
+        - классом
+        - строкой с именем класса в формате "package/ClassName"
+        """
+        if inspect.isclass(pack):
+            pack = self._name_class(pack)
+        return self._pack_instance_cache.get(pack)
 
 
     def _log(self, level, message):
@@ -216,19 +226,18 @@ class Observer(object):
         Возвращает True, если обработка Pack`а прошла нормально
         """
         # каждый отдельный Pack должен регистрироваться ровно один раз
-        # уникльность Pack определяется следующим ключем
+        # уникльность Pack определяется следующим ключом
         pack_name = self._name_class(pack.__class__)
-        if pack_name in self._already_registered_pack_names:
+        if pack_name in self._pack_instances_by_name:
             # попытка перерегистрации отмечается предупреждением
             self._log(self.LOG_WARNINGS,
                 'WARNING! Pack reregistration blocked!:\n\tPack: %s'
                 % pack_name)
-
             return False
 
         else:
             # ActionPack запоминается, как уже зарегистрированный
-            self._already_registered_pack_names.add(pack_name)
+            self._pack_instances_by_name[pack_name] = pack
             self._log(self.LOG_MORE,
                 'Pack reregistered:\n\tPack: %s'
                 % pack_name)
@@ -296,7 +305,7 @@ class Observer(object):
         return listener
 
 
-    def _configure_action(self, action, listeners):
+    def _configure_action(self, action, request, listeners):
         """
         Конфигурирует @action, инжектируя в него методы handle и handler_for,
         взаимрдействующие со слушателями @listeners
@@ -315,8 +324,9 @@ class Observer(object):
                         (action, listener, verb))
                     # слушатель инстанцируется каждый раз
                     listener = listener()
-                    # инжекция action в слушателя
+                    # инжекция action/request в слушателя
                     listener.action = action
+                    listener.request = request
                     # вызывается метод слушателя для нового экземпляра слушателя
                     arg = handler(listener, arg)
             return arg
@@ -335,7 +345,7 @@ class Observer(object):
         action.handler_for = handler_for
 
 
-    def _prepare_for_listening(self, action, stack):
+    def _prepare_for_listening(self, action, request, stack):
         """
         Подготовка action к прослушиванию (инжекция методов)
         """
@@ -344,7 +354,7 @@ class Observer(object):
         # в action инжектируются методы для работы подписки,
         # причем инжектирование производится и в случае,
         # когда подписчиков нет - для консистентности
-        self._configure_action(action, listeners)
+        self._configure_action(action, request, listeners)
 
         # если подписчики есть, в стек паков добавляется "пак",
         # реализующий подписку на before/after
