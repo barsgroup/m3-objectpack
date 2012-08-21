@@ -283,17 +283,31 @@ class ModelProxy(object):
                 return inner
             # если объект не указан - создается новый
             obj = self.model()
+            # список объектов, созданных при заполнении связанных объектов
+            created_objects = []
             # создаются экземпляры связанных объектов (вглубь)
             for path in self.relations:
                 sub_obj, sub_model = obj, self.model
                 for item in path.split('.'):
+                    # объект может быть уже заполнен, при частично
+                    # пересекающихся путях в relations
+                    # в этом случае новый объект не создается,
+                    # а испольуется созданный ранее
+                    existed = getattr(sub_obj, item, None)
+                    if existed:
+                        if existed in created_objects:
+                            sub_obj = existed
+                            continue
+                    # получение связанной модели
                     sub_model = sub_model._meta.get_field(
                         item).related.parent_model
+                    # создание пустого объекта
                     new_sub_obj = sub_model()
+                    created_objects.append(new_sub_obj)
                     # оборачивание save, для простановки xxx_id у род.модели
                     new_sub_obj.save = wrap_save_method(
                         new_sub_obj, sub_obj, '%s_id' % item)
-                    # созданный объект, вкладывается в зависимый 
+                    # созданный объект, вкладывается в зависимый
                     setattr(sub_obj, item, new_sub_obj)
                     # подъем на уровень выше
                     sub_obj = new_sub_obj
