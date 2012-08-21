@@ -146,10 +146,10 @@ class BaseListWindow(BaseWindow):
         assert 'pack' in params, 'incorrect params'
         params['pack'].configure_grid(self.grid)
 
-        self.title = params.pop('title')
-        self.grid.row_id_name = params['id_param_name']
-        self.width = params['width']
-        self.height = params['height']
+        self.title = params.get('title')
+        self.width = params.get('width')
+        self.height = params.get('height')
+        self.maximized = params.get('maximized', False)
 
     def add_grid_column_filter(self, column_name,
             filter_control=None, filter_name=None, tooltip=None):

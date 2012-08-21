@@ -116,7 +116,6 @@ class ObjectListWindowAction(BaseWindowAction):
         params['pack'] = self.parent
         params['title'] = self.parent.title
         params['is_select_mode'] = self.is_select_mode
-        params['id_param_name'] = self.parent.id_param_name
         params['height'] = self.parent.height
         params['width'] = self.parent.width
         params['read_only'] = not self.parent.has_sub_permission(
@@ -837,6 +836,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         grid.store.remote_sort = self.allow_paging
 
         grid.plugins.append(self.get_filter_plugin() or '')
+
 
     def create_edit_window(self, create_new, request, context):
         """
