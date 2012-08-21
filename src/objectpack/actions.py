@@ -263,7 +263,7 @@ class ObjectRowsAction(BaseAction):
     def set_query(self):
         """устанавливает запрос к базе"""
         self.query = self.handle('query',
-            self.parent.get_rows_query(self.request, self.context))
+            (self.parent.get_rows_query(self.request, self.context), self.request, self.context))[0]
 
     def apply_search(self):
         """Применяет фильтр поиска"""
