@@ -289,18 +289,20 @@ class ModelProxy(object):
             for path in self.relations:
                 sub_obj, sub_model = obj, self.model
                 for item in path.split('.'):
+                    # получение связанной модели
+                    sub_model = sub_model._meta.get_field(
+                        item).related.parent_model
                     # объект может быть уже заполнен, при частично
                     # пересекающихся путях в relations
                     # в этом случае новый объект не создается,
                     # а испольуется созданный ранее
-                    existed = getattr(sub_obj, item, None)
-                    if existed:
-                        if existed in created_objects:
-                            sub_obj = existed
-                            continue
-                    # получение связанной модели
-                    sub_model = sub_model._meta.get_field(
-                        item).related.parent_model
+                    try:
+                        existed = getattr(sub_obj, item, None)
+                    except sub_model.DoesNotExist:
+                        existed = None
+                    if existed and existed in created_objects:
+                        sub_obj = existed
+                        continue
                     # создание пустого объекта
                     new_sub_obj = sub_model()
                     created_objects.append(new_sub_obj)
