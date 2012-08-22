@@ -161,7 +161,7 @@ class Observer(object):
         """
         if inspect.isclass(pack):
             pack = self._name_class(pack)
-        return self._pack_instance_cache.get(pack)
+        return self._pack_instances_by_name.get(pack)
 
 
     def _log(self, level, message):
