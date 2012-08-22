@@ -233,7 +233,10 @@ class ObjectSaveAction(BaseAction):
     def save_obj(self):
         'сохранеие объекта'
         self.parent.save_row(
-            self.obj, self.create_new, self.request, self.context)
+            self.handle('save_object', self.obj),
+            self.create_new,
+            self.request, self.context
+        )
 
     def run(self, request, context):
         new_self = copy.copy(self)
