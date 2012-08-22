@@ -202,6 +202,36 @@ def extract_int_list(request, key):
     return map(int, filter(None, request.REQUEST.get(key, '').split(',')))
 
 
+def str_to_date(s):
+    '''
+    Извлечение даты из строки
+    >>> str_to_date('31.12.2012') == str_to_date('2012-12-31, Happy New Year')
+    True
+    '''
+    if s:
+        s = s[:10]
+        s = s.replace('-', '.')
+        try:
+            s = datetime.datetime.strptime(s, '%d.%m.%Y')
+        except ValueError:
+            try:
+                s = datetime.datetime.strptime(s, '%Y.%m.%d')
+            except ValueError:
+                s = None
+    else:
+        s = None
+    return s
+
+
+def extract_date(request, key):
+    '''
+    Извлечение даты из request`а в формате DD.MM.YYYY
+    (в таком виде приходит от ExtDateField)
+    и приведение к Django-формату (YYYY-MM-DD)
+    '''
+    return str_to_date(request.REQUEST.get(key)) 
+
+
 def modify(obj, **kwargs):
     '''
     Массовое дополнение атрибутов для объекта с его (объекта) возвратом
