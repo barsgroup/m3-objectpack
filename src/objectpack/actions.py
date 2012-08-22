@@ -21,6 +21,8 @@ from m3.ui.ext.fields.complex import ExtSearchField
 from m3.core.exceptions import RelatedError, ApplicationLogicException
 from m3.db import safe_delete
 
+import objectpack
+
 import ui, tools
 
 
@@ -209,6 +211,14 @@ class ObjectSaveAction(BaseAction):
     obj = None
     create_new = None
 
+    class AlreadySaved(Exception):
+        """
+        Исключение, с помощью которого расширение,
+        перекрывшее сохранение объекта, может сообщить, что объект сохранен
+        и больше ничего делать не нужно
+        """
+        pass
+
     def create_window(self):
         'вернем окно для создания или редактирования'
         self.win = self.parent.create_edit_window(
@@ -232,11 +242,19 @@ class ObjectSaveAction(BaseAction):
 
     def save_obj(self):
         'сохранеие объекта'
-        self.parent.save_row(
-            self.handle('save_object', self.obj),
-            self.create_new,
-            self.request, self.context
-        )
+        # инжекция классов исключений в объект
+        self.obj.AlreadySaved = self.AlreadySaved
+        try:
+            try:
+                self.obj = self.handle('save_object', self.obj)
+            except self.AlreadySaved:
+                # кто-то в цепочке слушателей обработал сохранение объекта
+                # и больше ничего делать не нужно
+                return
+            self.parent.save_row(
+                self.obj, self.create_new, self.request, self.context)
+        except (objectpack.ValidationError, objectpack.OverlapError) as err:
+            raise ApplicationLogicException(unicode(err))
 
     def run(self, request, context):
         new_self = copy.copy(self)
