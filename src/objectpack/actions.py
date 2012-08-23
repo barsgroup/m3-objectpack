@@ -566,7 +566,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                     field = data_index.replace('.', '__')
                     # поле(поля) для сортировки
                     if c.get('sortable', False):
-                        sort_fields = c.get('sort_fields', field)
+                        sort_fields = c.get('sort_fields', [field])
                         try:
                             sort_fields = list(sort_fields)
                         except:
