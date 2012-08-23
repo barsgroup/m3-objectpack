@@ -696,6 +696,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                 params.update(c)
                 params.pop('columns', None)
                 params.pop('filterable', None)
+                params.pop('sort_fields', None)
 
                 if not sub_cols is None:
                     new_root = cc.BandedCol(**params)
