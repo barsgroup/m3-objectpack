@@ -37,7 +37,7 @@ class ObservableMixin(object):
 
     def append_pack(self, pack):
         """
-        Добавление ActioPack`а с регистрацией его action`ов в ObserVer`е
+        Добавление ActionPack`а с регистрацией его action`ов в ObserVer`е
         """
         if self._observer._is_pack_populated(pack):
             # регистрация Pack`а в контроллере
