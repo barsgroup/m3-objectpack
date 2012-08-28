@@ -27,9 +27,9 @@ import objectpack
 import ui, tools
 
 
-#===============================================================================
+#==============================================================================
 # BaseAction
-#===============================================================================
+#==============================================================================
 class BaseAction(m3_actions.Action):
     """
     Предок, необходимый для actions ObjectPack`а, чтобы они могли работать
@@ -46,17 +46,17 @@ class BaseAction(m3_actions.Action):
         return wrapper
 
 
-#===============================================================================
+#==============================================================================
 # BaseWindowAction
-#===============================================================================
+#==============================================================================
 class BaseWindowAction(BaseAction):
     """
     базовый Группа который возвращает окно
     """
-    win_params = {} #параметы для формирования окна
-    request = None #request выолнения
-    context = None #context выполнения, будет возвращен экшеном
-    win = None #экземпляр окна которое вернет экшен
+    win_params = {}  # параметы для формирования окна
+    request = None  # request выолнения
+    context = None  # context выполнения, будет возвращен экшеном
+    win = None  # экземпляр окна которое вернет экшен
 
     def create_window(self):
         """
@@ -104,15 +104,15 @@ class BaseWindowAction(BaseAction):
             new_self.win, context=new_self.context)
 
 
-#===============================================================================
+#==============================================================================
 # ObjectListWindowAction
-#===============================================================================
+#==============================================================================
 class ObjectListWindowAction(BaseWindowAction):
     """
     Действие, которое возвращает окно со списком элементов справочника.
     """
     url = '/list-window$'
-    is_select_mode = False #режим показа окна (True - выбор, False - список)
+    is_select_mode = False  # режим показа окна (True - выбор, False - список)
 
     def set_windows_params(self):
         params = self.win_params
@@ -133,9 +133,9 @@ class ObjectListWindowAction(BaseWindowAction):
             context=self.context)
 
 
-#===============================================================================
+#==============================================================================
 # ObjectSelectWindowAction
-#===============================================================================
+#==============================================================================
 class ObjectSelectWindowAction(ObjectListWindowAction):
     """
     Действие, возвращающее окно выбора из справочника
@@ -144,9 +144,9 @@ class ObjectSelectWindowAction(ObjectListWindowAction):
     is_select_mode = True
 
 
-#===============================================================================
+#==============================================================================
 # ObjectEditWindowAction
-#===============================================================================
+#==============================================================================
 class ObjectEditWindowAction(BaseWindowAction):
     """
     редактирование элемента справочника
@@ -161,7 +161,9 @@ class ObjectEditWindowAction(BaseWindowAction):
 
         self.win_params['object'] = obj
         self.win_params['create_new'] = create_new
-        self.win_params['form_url'] = self.parent.save_action.get_absolute_url()
+        self.win_params['form_url'] = (
+            self.parent.save_action.get_absolute_url()
+        )
 
         # заголовок окна по-умолчанию
         self.win_params['title'] = self.parent.format_window_title(
@@ -169,7 +171,6 @@ class ObjectEditWindowAction(BaseWindowAction):
 
         self.win_params = self.parent.get_edit_window_params(
             self.win_params, self.request, self.context)
-
 
     def create_window(self):
         'вернем окно для создания или редактирования'
@@ -187,9 +188,9 @@ class ObjectEditWindowAction(BaseWindowAction):
             self.win.make_read_only(True, exclude_list)
 
 
-#===============================================================================
+#==============================================================================
 # ObjectAddWindowAction
-#===============================================================================
+#==============================================================================
 class ObjectAddWindowAction(ObjectEditWindowAction):
     """
     Отдельный action для уникальности short_name
@@ -197,9 +198,9 @@ class ObjectAddWindowAction(ObjectEditWindowAction):
     pass
 
 
-#===============================================================================
+#==============================================================================
 # ObjectSaveAction
-#===============================================================================
+#==============================================================================
 class ObjectSaveAction(BaseAction):
     """
     Действие выполняет сохранение новой записи в справочник
@@ -269,9 +270,9 @@ class ObjectSaveAction(BaseAction):
         return m3_actions.OperationResult()
 
 
-#===============================================================================
+#==============================================================================
 # ObjectRowsAction
-#===============================================================================
+#==============================================================================
 class ObjectRowsAction(BaseAction):
     """
     Возвращает данные для грида справочника
@@ -403,7 +404,6 @@ class ObjectRowsAction(BaseAction):
 
         return self.handle('prepare_obj', result_dict)
 
-
     def get_total_count(self):
         'подсчет общего кол-ва объектов'
         return self.query.count()
@@ -428,14 +428,14 @@ class ObjectRowsAction(BaseAction):
         new_self.apply_limit()
         rows = new_self.get_rows()
         return m3_actions.PreJsonResult({
-            'rows':  rows,
+            'rows': rows,
             'total': total_count
         })
 
 
-#===============================================================================
+#==============================================================================
 # ObjectDeleteAction
-#===============================================================================
+#==============================================================================
 class ObjectDeleteAction(BaseAction):
     """
     Действие по удалению объекта
@@ -462,7 +462,6 @@ class ObjectDeleteAction(BaseAction):
                 # все левые ошибки выпускаем наверх
                 raise
 
-
     def delete_objs(self):
         """
         удаляет обекты
@@ -476,14 +475,12 @@ class ObjectDeleteAction(BaseAction):
         """docstring for audit"""
         pass
 
-
     def delete_obj(self, id_):
         """
         Удаление объекта по идентификатору @id_
         """
         obj = self.parent.delete_row(id_, self.request, self.context)
         self.audit(obj)
-
 
     def run(self, request, context):
         new_self = copy.copy(self)
@@ -493,9 +490,9 @@ class ObjectDeleteAction(BaseAction):
         return m3_actions.OperationResult()
 
 
-#===============================================================================
+#==============================================================================
 # ObjectPack
-#===============================================================================
+#==============================================================================
 class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     """
     Пакет с действиями, специфичными для работы с редактирование модели
@@ -582,9 +579,10 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     def id_param_name(self):
         return '%s_id' % self.short_name
 
-    #data_index колонки, идентифицирующей объект
-    #этот параметр будет браться из модели и передаваться как ID в ExtDataStore
-    #т.е в post запросе редактирования будет лужеть {id_param_name:obj.id_field}
+    # data_index колонки, идентифицирующей объект
+    # этот параметр будет браться из модели и передаваться как ID
+    # в ExtDataStore, т.е в post запросе редактирования будет
+    # лежать { id_param_name:obj.id_field }
     id_field = 'id'
 
     # поле/метод, предоставляющее значение для отображения в DictSelectField
@@ -600,22 +598,26 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     read_only = False
 
     # Порядок сортировки элементов списка. Работает следующим образом:
-    # 1. Если в list_columns модели списка есть поле code, то устанавливается сортировка по возрастанию этого поля;
-    # 2. Если в list_columns модели списка нет поля code, но есть поле name, то устанавливается сортировка по возрастанию поля name;
+    # 1. Если в list_columns модели списка есть поле
+    # code, то устанавливается сортировка по
+    # возрастанию этого поля;
+    # 2. Если в list_columns модели списка нет поля
+    # code, но есть поле name, то устанавливается
+    # сортировка по возрастанию поля name;
     # Пример list_sort_order = ['code', '-name']
     list_sort_order = None
 
     # Окно для редактирования элемента справочника:
     add_window = None  # Нового
-    edit_window = None # Уже существующего
+    edit_window = None  # Уже существующего
 
     # Флаг разрешающий/запрещающий удаление,
     # если None - то удаление возможно при наличии add_window/edit_window
     can_delete = None
 
     # Группа отвечающие за отображение форм:
-    list_window = ui.BaseListWindow # Форма списка
-    select_window = ui.BaseSelectWindow # Форма выбора @UndefinedVariable
+    list_window = ui.BaseListWindow  # Форма списка
+    select_window = ui.BaseSelectWindow  # Форма выбора @UndefinedVariable
 
     #размеры окна выбора по умолчанию
     width, height = 510, 400
@@ -690,6 +692,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         self._columns_flat = []
         self._all_search_fields = self.search_fields or []
         self._sort_fields = {}
+
         def flatify(cols):
             for c in cols:
                 sub_cols = c.get('columns', None)
@@ -712,7 +715,6 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                         self._all_search_fields.append(field)
         flatify(self.columns)
 
-
     def replace_action(self, action_attr_name, new_action):
         """заменяет экшен в паке"""
         if getattr(self, action_attr_name, None):
@@ -721,13 +723,11 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         if getattr(self, action_attr_name):
             self.actions.append(getattr(self, action_attr_name))
 
-
     def get_default_action(self):
         """Воздвращает действие по умолчанию
         (действие для значка на раб.столе/пункта меню)
         Используется пи упрощенном встраивании в UI (add_to_XXX=True)"""
         return self.list_window_action
-
 
     def get_display_text(self, key, attr_name=None):
         """ Получить отображаемое значение записи
@@ -770,7 +770,6 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         """
         return "%s: %s" % (self.model._meta.verbose_name.capitalize(), action)
 
-
     #==================== ФУНКЦИИ ВОЗВРАЩАЮЩИЕ АДРЕСА =====================
     def get_list_url(self):
         """
@@ -804,11 +803,9 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         подходящих введенному в поле тексту """
         return self.get_rows_url()
 
-
     def get_not_found_exception(self):
         """возвращает Группа исключения 'не найден'"""
         return self.model.DoesNotExist
-
 
     def configure_grid(self, grid):
         """
@@ -824,6 +821,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 
         # построение колонок
         cc = ui.ColumnsConstructor()
+
         def populate(root, cols):
             for c in cols:
                 sub_cols = c.get('columns', None)
@@ -858,7 +856,6 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         grid.store.remote_sort = self.allow_paging
 
         grid.plugins.append(self.get_filter_plugin() or '')
-
 
     def create_edit_window(self, create_new, request, context):
         """
@@ -935,14 +932,14 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                         ))) for custom_fld in custom]
                         else:
                             params = [models.Q(**{
-                            "%s__icontains" % custom_fld : item['data']['value']
+                            "%s__icontains" % custom_fld: item['data']['value']
                         }) for custom_fld in custom]
 
                         q = reduce(lambda q1, q2: q1 | q2, params)
                     query = query.filter(q)
                 else:
                     query = query.filter(**{
-                        "%s__icontains" % item['field']:item['data']['value']
+                        "%s__icontains" % item['field']: item['data']['value']
                     })
         return query
 
@@ -1127,9 +1124,9 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 #        pass
 
 
-#===============================================================================
+#==============================================================================
 # SelectorWindowAction
-#===============================================================================
+#==============================================================================
 class SelectorWindowAction(BaseAction):
     """
     Экшн показа окна выбора с пользовательским экшном обработки выбранных
@@ -1147,13 +1144,11 @@ class SelectorWindowAction(BaseAction):
     # пак, объекты модели которого выбираются
     data_pack = None
 
-
     def configure_action(self, request, context):
         """
         Настройка экшна. Здесь нужно назначать пак и callback
         """
         pass
-
 
     def configure_context(self, request, context):
         """
@@ -1162,13 +1157,11 @@ class SelectorWindowAction(BaseAction):
         """
         return m3_actions.ActionContext()
 
-
     def configure_window(self, win, request, context):
         """
         В данном методе происходит конфигурирование окна выбора.
         """
         return win
-
 
     def run(self, request, context):
         """

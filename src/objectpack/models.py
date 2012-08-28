@@ -8,9 +8,9 @@ from itertools import ifilter, islice, imap
 from django.db.models import query, manager
 
 
-#===============================================================================
+#==============================================================================
 # VirtualModelManager
-#===============================================================================
+#==============================================================================
 class VirtualModelManager(object):
 
     _operators = {
@@ -76,7 +76,7 @@ class VirtualModelManager(object):
             op = lambda obj: obj
         return reduce(folder, reversed(key), op)
 
-    def filter(self, **kwargs): #@ReservedAssignment
+    def filter(self, **kwargs):  # @ReservedAssignment
         procs = self._procs[:]
         if kwargs:
             fns = [self._make_getter(key, val, allow_op=True)
@@ -111,9 +111,9 @@ class VirtualModelManager(object):
         return len(list(self))
 
 
-#===============================================================================
+#==============================================================================
 # VirtualModel
-#===============================================================================
+#==============================================================================
 class VirtualModel(object):
 
     class DoesNotExist(Exception):
@@ -133,9 +133,9 @@ class VirtualModel(object):
     objects = VirtualModelManager()
 
 
-#===============================================================================
+#==============================================================================
 # model_proxy_metaclass
-#===============================================================================
+#==============================================================================
 def model_proxy_metaclass(name, bases, dic):
     """
     Метакласс для ModelProxy
@@ -146,7 +146,7 @@ def model_proxy_metaclass(name, bases, dic):
     if not model:
         return type(name, bases, dic)
 
-    # сбор полей основной модели и указанных моделей, связанных с ней    
+    # сбор полей основной модели и указанных моделей, связанных с ней
     def add_prefix(field, prefix):
         field = copy.copy(field)
         field.attname = '%s.%s' % (prefix, field.attname)
@@ -167,7 +167,6 @@ def model_proxy_metaclass(name, bases, dic):
             fields_.append(f)
             fields_dict[f.attname] = f
 
-
     # django-подобный класс метаинформации о модели
     class BaseMeta(object):
         fields = fields_
@@ -184,7 +183,6 @@ def model_proxy_metaclass(name, bases, dic):
         dic['_meta'] = type('_meta', (meta_mixin, BaseMeta), {})
     else:
         dic['_meta'] = BaseMeta
-
 
     relations_for_select = [r.replace('.', '__') for r in relations]
 
@@ -232,6 +230,7 @@ def model_proxy_metaclass(name, bases, dic):
                 return self.__dict__[attr]
             else:
                 result = getattr(self._manager, attr)
+
                 def wrapped(fn):
                     def inner(*args, **kwargs):
                         result = fn(*args, **kwargs)
@@ -244,7 +243,6 @@ def model_proxy_metaclass(name, bases, dic):
                     return wrapped(result)
                 return result
 
-
     dic['objects'] = WrappingManager(model.objects)
 
     dic['DoesNotExist'] = model.DoesNotExist
@@ -256,9 +254,9 @@ def model_proxy_metaclass(name, bases, dic):
     return proxy_class
 
 
-#===============================================================================
+#==============================================================================
 # ModelProxy
-#===============================================================================
+#==============================================================================
 class ModelProxy(object):
     """
     Proxy-объект инкапсулирующий в себе несколько моделей
@@ -276,6 +274,7 @@ class ModelProxy(object):
         if obj is None:
             def wrap_save_method(child, parent, attr):
                 old_save = child.save
+
                 def inner(*args, **kwargs):
                     result = old_save(*args, **kwargs)
                     setattr(parent, attr, child.id)

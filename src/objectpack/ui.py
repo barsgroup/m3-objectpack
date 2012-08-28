@@ -46,9 +46,9 @@ class _BaseWindowExtender(object):
             self.make_read_only()
 
 
-#===============================================================================
+#==============================================================================
 # BaseWindow
-#===============================================================================
+#==============================================================================
 class BaseWindow(ext_windows.ExtWindow, _BaseWindowExtender):
     """базовое окно"""
 
@@ -59,19 +59,19 @@ class BaseWindow(ext_windows.ExtWindow, _BaseWindowExtender):
 
     def __init__(self):
         super(BaseWindow, self).__init__()
-        self._mro_exclude_list = [] # список исключений для make_read_only
+        self._mro_exclude_list = []  # список исключений для make_read_only
         self._initialize()
 
 
-#===============================================================================
+#==============================================================================
 # BaseEditWindow
-#===============================================================================
+#==============================================================================
 class BaseEditWindow(ext_windows.ExtEditWindow, _BaseWindowExtender):
     """базовое окно редактирования"""
 
     def __init__(self):
         super(BaseEditWindow, self).__init__()
-        self._mro_exclude_list = [] # список исключений для make_read_only
+        self._mro_exclude_list = []  # список исключений для make_read_only
         self._initialize()
 
     def _init_components(self):
@@ -89,7 +89,7 @@ class BaseEditWindow(ext_windows.ExtEditWindow, _BaseWindowExtender):
             self.cancel_btn,
             ])
         # F2 -- ОК:
-        f2key = {'key' : 113, 'fn' : self.save_btn.handler}
+        f2key = {'key': 113, 'fn' : self.save_btn.handler}
         self.keys.append(f2key)
 
     def set_params(self, params):
@@ -108,9 +108,9 @@ class BaseEditWindow(ext_windows.ExtEditWindow, _BaseWindowExtender):
             access_off, self._mro_exclude_list + (exclude_list or []))
 
 
-#===============================================================================
+#==============================================================================
 # BaseListWindow
-#===============================================================================
+#==============================================================================
 class BaseListWindow(BaseWindow):
     """
     окно для отображения линейного справочника
@@ -208,9 +208,9 @@ class BaseListWindow(BaseWindow):
         return super(BaseListWindow, self).render()
 
 
-#===============================================================================
+#==============================================================================
 # BaseSelectWindow
-#===============================================================================
+#==============================================================================
 class BaseSelectWindow(BaseListWindow):
     """
     окно выбора из линейного справочника
@@ -238,9 +238,9 @@ class BaseSelectWindow(BaseListWindow):
         self.template_globals = 'select-window.js'
 
 
-#===============================================================================
+#==============================================================================
 # ColumnsConstructor
-#===============================================================================
+#==============================================================================
 class ColumnsConstructor(object):
     """
     Конструктор колонок для сложных гридов с banded-колонками
@@ -305,13 +305,11 @@ class ColumnsConstructor(object):
             self._column = ext.ExtGridColumn(**params)
             self.items = list(items or [])
 
-
         def add(self, *args):
             """
             Добавление колонок
             """
             self.items.extend(args)
-
 
         def _cleaned(self):
             """
@@ -320,7 +318,6 @@ class ColumnsConstructor(object):
             """
             self.items = filter(None, [i._cleaned() for i in self.items])
             return self if self.items else None
-
 
         def _normalized_depth(self):
             """
@@ -339,14 +336,14 @@ class ColumnsConstructor(object):
             self.items = new_items
             return max_depth + 1
 
-
         def _populate(self, grid, level, is_top_level=False):
             """
             Вставка колонок. Возвращается кол-во вставленных колонок
             """
             if is_top_level:
-                if not self._cleaned(): return 0 # чистка
-                level = self._normalized_depth() # нормализация уровней
+                if not self._cleaned():
+                    return 0 # чистка
+                level = self._normalized_depth()  # нормализация уровней
             else:
                 grid.add_banded_column(self._column, level, 0)
 
@@ -357,7 +354,6 @@ class ColumnsConstructor(object):
             self._column.colspan = cnt
 
             return cnt
-
 
     class Col(object):
         """
@@ -372,23 +368,20 @@ class ColumnsConstructor(object):
             return self
 
         def _normalized_depth(self):
-            return 1 # подэлементов нет, поэтому всегда вложенность 1
+            return 1  # подэлементов нет, поэтому всегда вложенность 1
 
         def _populate(self, grid, level, is_top_level=False):
             grid.columns.append(self._column)
             return 1
 
-
     def __init__(self, items=None):
         self.items = list(items or [])
-
 
     def add(self, *args):
         """
         Добавление колонок
         """
         self.items.extend(args)
-
 
     def configure_grid(self, grid):
         """
@@ -400,9 +393,9 @@ class ColumnsConstructor(object):
         fake_col._populate(grid, level=None, is_top_level=True)
 
 
-#===============================================================================
+#==============================================================================
 # ModelEditWindow
-#===============================================================================
+#==============================================================================
 class ModelEditWindow(BaseEditWindow):
     """
     Простое окно редактирования модели
@@ -446,7 +439,7 @@ class ModelEditWindow(BaseEditWindow):
             'model': model, 'field_fabric_params': kwargs})
 
 
-#===============================================================================
+#==============================================================================
 def model_fields_to_controls(model, window,
         field_list=None, exclude_list=None,
         model_register=None, **kwargs):
@@ -455,10 +448,10 @@ def model_fields_to_controls(model, window,
     - входящим в список (строк) @field_list
     - не входящим в список (строк) @exclude_list
     @kwargs - передача доп параметров в конструктор элементов
-    
+
     Списки врлючения/исключения полей могут содержать
     wildcards вида 'x*' или '*x', которые трактуются как префиксы и суффиксы.
-    
+
     При создании полей для связанных моделей ActionPack для модели ищется
     в реестре моделей @model_register по имени класса модели
     (передачей имени в метод "get" реестра)
@@ -522,7 +515,7 @@ def _create_control_for_field(f, model_register=None, **kwargs):
 
     elif isinstance(f, (
             django_models.CharField,
-            django_models.TimeField, # время вводится в StringField
+            django_models.TimeField,  # время вводится в StringField
             )):
         ctl = ext.ExtStringField(max_length=f.max_length, **kwargs)
 
@@ -591,17 +584,17 @@ def _create_dict_select_field(f, model_register=None, **kwargs):
     return ctl
 
 
-#===============================================================================
+#==============================================================================
 # WindowTab
-#===============================================================================
+#==============================================================================
 class WindowTab(object):
-    '''
+    """
     Прототип конструктора таба для карточки сотрудника
-    '''
+    """
     # заголовок таба
     title = u''
 
-    template = None # js-шаблон для вкладки
+    template = None  # js-шаблон для вкладки
 
     def _create_tab(self):
         return ext.ExtPanel(
@@ -612,38 +605,35 @@ class WindowTab(object):
         )
 
     def init_components(self, win):
-        '''
+        """
         Здесь создаются компоненты, но не задаётся расположение
         Компоненты создаются, как атрибуты окна win
-        '''
+        """
         pass
-
 
     def do_layout(self, win, tab):
-        '''
+        """
         Здесь задаётся расположение компонентов. Компоненты должны
         быть расположены на табе tab окна win
-        '''
+        """
         pass
-
 
     def set_params(self, win, params):
-        '''
+        """
         Установка параметров
-        '''
+        """
         pass
 
 
-#===============================================================================
+#==============================================================================
 # TabbedWindow
-#===============================================================================
+#==============================================================================
 class TabbedWindow(BaseWindow):
-    '''
+    """
     Окно со вкладками
-    '''
+    """
     # список вкладок (экземпляров WindowTab)
     tabs = []
-
 
     def _init_components(self):
         super(TabbedWindow, self)._init_components()
@@ -654,7 +644,6 @@ class TabbedWindow(BaseWindow):
         # создание компонентов для вкладок
         for con in self.tabs:
             con.init_components(win=self)
-
 
     def _do_layout(self):
         super(TabbedWindow, self)._do_layout()
@@ -679,7 +668,6 @@ class TabbedWindow(BaseWindow):
         tc.auto_scroll = True
         self.items.append(tc)
 
-
     def set_params(self, params):
         super(TabbedWindow, self).set_params(params)
 
@@ -693,16 +681,15 @@ class TabbedWindow(BaseWindow):
             con.set_params(win=self, params=params)
 
 
-#===============================================================================
+#==============================================================================
 # TabbedEditWindow
-#===============================================================================
+#==============================================================================
 class TabbedEditWindow(BaseEditWindow):
-    '''
+    """
     Окно редактирования с вкладками
-    '''
+    """
     # список вкладок (экземпляров WindowTab)
     tabs = []
-
 
     def _init_components(self):
         super(TabbedEditWindow, self)._init_components()
@@ -713,7 +700,6 @@ class TabbedEditWindow(BaseEditWindow):
         # создание компонентов для вкладок
         for con in self.tabs:
             con.init_components(win=self)
-
 
     def _do_layout(self):
         super(TabbedEditWindow, self)._do_layout()
@@ -739,7 +725,6 @@ class TabbedEditWindow(BaseEditWindow):
         tc.auto_scroll = True
         self.form.items.append(tc)
 
-
     def set_params(self, params):
         super(TabbedEditWindow, self).set_params(params)
 
@@ -749,18 +734,18 @@ class TabbedEditWindow(BaseEditWindow):
         self.check_tab_controls()
 
     def check_tab_controls(self):
-        '''
+        """
         проверим содержажиеся втабе гриддыи отлючим сеарч бар
-        '''
+        """
         for grid in tools.find_element_by_type(
                 self._tab_container, ext.ExtObjectGrid):
             if hasattr(grid.top_bar, 'search_grid'):
                 grid.top_bar.search_grid.hidden = True
 
 
-#===============================================================================
+#==============================================================================
 # ComboBoxWithStore
-#===============================================================================
+#==============================================================================
 class ComboBoxWithStore(ext.ExtComboBox):
     """
     Потомок m3-комбобокса со втроенным стором
@@ -780,7 +765,6 @@ class ComboBoxWithStore(ext.ExtComboBox):
             self.store.root = 'rows'
         else:
             self.store = ext_store.ExtDataStore(data or ((0, ''),))
-
 
     @property
     def data(self):
@@ -813,7 +797,7 @@ def make_combo_box(**kwargs):
     return ComboBoxWithStore(**params)
 
 
-#===============================================================================
+#==============================================================================
 def anchor100(ctl):
     """
     Устанавливает anchor в 100% у контрола и восвращает его (контрол)

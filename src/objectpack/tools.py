@@ -1,7 +1,6 @@
 #coding: utf-8
 """
 Created on 23.07.2012
-
 @author: pirogov
 """
 import datetime
@@ -11,6 +10,7 @@ from django.db import transaction
 #==============================================================================
 # QuerySplitter
 #==============================================================================
+
 class QuerySplitter(object):
     '''
     Порционный загрузчик выборки в итеративном контексте
@@ -282,9 +282,9 @@ def find_element_by_type(container, cls):
     return res
 
 
-#===============================================================================
+#==============================================================================
 # collect_overlaps
-#===============================================================================
+#==============================================================================
 def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
     '''
     Возвращает список объектов из указанной выборки, которые пересекаются
@@ -293,10 +293,12 @@ def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
     obj_bgn = getattr(obj, attr_begin, None)
     obj_end = getattr(obj, attr_end, None)
 
-    if obj_bgn is None or obj_end is None: raise ValueError(
+    if obj_bgn is None or obj_end is None:
+        raise ValueError(
         u'Объект интервальной модели должен иметь непустые границы интервала!')
 
-    if obj.id: queryset = queryset.exclude(id=obj.id)
+    if obj.id:
+        queryset = queryset.exclude(id=obj.id)
 
     result = []
     for o in queryset.iterator():
@@ -312,7 +314,8 @@ def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
                     bgn <= obj_end <= end,
                     obj_bgn <= bgn <= obj_end,
                     obj_bgn <= end <= obj_end,
-                )): result.append(o)
+                )):
+                    result.append(o)
 
         try:
             add()

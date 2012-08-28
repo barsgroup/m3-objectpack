@@ -1,18 +1,17 @@
 #coding:utf-8
-'''
+"""
 Created on 03.08.2012
-
 @author: pirogov
-'''
+"""
 import re
 import inspect
 
 from m3.ui import actions as m3_actions
 
 
-#===============================================================================
+#==============================================================================
 # ControllerMixin
-#===============================================================================
+#==============================================================================
 class ObservableMixin(object):
     """
     Наблюдатель за вызовом actions и кода в точках их (actions) расшрения
@@ -22,7 +21,6 @@ class ObservableMixin(object):
         super(ObservableMixin, self).__init__(*args, **kwargs)
         self._observer = observer
         self._already_registered = set()
-
 
     def _invoke(self, request, action, stack):
         """
@@ -34,7 +32,6 @@ class ObservableMixin(object):
         # обработка контроллером
         return super(ObservableMixin, self)._invoke(request, action, stack)
 
-
     def append_pack(self, pack):
         """
         Добавление ActionPack`а с регистрацией его action`ов в ObserVer`е
@@ -42,7 +39,6 @@ class ObservableMixin(object):
         if self._observer._is_pack_populated(pack):
             # регистрация Pack`а в контроллере
             super(ObservableMixin, self).append_pack(pack)
-
 
     @property
     def urlpattern(self):
@@ -58,9 +54,9 @@ class ObservableMixin(object):
         return (r'^%s/' % url, self.process_request)
 
 
-#===============================================================================
+#==============================================================================
 # ObservableController
-#===============================================================================
+#==============================================================================
 class ObservableController(ObservableMixin, m3_actions.ActionController):
     """
     Контроллер, поддерживающий механизм подписки через Observer
@@ -68,16 +64,15 @@ class ObservableController(ObservableMixin, m3_actions.ActionController):
     pass
 
 
-#===============================================================================
+#==============================================================================
 # Observer
-#===============================================================================
+#==============================================================================
 class Observer(object):
     """
     Реестр слушателей, реализующий подписку последних на действия в actions
     """
     # уровни детализации отладочного логировния
     LOG_NONE, LOG_WARNINGS, LOG_CALLS, LOG_MORE = 0, 1, 2, 3
-
 
     class _BeforAfterPack:
         """
@@ -112,7 +107,8 @@ class Observer(object):
                         (self._action, listener, verb))
                     # инжекция action в слушателя
                     listener.action = self._action
-                    # вызывается метод слушателя для нового экземпляра слушателя
+                    # вызывается метод слушателя для
+                    # нового экземпляра слушателя
                     result = method(listener, *args)
                     if result:
                         return result
@@ -122,7 +118,6 @@ class Observer(object):
 
         def post_run(self, *args):
             return self._execute('after', *args)
-
 
     def __init__(self, logger=lambda msg: None, verbose_level=None):
         """
@@ -142,7 +137,6 @@ class Observer(object):
         self._model_register = {}
         self._pack_instances_by_name = {}
 
-
     def get(self, model_name):
         """
         Поиск экземпляра ActionPack для модели по имени её класса.
@@ -150,7 +144,6 @@ class Observer(object):
         основными для своих моделей (и привязаны к модели)
         """
         return self._model_register.get(model_name)
-
 
     def get_pack_instance(self, pack):
         """
@@ -163,14 +156,12 @@ class Observer(object):
             pack = self._name_class(pack)
         return self._pack_instances_by_name.get(pack)
 
-
     def _log(self, level, message):
         """
         Логирование действий с проверкой уровня подробности
         """
         if self._verbose_level >= level:
             self._logger(message)
-
 
     @staticmethod
     def _name_class(clazz):
@@ -179,7 +170,6 @@ class Observer(object):
         """
         return '%s/%s' % (
             inspect.getmodule(clazz).__package__, clazz.__name__)
-
 
     def _name_action(self, action, pack_name=None):
         """
@@ -199,7 +189,6 @@ class Observer(object):
 
         return name
 
-
     def _reconfigure(self):
         """
         Перестройка дерева сопоставления экшнов со слушателями
@@ -218,7 +207,6 @@ class Observer(object):
                         'Action linked:\n\tshort_name\t "%s"'
                         '\n\tListener\t %r' % (name, listener))
             self._action_listeners[name] = action_listeners
-
 
     def _is_pack_populated(self, pack):
         """
@@ -277,21 +265,20 @@ class Observer(object):
 
         return True
 
-
     def subscribe(self, listener):
         """
         Декоратор, регистрирующий слушателя @listener в реестре слушателей
         """
         priority = getattr(listener, 'priority', 0) or 0
 
-        # matcher`ы по списку рег.выр. в параметре "from" слушателя 
+        # matcher`ы по списку рег.выр. в параметре "from" слушателя
         matchers = map(
             lambda p: re.compile(p).match,
             getattr(listener, 'listen', []))
         if matchers:
             is_listen = lambda name: any(m(name) for m in matchers)
         else:
-            # если from не указан - слушатель слушает всех 
+            # если from не указан - слушатель слушает всех
             is_listen = lambda name: True
 
         self._registered_listeners.append(
@@ -303,7 +290,6 @@ class Observer(object):
         self._reconfigure()
 
         return listener
-
 
     def _configure_action(self, action, request, listeners):
         """
@@ -327,7 +313,8 @@ class Observer(object):
                     # инжекция action/request в слушателя
                     listener.action = action
                     listener.request = request
-                    # вызывается метод слушателя для нового экземпляра слушателя
+                    # вызывается метод слушателя для
+                    # нового экземпляра слушателя
                     arg = handler(listener, arg)
             return arg
 
@@ -343,7 +330,6 @@ class Observer(object):
 
         action.handle = handle
         action.handler_for = handler_for
-
 
     def _prepare_for_listening(self, action, request, stack):
         """
