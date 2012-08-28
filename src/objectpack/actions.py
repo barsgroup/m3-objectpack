@@ -9,6 +9,7 @@ import copy
 import datetime
 import re
 import inspect
+import types
 
 from django.db import models
 from django.db.models import fields as dj_fields
@@ -1204,3 +1205,39 @@ class SelectorWindowAction(BaseAction):
         return m3_actions.ExtUIScriptResult(win, new_context)
 
 
+def multiline_text_window_result(
+        data, success=True, title=u'', width=600, height=500):
+    """
+    Формирование OpersionResult в виде многострочного окна,
+    с размерами @width x @height и заголовком @title,
+    отображающего текст @data :: string | iterable
+    """
+    if not isinstance(data, types.StringTypes):
+        data = u'\n'.join(data)
+    return m3_actions.OperationResult(
+        success=success,
+        code=u"""
+            (function() {
+                var msg_win = new Ext.Window({
+                    title: '%s',
+                    width: %s, height: %s, layout:'fit',
+                    items:[
+                        new Ext.form.TextArea({
+                            value: '%s',
+                            readOnly: true,
+                        })
+                    ],
+                    buttons:[{
+                        text:'Закрыть',
+                        handler: function(){ msg_win.close() }
+                    }]
+
+                })
+                msg_win.show();
+            })()
+            """ % (
+                title,
+                width, height,
+                data.replace("\n", r"\n").replace(r"'", r'"')
+            )
+    )

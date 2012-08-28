@@ -18,6 +18,8 @@ from actions import (
     ObjectPack,
 
     SelectorWindowAction,
+
+    multiline_text_window_result,
 )
 
 from slave_object_pack import SlavePack

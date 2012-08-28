@@ -223,13 +223,16 @@ def str_to_date(s):
     return s
 
 
-def extract_date(request, key):
+def extract_date(request, key, as_date=False):
     '''
     Извлечение даты из request`а в формате DD.MM.YYYY
     (в таком виде приходит от ExtDateField)
     и приведение к Django-формату (YYYY-MM-DD)
     '''
-    return str_to_date(request.REQUEST.get(key)) 
+    res = str_to_date(request.REQUEST.get(key))
+    if res and as_date:
+        res = res.date()
+    return res
 
 
 def modify(obj, **kwargs):
