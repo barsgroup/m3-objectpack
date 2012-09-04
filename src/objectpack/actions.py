@@ -22,9 +22,7 @@ from m3.ui.ext.fields.complex import ExtSearchField
 from m3.core.exceptions import RelatedError, ApplicationLogicException
 from m3.db import safe_delete
 
-import objectpack
-
-import ui, tools
+import ui, tools, exceptions
 
 
 #==============================================================================
@@ -255,7 +253,7 @@ class ObjectSaveAction(BaseAction):
                 return
             self.parent.save_row(
                 self.obj, self.create_new, self.request, self.context)
-        except (objectpack.ValidationError, objectpack.OverlapError) as err:
+        except (exceptions.ValidationError, exceptions.OverlapError) as err:
             raise ApplicationLogicException(unicode(err))
 
     def run(self, request, context):
@@ -530,6 +528,22 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
     @property
     def url(self):
         return r'/%s' % self.short_name
+
+    @classmethod
+    def absolute_url(cls):
+        # получение url для построения внутренних кэшей m3
+        path = [r'/%s' % cls.get_short_name()]
+        pack = cls.parent
+        while pack != None:
+            path.append(pack.url)
+            pack = pack.parent
+        for cont in m3_actions.ControllerCache.get_controllers():
+            p = cont.find_pack(cls)
+            if p:
+                path.append(cont.url)
+                break
+        return ''.join(reversed(path))
+
 
     # Список колонок состоящий из словарей
     # все параметры словаря передаются в add_column
