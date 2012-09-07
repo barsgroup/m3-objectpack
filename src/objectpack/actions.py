@@ -49,7 +49,7 @@ class BaseAction(m3_actions.Action):
 #==============================================================================
 class BaseWindowAction(BaseAction):
     """
-    базовый Группа который возвращает окно
+    Базовый Action показа окна
     """
     win_params = {}  # параметы для формирования окна
     request = None  # request выолнения
@@ -58,37 +58,41 @@ class BaseWindowAction(BaseAction):
 
     def create_window(self):
         """
-        создает объект окна
-        например self.win = EditWindow()
+        Метод инстанцирует окно и помещает экземпляр в атрибут self.win
+        ( пример: self.win = EditWindow() )
         """
         raise NotImplementedError()
 
     def set_windows_params(self):
         """
-        заполняет словарь win_params
-        например self.win_params['title'] = u'Привет из ада'
+        Метод заполняет словарь self.win_params, который будет передан
+        в окно. Этот словарь выступает как шина передачи данных
+        от Actions/Packs к окну.
+        ( пример: self.win_params['title'] = u'Привет из ада' )
         """
         pass
 
     def _apply_windows_params(self):
         """
-        передает параметры в экземлпяр окна
-        перекрывается в крайних случаях
+        Метод передает словарь параметров в окно.
+        ( Обычно не требует перекрытия )
         """
         self.win.set_params(self.win_params)
 
     def configure_window(self):
         """
-        дополнительно конфигурирует окно,
-        только через функции окна,
-        например self.win.make_read_only()
-        никакого self.win.grid.top_bar.items[8].text = u'Ух ты, 9 кнопок'
+        Точка расширения, предоставляющая доступ к настроенному
+        экземпляру окна для тонкой настройки.
+        ( Оставлена для особо тяжёлых случаев,
+        когда не удаётся обойтись set_params )
+        ( пример: self.win.grid.top_bar.items[8].text = u'Ух ты, 9 кнопок' )
         """
         pass
 
     def run(self, request, context):
         """
-        сам обработчки, перекрывает в крайних случаях
+        Тело Action, вызывается при обработке запроса к серверу.
+        ( обычно не требует перекрытия )
         """
         new_self = copy.copy(self)
         new_self.win_params = (self.__class__.win_params or {}).copy()
@@ -107,7 +111,7 @@ class BaseWindowAction(BaseAction):
 #==============================================================================
 class ObjectListWindowAction(BaseWindowAction):
     """
-    Действие, которое возвращает окно со списком элементов справочника.
+    Базовый Action показа окна списка объектов.
     """
     url = '/list-window$'
     is_select_mode = False  # режим показа окна (True - выбор, False - список)
@@ -136,7 +140,7 @@ class ObjectListWindowAction(BaseWindowAction):
 #==============================================================================
 class ObjectSelectWindowAction(ObjectListWindowAction):
     """
-    Действие, возвращающее окно выбора из справочника
+    Базовый Action показа окна списка выбора объекта из списка.
     """
     url = '/select-window$'
     is_select_mode = True
@@ -147,7 +151,7 @@ class ObjectSelectWindowAction(ObjectListWindowAction):
 #==============================================================================
 class ObjectEditWindowAction(BaseWindowAction):
     """
-    редактирование элемента справочника
+    Базовый Action показа окна редактирования объекта.
     """
     url = '/edit-window$'
 
@@ -171,14 +175,12 @@ class ObjectEditWindowAction(BaseWindowAction):
             self.win_params, self.request, self.context)
 
     def create_window(self):
-        'вернем окно для создания или редактирования'
         assert self.win_params.has_key('create_new'), (
             u'может забыли вызвать родителький set_windows_params?')
         self.win = self.parent.create_edit_window(
             self.win_params['create_new'], self.request, self.context)
 
     def configure_window(self):
-        'настройка окна'
         # проверим право редактирования
         if not self.parent.has_sub_permission(
                 self.request.user, self.parent.PERM_EDIT, self.request):
@@ -191,8 +193,9 @@ class ObjectEditWindowAction(BaseWindowAction):
 #==============================================================================
 class ObjectAddWindowAction(ObjectEditWindowAction):
     """
-    Отдельный action для уникальности short_name
+    Базовый Action показа окна редактирования объекта.
     """
+    # Отдельный action для уникальности short_name
     pass
 
 
@@ -201,8 +204,7 @@ class ObjectAddWindowAction(ObjectEditWindowAction):
 #==============================================================================
 class ObjectSaveAction(BaseAction):
     """
-    Действие выполняет сохранение новой записи в справочник
-    в любом месте можно райзить ApplicationLogicException
+    Базовый Action сохранения отредактированного объекта.
     """
     url = '/save$'
     request = None
@@ -214,34 +216,43 @@ class ObjectSaveAction(BaseAction):
     class AlreadySaved(Exception):
         """
         Исключение, с помощью которого расширение,
-        перекрывшее сохранение объекта, может сообщить, что объект сохранен
-        и больше ничего делать не нужно
+        перекрывшее сохранение объекта,
+        может сообщить, что объект сохранен
+        и больше ничего делать не нужно.
         """
         pass
 
     def create_window(self):
-        'вернем окно для создания или редактирования'
         self.win = self.parent.create_edit_window(
             self.create_new, self.request, self.context)
 
     def create_obj(self):
-        'создание объекта'
+        """
+        Метод загружает из БД / создаёт новый объект модели.
+        """
         try:
             self.obj, self.create_new = self.parent.get_obj(
                 self.request, self.context)
         except self.parent.get_not_found_exception():
-            raise ApplicationLogicException(self.parent.MSG_DOESNOTEXISTS)
+            raise ApplicationLogicException(
+                self.parent.MSG_DOESNOTEXISTS)
 
     def bind_win(self):
-        'биндим форму к реквесту'
+        """
+        Заполнение полей окна по данным из request.
+        """
         self.win.form.bind_to_request(self.request)
 
     def bind_to_obj(self):
-        'биднинг формы к объекту'
+        """
+        Заполнение объекта данными из полей окна.
+        """
         self.win.form.to_object(self.obj)
 
     def save_obj(self):
-        'сохранеие объекта'
+        """
+        Сохранение объекта в БД
+        """
         # инжекция классов исключений в объект
         self.obj.AlreadySaved = self.AlreadySaved
         try:
@@ -257,6 +268,10 @@ class ObjectSaveAction(BaseAction):
             raise ApplicationLogicException(unicode(err))
 
     def run(self, request, context):
+        """
+        Тело Action, вызывается при обработке запроса к серверу.
+        ( обычно не требует перекрытия )
+        """
         new_self = copy.copy(self)
         new_self.request = request
         new_self.context = context
@@ -273,7 +288,7 @@ class ObjectSaveAction(BaseAction):
 #==============================================================================
 class ObjectRowsAction(BaseAction):
     """
-    Возвращает данные для грида справочника
+    Базовый Action получения данных для отображения в окне списка объектов.
     """
     url = '/rows$'
     request = None
@@ -281,13 +296,19 @@ class ObjectRowsAction(BaseAction):
     query = None
 
     def set_query(self):
-        """устанавливает запрос к базе"""
+        """
+        Метод получает первоначальную выборку данных в виде QuerySet
+        и помещает в атрибут self.query
+        """
         self.query = self.handle('query',
             self.parent.get_rows_query(self.request, self.context)
         )
 
     def apply_search(self):
-        """Применяет фильтр поиска"""
+        """
+        Метод применяет к выборке self.query фильтр по тексту
+        из поля "Поиск" окна списка.
+        """
         self.query = self.handle('apply_search',
             self.parent.apply_search(
                 self.query,
@@ -296,7 +317,10 @@ class ObjectRowsAction(BaseAction):
             ))
 
     def apply_filter(self):
-        """применяет фильтр"""
+        """
+        Метод применяет к выборке self.query фильтр, как правило поступающий
+        от "колоночных фильтров"/фильтров в контекстных меню в окне списка.
+        """
         self.query = self.handle('apply_filter',
             self.parent.apply_filter(
                 self.query,
@@ -305,7 +329,10 @@ class ObjectRowsAction(BaseAction):
             ))
 
     def apply_sort_order(self):
-        """Применяет сортировку"""
+        """
+        Метод применяет к выборке self.query сортировку
+        по выбранному в окне списка столбцу.
+        """
         self.query = self.handle('apply_sort_order',
             self.parent.apply_sort_order(
                 self.query,
@@ -314,7 +341,10 @@ class ObjectRowsAction(BaseAction):
             ))
 
     def apply_limit(self):
-        'обрезает по текущей странице'
+        """
+        Метод применяет к выборке self.query операцию оганичения
+        по количеству элементов (для порционной загрузки в окно списка).
+        """
         if getattr(self.parent, 'allow_paging', True):
             offset = m3_actions.utils.extract_int(self.request, 'start')
             limit = m3_actions.utils.extract_int(self.request, 'limit')
@@ -323,7 +353,10 @@ class ObjectRowsAction(BaseAction):
         self.query = tools.QuerySplitter(self.query, offset, limit)
 
     def get_rows(self):
-        'преобразует query в лист'
+        """
+        Метод производит преобразование QuerySet в список.
+        При этом объекты сериализуются в словари.
+        """
         res = []
         for obj in self.query:
             prep_obj = self.prepare_object(obj)
