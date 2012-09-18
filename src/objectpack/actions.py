@@ -759,7 +759,12 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                         self._sort_fields[data_index] = sort_fields
                     # поле для фильтрации
                     if c.get('searchable'):
-                        self._all_search_fields.append(field)
+                        search_fields = c.get('search_fields', [field])
+                        try:
+                            search_fields = list(search_fields)
+                        except:
+                            search_fields = [search_fields]
+                        self._all_search_fields.extend(search_fields)
         flatify(self.columns)
 
     def replace_action(self, action_attr_name, new_action):
@@ -877,6 +882,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
                 params.update(c)
                 params.pop('columns', None)
                 params.pop('searchable', None)
+                params.pop('search_fields', None)
                 params.pop('sort_fields', None)
                 params.pop('filter', None)
 
