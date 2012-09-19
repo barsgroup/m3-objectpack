@@ -271,6 +271,7 @@ class ModelProxy(object):
     relations = None
 
     def __init__(self, obj=None):
+        self.relations = self.relations or []
         if obj is None:
             def wrap_save_method(child, parent, attr):
                 old_save = child.save
