@@ -30,15 +30,27 @@ import ui, tools, exceptions
 #==============================================================================
 class BaseAction(m3_actions.Action):
     """
-    Предок, необходимый для actions ObjectPack`а, чтобы они могли работать
-    в контроллере, не реализующем механизм подписки.
+    Прототип для actions ObjectPack`а
     """
+    @property
+    def url(self):
+        # автоматически генерируемый url
+        return r'/%s' % self.__class__.__name__.lower()
+
     @staticmethod
     def handle(verb, arg):
+        """
+        Заглушка для точек расширения.
+        При регистрации в обсервер перекрывается
+        """
         return arg
 
     @staticmethod
     def handler_for(verb):
+        """
+        Декоратор-заглушка для точек расширения.
+        При регистрации в обсервер перекрывается
+        """
         def wrapper(fn):
             return fn
         return wrapper
@@ -522,21 +534,12 @@ class ObjectDeleteAction(BaseAction):
 
 
 #==============================================================================
-# ObjectPack
+# BasePack
 #==============================================================================
-class ObjectPack(m3_actions.ActionPack, ISelectablePack):
+class BasePack(m3_actions.ActionPack):
     """
-    Пакет с действиями, специфичными для работы с редактирование модели
+    Потомок ActionPack, реализующий автогенерацию short_name, url
     """
-
-    # Заголовок окна справочника
-    # если не перекрыт в потомках - берется из модели
-    @property
-    def title(self):
-        return unicode(
-            self.model._meta.verbose_name_plural or
-            self.model._meta.verbose_name or
-            repr(self.model)).capitalize()
 
     @classmethod
     def get_short_name(cls):
@@ -578,13 +581,28 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
         return ''.join(reversed(path))
 
 
-    # Список колонок состоящий из словарей
-    # все параметры словаря передаются в add_column
-    # список параметров смотри в BaseExtGridColumn
-    # кроме searchable - признак что колонка будет учавтовать в фильтрации
+#==============================================================================
+# ObjectPack
+#==============================================================================
+class ObjectPack(BasePack, ISelectablePack):
+    """
+    Пакет с действиями, специфичными для работы с редактирование модели
+    """
 
-    #url = u'/pack'
+    # Заголовок окна справочника
+    # если не перекрыт в потомках - берется из модели
+    @property
+    def title(self):
+        return unicode(
+            self.model._meta.verbose_name_plural or
+            self.model._meta.verbose_name or
+            repr(self.model)).capitalize()
 
+
+    # Список колонок
+
+    # ВАЖНО: для корректной работы полей выбора,
+    # необходима колонка с data_index = '__unicode__'
     columns = [
        {
            'header':u'Наименование',
@@ -596,7 +614,7 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 #            'header':u'',
 #            'serchable':True,
 #            'sortable':True,
-#            'sort_fields':['foo','bar'],
+#            'sort_fields': ('foo','bar'),
 #        },
 #        {
 #            'header':u'Группирующая Колонка 1',
@@ -605,7 +623,8 @@ class ObjectPack(m3_actions.ActionPack, ISelectablePack):
 #                    'data_index':'school.name',
 #                    'width':200,
 #                    'header':u'Колонка 1',
-#                    'searchable':True
+#                    'searchable':True,
+#                    'search_fields': ('school.fullname',),
 #                },
 #            ]
 #        },

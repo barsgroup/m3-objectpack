@@ -8,7 +8,11 @@ Created on July 23, 2012
 __version__ = '0.5.1'
 
 from actions import (
+
+    BasePack,
+    BaseAction,
     BaseWindowAction,
+
     ObjectListWindowAction,
     ObjectSelectWindowAction,
     ObjectEditWindowAction,
