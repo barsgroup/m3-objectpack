@@ -318,6 +318,7 @@ class ModelProxy(object):
             self.id = obj.id
 
         setattr(self, self.model.__name__.lower(), obj)
+        setattr(self, '_object', obj)
         # заполнение атрибутов proxy по заданным связям вглубь (xxx.yyy)
         for rel in self.relations:
             attr = rel.split('.', 1)[0]
