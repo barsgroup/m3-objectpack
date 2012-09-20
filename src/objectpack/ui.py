@@ -561,19 +561,23 @@ def _create_dict_select_field(f, model_register=None, **kwargs):
     "get", в качестве параметра принимающий имя связанной модели.
     """
     related_model = f.rel.to.__name__
+
     pack = (model_register or {}).get(related_model)
+
     assert pack, 'Cant find pack for field %s (realated model %s)' % (
         f.name, related_model)
+
     params = {
         'display_field': pack.column_name_on_select,
         'value_field': 'id',
         'hide_edit_trigger': True,
-        'hide_trigger': pack.allow_paging,
+        'hide_trigger': getattr(pack, 'allow_paging', False),
         'hide_clear_trigger': not f.blank,
         'hide_dict_select_trigger': False,
         'editable': False,
     }
     params.update(kwargs)
+
     ctl = ext.ExtDictSelectField(**params)
     ctl.url = pack.get_select_url()
     ctl.pack = pack.__class__
