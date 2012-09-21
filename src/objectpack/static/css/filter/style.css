@@ -22,31 +22,31 @@
 /**
  * RangeMenu.js Styles
  **/
-.ux-rangemenu-gt {
+.op-ux-rangemenu-gt {
 	background-image: url(greater_then.png);
 }
 
-.ux-rangemenu-lt {
+.op-ux-rangemenu-lt {
 	background-image: url(less_then.png);
 }
 
-.ux-rangemenu-eq {
+.op-ux-rangemenu-eq {
 	background-image: url(equals.png);
 }
 
 /**
  * TreeMenu.js Styles
  */
-.ux-tree-menu {
-	background-image: none;	
+.op-ux-tree-menu {
+	background-image: none;
 }
 
-.ux-tree-menu-wrap {
+.op-ux-tree-menu-wrap {
 	position: relative;
 	overflow: auto;
 }
 
-.ux-tree-menu-search-icon {
+.op-ux-tree-menu-search-icon {
 	position: absolute;
 	top:    3px;
 	left:   3px;
@@ -55,6 +55,6 @@
 	background: url(find.png) top left no-repeat !important;
 }
 
-.ux-tree-menu-search {
+.op-ux-tree-menu-search {
 	padding-left: 19px;
 }

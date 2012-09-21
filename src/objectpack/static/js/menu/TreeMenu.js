@@ -3,7 +3,7 @@ Ext.ux.menu.TreeMenu = function(cfg){
 	Ext.ux.menu.TreeMenu.superclass.constructor.call(this, {
 		plain: false,
 		items: [new Ext.ux.menu.TreeMenuItem(cfg)],
-		cls: 'ux-tree-menu'
+		cls: 'op-ux-tree-menu'
 	});
 	this.relayEvents(this.items.get(0), ["select", "search"]);
 	this.tree = cfg.tree;
@@ -13,13 +13,13 @@ Ext.extend(Ext.ux.menu.TreeMenu, Ext.menu.Menu);
 Ext.ux.menu.TreeMenuItem = function(cfg){
 	this.addEvents({select: true, search: true});
 	Ext.ux.menu.TreeMenu.superclass.constructor.call(this, cfg);
-	
+
 	this.qTask = new Ext.util.DelayedTask(this.doQuery, this);
 	this.searchBox = new Ext.form.TextField({
-		cls: 'ux-tree-menu-search',
+		cls: 'op-ux-tree-menu-search',
 		emptyText: this.emptyText
 	});
-	
+
 	this.tree.getSelectionModel().on('selectionchange', this.onSelect, this);
 };
 Ext.extend(Ext.ux.menu.TreeMenuItem, Ext.menu.BaseItem, {
@@ -44,24 +44,24 @@ Ext.extend(Ext.ux.menu.TreeMenuItem, Ext.menu.BaseItem, {
 	searchFn: undefined,
 	emptyText: 'Search...',
 	handelOffset: 3,
-	
+
     onRender : function(container){
         var el = this.el = container.createChild({
-			cls:      'ux-tree-menu-wrap',
-			children: [{cls: 'ux-tree-menu-search-icon'}]
+			cls:      'op-ux-tree-menu-wrap',
+			children: [{cls: 'op-ux-tree-menu-search-icon'}]
 		});
-		
+
 		if(this.searchFn){
 			this.searchBox.render(el);
 			this.searchBox.getEl().setStyle('margin-bottom', '3px');
 			this.searchBox.el.on('keyup', function(){this.qTask.delay(this.searchDelay);}, this);
-		}	
-		
+		}
+
 		this.tree.autoScroll = true;
 		this.tree.render(el);
-		
+
 		var resizer = new Ext.Resizable(el, {
-			pinned:true, 
+			pinned:true,
 			handles:'se',
 			listeners: {
 				'resize': function(rsz, w, h){
@@ -73,28 +73,28 @@ Ext.extend(Ext.ux.menu.TreeMenuItem, Ext.menu.BaseItem, {
 			}
 		});
 		this.resize(this.minWidth, this.minHeight);
-		
+
 		if(this.searchFn)
 			this.doQuery();
 	},
-	
+
 	onSelect: function(model, node){
 		this.fireEvent('select', node.id, node);
 	},
-	
+
 	doQuery: function(callback){
 		var value = this.searchBox.getValue();
-		
+
 		this.searchFn(value.length > 0 ? value : null, callback);
-			
+
 		this.fireEvent('search', value);
 	},
-	
+
 	resize: function(w, h){
 		var search    = this.searchBox.getEl();
 			padding   = this.el.getFrameWidth('tb'),
 			searchOff = 0;
-		
+
 		if(search){
 			search.setWidth(w - this.el.getFrameWidth('lr'));
 			searchOff = search.getHeight();
