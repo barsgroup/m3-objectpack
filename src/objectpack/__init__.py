@@ -75,3 +75,5 @@ import observer
 from desktop import uificate_the_controller
 
 from exceptions import ValidationError, OverlapError
+
+import column_filters
