@@ -232,7 +232,7 @@ class Observer(object):
 
         # регистрация ActionPack, как основного для модели
         try:
-            if pack._is_primary_for_model and pack.model:
+            if pack.model and getattr(pack, '_is_primary_for_model', True):
                 model_name = pack.model.__name__
                 try:
                     # если для модели уже зарегистрирован ActionPack
