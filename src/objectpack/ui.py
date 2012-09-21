@@ -549,7 +549,7 @@ def _create_control_for_field(f, model_register=None, **kwargs):
         raise GenerationError(u'Не могу сгенирировать контрол для %s' % f)
 
     ctl.name = name
-    ctl.label = f.verbose_name.capitalize()
+    ctl.label = f.verbose_name
     ctl.allow_blank = f.blank
     return ctl
 
