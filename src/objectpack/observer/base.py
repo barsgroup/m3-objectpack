@@ -232,8 +232,9 @@ class Observer(object):
 
         # регистрация ActionPack, как основного для модели
         try:
-            if pack.model and getattr(pack, '_is_primary_for_model', True):
-                model_name = pack.model.__name__
+            model = getattr(pack, 'model', getattr(pack, 'tree_model', None))
+            if model and getattr(pack, '_is_primary_for_model', True):
+                model_name = model.__name__
                 try:
                     # если для модели уже зарегистрирован ActionPack
                     # возбуждается исключение
