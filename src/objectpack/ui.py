@@ -217,12 +217,9 @@ class BaseSelectWindow(BaseListWindow):
     """
     column_name_on_select = '__unicode__'
 
-    def __init__(self, *args, **kwargs):
-        super(BaseSelectWindow, self).__init__(*args, **kwargs)
-
     def _init_components(self):
         super(BaseSelectWindow, self)._init_components()
-        self.grid.dblclick_handler = 'selectValue'
+        self.grid.handler_dblclick = 'selectValue'
         self.select_btn = ext.ExtButton(
             handler='selectValue', text=u'Выбрать')
         self.buttons.insert(0, self.select_btn)
@@ -476,8 +473,9 @@ def model_fields_to_controls(model, window,
 
     # генерация функции, запрещающей обработку поля
     exclude = make_checker((exclude_list or []) + [
-        'created', 'modified',
-        '*.created', '*.modified'
+        'created', '*.created',
+        'modified', '*.modified',
+        'external_id', '*.external_id',
     ])
 
     controls = []
