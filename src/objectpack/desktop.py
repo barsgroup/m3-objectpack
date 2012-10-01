@@ -231,16 +231,6 @@ class BaseMenu(_UIFabric):
         return super(BaseMenu, self)._populate(metarole, data)
 
 
-#==============================================================================
-# TopMenu
-#==============================================================================
-class TopMenu(BaseMenu):
-    """
-    Класс для работы с верхним меню
-    """
-    pack_method = 'extend_top_menu'
-    pack_flag = 'add_to_top_menu'
-    ui_extend_method = staticmethod(_add_to_top_menu)
 
 
 #==============================================================================
@@ -295,6 +285,18 @@ class MainMenu(BaseMenu):
         """
         self._administry_menu._items.extend(items)
         return self._administry_menu
+
+
+#==============================================================================
+# TopMenu
+#==============================================================================
+class TopMenu(MainMenu):
+    """
+    Класс для работы с верхним меню
+    """
+    pack_method = 'extend_top_menu'
+    pack_flag = 'add_to_top_menu'
+    ui_extend_method = staticmethod(_add_to_top_menu)
 
 
 #==============================================================================
