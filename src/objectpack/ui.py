@@ -420,6 +420,14 @@ class ModelEditWindow(BaseEditWindow):
         # все поля добавляются на форму растянутыми по ширине
         self.form.items.extend(map(anchor100, self._controls))
 
+    def set_params(self, params):
+        super(ModelEditWindow, self).set_params(params)
+        # если сгенерировано хотя бы одно поле загрузки файлов,
+        # окно получает флаг разрешения загрузки файлов
+        self.form.file_upload = any(
+            isinstance(x, ext.ExtFileUploadField)
+            for x in self._controls)
+
     @classmethod
     def fabricate(cls, model, **kwargs):
         """
