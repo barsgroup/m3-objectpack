@@ -16,6 +16,7 @@ from actions import (
     ObjectListWindowAction,
     ObjectSelectWindowAction,
     ObjectEditWindowAction,
+    ObjectAddWindowAction,
     ObjectSaveAction,
     ObjectRowsAction,
     ObjectDeleteAction,
