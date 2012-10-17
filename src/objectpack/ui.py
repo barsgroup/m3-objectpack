@@ -4,6 +4,8 @@ Created on 23.07.12
 
 @author: pirogov
 """
+import inspect
+
 from django.db import models as django_models
 
 from m3.ui.ext import all_components as ext
@@ -14,13 +16,16 @@ from m3.ui.ext.containers.grids import ExtGridColumn
 import tools
 
 
-class _BaseWindowExtender(object):
+#==============================================================================
+# BaseWindow
+#==============================================================================
+class BaseWindow(ext_windows.ExtWindow):
     """
-    Группа для описания методов
-    конструирования и настройки окна
+    Базовое окно
     """
-
-    def _initialize(self):
+    def __init__(self):
+        super(BaseWindow, self).__init__()
+        self._mro_exclude_list = []  # список исключений для make_read_only
         self._init_components()
         self._do_layout()
 
@@ -45,37 +50,27 @@ class _BaseWindowExtender(object):
         if params.get('read_only'):
             self.make_read_only()
 
-
-#==============================================================================
-# BaseWindow
-#==============================================================================
-class BaseWindow(ext_windows.ExtWindow, _BaseWindowExtender):
-    """базовое окно"""
-
     def make_read_only(self, access_off=True, exclude_list=None):
         """Управление состоянием Read-only окна"""
         super(BaseWindow, self).make_read_only(
             access_off, self._mro_exclude_list + (exclude_list or []))
 
-    def __init__(self):
-        super(BaseWindow, self).__init__()
-        self._mro_exclude_list = []  # список исключений для make_read_only
-        self._initialize()
-
 
 #==============================================================================
 # BaseEditWindow
 #==============================================================================
-class BaseEditWindow(ext_windows.ExtEditWindow, _BaseWindowExtender):
-    """базовое окно редактирования"""
-
-    def __init__(self):
-        super(BaseEditWindow, self).__init__()
-        self._mro_exclude_list = []  # список исключений для make_read_only
-        self._initialize()
+class BaseEditWindow(ext_windows.ExtEditWindow, BaseWindow):
+    """
+    Базовое окно редактирования
+    """
+    @property
+    def form(self):
+        return self.__form
 
     def _init_components(self):
-        self.form = ext.ExtForm()
+        super(BaseEditWindow, self)._init_components()
+        self.__form = ext.ExtForm()
+        self.items.append(self.form)
         # ОК:
         self.save_btn = ext.ExtButton(text=u'Сохранить', handler="submitForm")
         # Отмена:
@@ -83,13 +78,14 @@ class BaseEditWindow(ext_windows.ExtEditWindow, _BaseWindowExtender):
         self._mro_exclude_list.append(self.cancel_btn)
 
     def _do_layout(self):
+        super(BaseEditWindow, self)._do_layout()
         self.modal = True
         self.buttons.extend([
             self.save_btn,
             self.cancel_btn,
-            ])
+        ])
         # F2 -- ОК:
-        f2key = {'key': 113, 'fn' : self.save_btn.handler}
+        f2key = {'key': 113, 'fn': self.save_btn.handler}
         self.keys.append(f2key)
 
     def set_params(self, params):
@@ -101,11 +97,6 @@ class BaseEditWindow(ext_windows.ExtEditWindow, _BaseWindowExtender):
         if obj:
             self.form.from_object(obj)
         super(BaseEditWindow, self).set_params(params)
-
-    def make_read_only(self, access_off=True, exclude_list=None):
-        """Управление состоянием Read-only окна"""
-        super(BaseEditWindow, self).make_read_only(
-            access_off, self._mro_exclude_list + (exclude_list or []))
 
 
 #==============================================================================
@@ -339,7 +330,7 @@ class ColumnsConstructor(object):
             """
             if is_top_level:
                 if not self._cleaned():
-                    return 0 # чистка
+                    return 0  # чистка
                 level = self._normalized_depth()  # нормализация уровней
             else:
                 grid.add_banded_column(self._column, level, 0)
@@ -642,10 +633,25 @@ class TabbedWindow(BaseWindow):
     """
     Окно со вкладками
     """
-    # список вкладок (экземпляров WindowTab)
-    tabs = []
+    # описание классов вкладок (iterable)
+    tabs = None
+
+    template_globals = 'tabbed-window.js'
 
     def _init_components(self):
+        # описание вкладок должно должны быть итерабельным
+        assert tools.istraversable(self.tabs), 'Wrond type of "tabs"!'
+
+        # инстанцирование вкладок
+        instantiate = lambda x: x() if inspect.isclass(x) else x
+        self.tabs = map(instantiate, self.tabs or [])
+
+        # опредение вкладок не должно быть пустым
+        # (проверка производится после инстанцирования,
+        # т.к. описание колонок может быть итератором
+        # и иметь истинное значение в булевом контексте)
+        assert self.tabs, '"tabs" can not be empty!'
+
         super(TabbedWindow, self)._init_components()
 
         # контейнер для вкладок
@@ -681,8 +687,6 @@ class TabbedWindow(BaseWindow):
     def set_params(self, params):
         super(TabbedWindow, self).set_params(params)
 
-        self.template_globals = 'tabbed-window.js'
-
         # установка параметров вкладок, формирование списка шаблонов вкладок
         self.tabs_templates = []
         for con in self.tabs:
@@ -690,67 +694,166 @@ class TabbedWindow(BaseWindow):
                 self.tabs_templates.append(con.template)
             con.set_params(win=self, params=params)
 
-
-#==============================================================================
-# TabbedEditWindow
-#==============================================================================
-class TabbedEditWindow(BaseEditWindow):
-    """
-    Окно редактирования с вкладками
-    """
-    # список вкладок (экземпляров WindowTab)
-    tabs = []
-
-    def _init_components(self):
-        super(TabbedEditWindow, self)._init_components()
-
-        # контейнер для вкладок
-        self._tab_container = ext.ExtTabPanel(deferred_render=False)
-
-        # создание компонентов для вкладок
-        for con in self.tabs:
-            con.init_components(win=self)
-
-    def _do_layout(self):
-        super(TabbedEditWindow, self)._do_layout()
-
-        # настройка отображения окна
-        self.layout = 'fit'
-        self.form.layout = 'fit'
-        self.width, self.height = 600, 450
-        self.min_width, self.min_height = self.width, self.height
-        self.modal = True
-        self.maximizable = True
-
-        # размещение контролов во вкладках
-        for con in self.tabs:
-            tab = con._create_tab()
-            con.do_layout(win=self, tab=tab)
-            self._tab_container.items.append(tab)
-
-        # размещение контейнера вкладок на форму
-        tc = self._tab_container
-        tc.anchor = '100%'
-        tc.layout = 'fit'
-        tc.auto_scroll = True
-        self.form.items.append(tc)
-
-    def set_params(self, params):
-        super(TabbedEditWindow, self).set_params(params)
-
-        # установка параметров вкладок
-        for con in self.tabs:
-            con.set_params(win=self, params=params)
-        self.check_tab_controls()
-
-    def check_tab_controls(self):
-        """
-        проверим содержажиеся втабе гриддыи отлючим сеарч бар
-        """
+        # отключение поиска в гридах во вкладках
+        # т.к. рендеринг оного работает неправильно
+        # TODO: найти причину
         for grid in tools.find_element_by_type(
                 self._tab_container, ext.ExtObjectGrid):
             if hasattr(grid.top_bar, 'search_grid'):
                 grid.top_bar.search_grid.hidden = True
+
+
+#==============================================================================
+# TabbedEditWindow
+#==============================================================================
+class TabbedEditWindow(TabbedWindow, BaseEditWindow):
+    """
+    Окно редактирования с вкладками
+    """
+    def _do_layout(self):
+        super(TabbedEditWindow, self)._do_layout()
+        self.items.remove(self._tab_container)
+        self.form.items.append(self._tab_container)
+        self.form.layout = 'fit'
+
+
+#==============================================================================
+# ComboBoxWithStore
+#==============================================================================
+class ObjectGridTab(WindowTab):
+    """
+    Вкладка с гридом
+    """
+    _pack_instance = None
+
+    @property
+    def title(self):
+        return self._pack.title
+
+    @property
+    def _pack(self):
+        # кэшированная ссылка на пак
+        self._pack_instance = self._pack_instance or self.get_pack()
+        return self._pack_instance
+
+    def get_pack(self):
+        """
+        Возвращает экземпляр ObjectPack для настройки грида
+        """
+        raise NotImplementedError()
+
+    def _create_tab(self):
+        tab = super(ObjectGridTab, self)._create_tab()
+        tab.layout = 'fit'
+        return tab
+
+    def init_components(self, win):
+        # создание грида
+        self.grid = ext.ExtObjectGrid()
+        setattr(win, '%s_grid' % self.__class__.__name__, self.grid)
+
+    def do_layout(self, win, tab):
+        # помещение грида во вкладку
+        tab.items.append(self.grid)
+
+    def set_params(self, win, params):
+        # настройка
+        self._pack.configure_grid(self.grid)
+
+    @classmethod
+    def fabricate_from_pack(
+            cls, pack_name, pack_register, tab_class_name=None):
+        """
+        Возвращает класс вкладки, построенной на основе
+        пака с именем @pack_name. В процессе настройки вкладки
+        экземпляр пака получается посредством
+        вызова @pack_getter.get_pack_instance для @pack_name.
+
+        @tab_class_name - имя класса вкладки (если не указано,
+            то генерируется на основе имени класса модели пака)
+        """
+        tab_class_name = tab_class_name or (
+            '%sTab' % pack_name.replace('/', '_'))
+        return type(
+            tab_class_name, (cls,),
+            {'get_pack': lambda self: (
+                pack_register.get_pack_instance(pack_name)
+            )}
+        )
+
+    @classmethod
+    def fabricate(cls, model, model_register, tab_class_name=None):
+        """
+        Возвращает класс вкладки, построенной на основе основного
+        пака для модели @model. В процессе настройки вкладки
+        экземпляр пака получается посредством
+        вызова @model_register.get для @model_name.
+
+        @tab_class_name - имя класса вкладки (если не указано,
+            то генерируется на основе имени класса модели пака)
+        """
+        tab_class_name = tab_class_name or ('%sTab' % model.__name__)
+        return type(
+            tab_class_name, (cls,),
+            {'get_pack': lambda self: model_register.get(model.__name__)}
+        )
+
+
+class ObjectTab(WindowTab):
+    """
+    Вкладка редактирования полей объекта
+    """
+    # модель, для которой будет строится окно
+    model = None
+
+    # словарь kwargs для model_fields_to_controls ("field_list", и т.д.)
+    field_fabric_params = None
+
+    @property
+    def title(self):
+        return unicode(
+            self.model._meta.verbose_name or
+            repr(self.model)
+        )
+
+    def init_components(self, win):
+        super(ObjectTab, self).init_components(win)
+        self._controls = model_fields_to_controls(
+            self.model, self, **self.field_fabric_params)
+
+    def do_layout(self, win, tab):
+        super(ObjectTab, self).do_layout(win, tab)
+
+        # автовысота вкладки
+        tab.height = None
+        tab.layout = 'form'
+        tab.layout_config = {'autoHeight': True}
+
+        # все поля добавляются на форму растянутыми по ширине
+        tab.items.extend(map(anchor100, self._controls))
+
+    def set_params(self, win, params):
+        super(ObjectTab, self).set_params(win, params)
+        # если сгенерировано хотя бы одно поле загрузки файлов,
+        # окно получает флаг разрешения загрузки файлов
+        win.form.file_upload = win.form.file_upload or any(
+            isinstance(x, ext.ExtFileUploadField)
+            for x in self._controls)
+
+    @classmethod
+    def fabricate(cls, model, **kwargs):
+        """
+        Гененрирует класс-потомок для конкретной модели.
+        Использование:
+        class Pack(...):
+            add_window = ObjectTab.fabricate(
+                SomeModel,
+                field_list=['code', 'name'],
+                model_register=observer,
+            )
+        """
+        return type('%sTab' % model.__name__, (cls,), {
+            'model': model, 'field_fabric_params': kwargs})
 
 
 #==============================================================================

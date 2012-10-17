@@ -326,3 +326,17 @@ def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
                 obj_end = obj_end.date()
                 add()
     return result
+
+
+#==============================================================================
+# istraversable
+#==============================================================================
+def istraversable(x):
+    """
+    возвращает True, если объект @x позволяет обход себя в цикле for
+    """
+    return (
+        hasattr(x, '__iter__')
+        or hasattr(x, '__next__')
+        or hasattr(x, '__getitem__')
+    )

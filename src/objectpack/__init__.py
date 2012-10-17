@@ -49,6 +49,8 @@ from ui import (
     TabbedWindow,
     TabbedEditWindow,
     WindowTab,
+    ObjectGridTab,
+    ObjectTab,
 
     ColumnsConstructor,
     model_fields_to_controls,
