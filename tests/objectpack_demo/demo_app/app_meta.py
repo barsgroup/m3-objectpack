@@ -1,9 +1,5 @@
 #coding: utf-8
-'''
-File: app_meta.py
-Author: Rinat F Sabitov
-Description:
-'''
+
 from django.conf import urls
 
 from m3_users import metaroles, GENERIC_USER
@@ -11,7 +7,6 @@ from objectpack import desktop
 
 import actions
 import controller
-
 
 
 def register_urlpatterns():
@@ -24,7 +19,9 @@ def register_urlpatterns():
 
 
 def register_actions():
-    """ регистрация экшенов"""
+    """
+    регистрация экшенов
+    """
     controller.action_controller.packs.extend([
         actions.PersonObjectPack(),
         actions.BandedColumnPack(),

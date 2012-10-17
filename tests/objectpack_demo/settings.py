@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import m3
 DEBUG = True
@@ -74,7 +75,7 @@ ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
-    ('m3static', os.path.normpath(os.path.join(M3_ROOT, 'static'))), #m3
+    ('m3static', os.path.normpath(os.path.join(M3_ROOT, 'static'))),  #m3
     os.path.normpath(os.path.join(PROJECT_PATH, 'dev-static'))
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
@@ -119,7 +120,8 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'objectpack_demo.urls'
 
 TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
+    # Put strings here, like "/home/html/django_templates"
+    # or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
 )
@@ -144,6 +146,7 @@ INSTALLED_APPS = (
     'm3_users',
     'objectpack',
     'demo_app',
+    'demo_app.slaves',
     # Uncomment the next line to enable the admin:
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:

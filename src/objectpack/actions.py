@@ -707,7 +707,7 @@ class ObjectPack(BasePack, ISelectablePack):
     # при автогонерации окон редактирования)
     _is_primary_for_model = True
 
-    # функция, возвращающая экземпляр Pack дл укзанной по имени модели.
+    # функция, возвращающая экземпляр Pack, для укзанной по имени модели.
     # Реализация функции инжектируется при регистрации в Observable контроллер.
     @staticmethod
     def _get_model_pack(model_name):
@@ -823,7 +823,8 @@ class ObjectPack(BasePack, ISelectablePack):
 
     def get_edit_window_params(self, params, request, context):
         """
-        возвращает словарь параметров которые будут переданы окну редактирования
+        возвращает словарь параметров
+        которые будут переданы окну редактирования
         """
         return params
 
@@ -1119,7 +1120,7 @@ class ObjectPack(BasePack, ISelectablePack):
                     dataIndex:'%(data_index)s',
                     options:%(options)s
                 }""" % params)
-            return  """
+            return """
                  new Ext.ux.grid.GridFilters({filters:[%s]})
             """ % ','.join(filter_items)
 

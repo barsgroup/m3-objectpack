@@ -9,9 +9,9 @@ import objectpack
 import models
 
 
-#===============================================================================
+#==============================================================================
 # PersonObjectPack
-#===============================================================================
+#==============================================================================
 class PersonObjectPack(objectpack.ObjectPack):
     """docstring for PersonObjectPack"""
 
@@ -36,9 +36,9 @@ class PersonObjectPack(objectpack.ObjectPack):
         self.list_window_action.short_name = 'foo'
 
 
-#===============================================================================
+#==============================================================================
 # PersonObjectPack
-#===============================================================================
+#==============================================================================
 class BandedColumnPack(objectpack.ObjectPack):
     """Демонстрация Banded Columns"""
 
@@ -71,5 +71,5 @@ class BandedColumnPack(objectpack.ObjectPack):
         'data_index': 'field%s' % idx,
         'width': 25,
         'fixed': True,
-        'filter': {'type':'string'}
+        'filter': {'type': 'string'}
     })

@@ -1,11 +1,8 @@
 #coding:utf-8
-'''
-File: controller.py
-Author: Rinat F Sabitov
-Description:
-'''
+"""
+Обсервер и контроллеры
+"""
 
-from m3.ui import actions as m3_actions
 from objectpack import observer
 
 
@@ -13,7 +10,8 @@ def logger(msg):
     print "Observer: %s" % msg
 
 # Наблюдатель
-obs = observer.Observer(logger=logger, verbose_level=observer.Observer.LOG_MORE)
+obs = observer.Observer()
+    #logger=logger, verbose_level=observer.Observer.LOG_MORE)
 
 
 action_controller = observer.ObservableController(obs, "/controller")
@@ -26,7 +24,7 @@ class Listener(object):
 
     def after(self, request, context, response):
         # подмена заголовка окна
-        response.data.title = u'Му-ха-ха! (%s)' % self.action.__class__.__name__
+        response.data.title = u'Му-ха-ха! %s' % response.data.title
 
 
 @obs.subscribe
