@@ -146,37 +146,61 @@ def model_proxy_metaclass(name, bases, dic):
     if not model:
         return type(name, bases, dic)
 
-    # сбор полей основной модели и указанных моделей, связанных с ней
-    def add_prefix(field, prefix):
-        field = copy.copy(field)
-        field.attname = '%s.%s' % (prefix, field.attname)
-        return field
+    class LazyMetaData(object):
+        """
+        Дескриптор, реализующий ленивое построение данных,
+        необходимых для работы meta-данных прокси-модели
+        """
+        FIELDS, FIELD_DICT = 0, 1
 
-    def submeta(meta, path):
-        for field in path.split('.'):
-            meta = meta.get_field(field).related.parent_model._meta
-        return meta
+        _CACHING_ATTR = '_lazy_metadata'
 
-    meta = model._meta
-    fields_ = []
-    fields_dict = {}
-    for prefix, meta in [(model.__name__.lower(), meta)] + [
-            (rel, submeta(meta, rel)) for rel in relations]:
-        for f in meta.fields:
-            f = add_prefix(f, prefix)
-            fields_.append(f)
-            fields_dict[f.attname] = f
+        def __init__(self, attr):
+            self._attr = attr
+
+        def __get__(self, inst, clazz):
+            assert inst is None  # дескриптор должен работать только для класса
+            cache = getattr(clazz, self._CACHING_ATTR, None)
+            if not cache:
+                cache = self._collect_metadata()
+                setattr(clazz, self._CACHING_ATTR, cache)
+            return cache[self._attr]
+
+        def _collect_metadata(self):
+            # сбор полей основной модели и указанных моделей, связанных с ней
+            def add_prefix(field, prefix):
+                field = copy.copy(field)
+                field.attname = '%s.%s' % (prefix, field.attname)
+                return field
+
+            def submeta(meta, path):
+                for field in path.split('.'):
+                    meta = meta.get_field(field).related.parent_model._meta
+                return meta
+
+            meta = model._meta
+            fields_ = []
+            fields_dict = {}
+            for prefix, meta in [(model.__name__.lower(), meta)] + [
+                    (rel, submeta(meta, rel)) for rel in relations]:
+                for f in meta.fields:
+                    f = add_prefix(f, prefix)
+                    fields_.append(f)
+                    fields_dict[f.attname] = f
+
+            return fields_, fields_dict
 
     # django-подобный класс метаинформации о модели
     class BaseMeta(object):
-        fields = fields_
+        fields = LazyMetaData(LazyMetaData.FIELDS)
+        field_dict = LazyMetaData(LazyMetaData.FIELD_DICT)
 
         verbose_name = model._meta.verbose_name
         verbose_name_plural = model._meta.verbose_name_plural
 
-        @staticmethod
-        def get_field(field_name):
-            return fields_dict[field_name]
+        @classmethod
+        def get_field(cls, field_name):
+            return cls.field_dict[field_name]
 
     meta_mixin = dic.pop('Meta', None)
     if meta_mixin:
