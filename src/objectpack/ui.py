@@ -468,10 +468,10 @@ def model_fields_to_controls(model, window,
             return lambda s: True
 
     # генерация функции, разрешающей обработку поля
-    include = make_checker(field_list or [])
+    include = make_checker(list(field_list) or [])
 
     # генерация функции, запрещающей обработку поля
-    exclude = make_checker((exclude_list or []) + [
+    exclude = make_checker((list(exclude_list) or []) + [
         'created', '*.created',
         'modified', '*.modified',
         'external_id', '*.external_id',
@@ -479,7 +479,7 @@ def model_fields_to_controls(model, window,
 
     controls = []
     for f in model._meta.fields:
-        if include(f.attname) and not exclude(f.attname):
+        if not exclude(f.attname) or include(f.attname):
             try:
                 ctl = _create_control_for_field(f, model_register, **kwargs)
             except GenerationError:
@@ -546,7 +546,7 @@ def _create_control_for_field(f, model_register=None, **kwargs):
         raise GenerationError(u'Не могу сгенирировать контрол для %s' % f)
 
     ctl.name = name
-    ctl.label = f.verbose_name
+    ctl.label = unicode(f.verbose_name)
     ctl.allow_blank = f.blank
     return ctl
 
