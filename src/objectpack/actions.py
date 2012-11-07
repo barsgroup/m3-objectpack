@@ -187,8 +187,8 @@ class ObjectEditWindowAction(BaseWindowAction):
             self.win_params, self.request, self.context)
 
     def create_window(self):
-        assert self.win_params.has_key('create_new'), (
-            u'может забыли вызвать родителький set_windows_params?')
+        assert 'create_new' in self.win_params, (
+            u'You must call "set_windows_params" method of superclass!')
         self.win = self.parent.create_edit_window(
             self.win_params['create_new'], self.request, self.context)
 
