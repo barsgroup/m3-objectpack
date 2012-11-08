@@ -104,13 +104,16 @@ class ModelCache(object):
     '''
     Кэш get-ов объектов одной модели.
     В качестве ключа кэша - набор параметров для get-а
+    Если в конструкторе указана фабрика объектов, то отсутствующие объекты
+    создаются передачей аргументов фабрике.
     '''
 
-    def __init__(self, model):
+    def __init__(self, model, object_fabric=None):
         self._model = model
         self.MultipleObjectsReturned = model.MultipleObjectsReturned
         self._cache = {}
         self._last_kwargs = {}
+        self._fabric = object_fabric
 
     @staticmethod
     def _key_for_dict(d):
@@ -127,7 +130,10 @@ class ModelCache(object):
         key = self._key_for_dict(kwargs)
         if key in self._cache:
             return self._cache[key]
-        new = self._cache[key] = self._get_object(kwargs)
+        new = self._get_object(kwargs)
+        if new is None and self._fabric:
+            new = self._fabric(**kwargs)
+        self._cache[key] = new
         return new
 
     def forget_last(self):
