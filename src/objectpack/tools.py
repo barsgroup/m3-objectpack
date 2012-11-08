@@ -127,13 +127,21 @@ class ModelCache(object):
 
     def get(self, **kwargs):
         self._last_kwargs = kwargs
+
         key = self._key_for_dict(kwargs)
+
         if key in self._cache:
             return self._cache[key]
+
         new = self._get_object(kwargs)
+
         if new is None and self._fabric:
             new = self._fabric(**kwargs)
+            assert isinstance(new, self._model)
+            assert not new.id is None
+
         self._cache[key] = new
+
         return new
 
     def forget_last(self):
