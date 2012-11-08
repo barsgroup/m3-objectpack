@@ -397,7 +397,7 @@ class ModelEditWindow(BaseEditWindow):
     def _init_components(self):
         super(ModelEditWindow, self)._init_components()
         self._controls = model_fields_to_controls(
-            self.model, self, **self.field_fabric_params)
+            self.model, self, **(self.field_fabric_params or {}))
 
     def _do_layout(self):
         super(ModelEditWindow, self)._do_layout()
@@ -468,10 +468,10 @@ def model_fields_to_controls(model, window,
             return lambda s: True
 
     # генерация функции, разрешающей обработку поля
-    include = make_checker(list(field_list) or [])
+    include = make_checker(list(field_list or ()))
 
     # генерация функции, запрещающей обработку поля
-    exclude = make_checker((list(exclude_list) or []) + [
+    exclude = make_checker(list(exclude_list or ()) + [
         'created', '*.created',
         'modified', '*.modified',
         'external_id', '*.external_id',
@@ -819,7 +819,7 @@ class ObjectTab(WindowTab):
     def init_components(self, win):
         super(ObjectTab, self).init_components(win)
         self._controls = model_fields_to_controls(
-            self.model, self, **self.field_fabric_params)
+            self.model, self, **(self.field_fabric_params or {}))
 
     def do_layout(self, win, tab):
         super(ObjectTab, self).do_layout(win, tab)
