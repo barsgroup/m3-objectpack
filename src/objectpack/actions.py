@@ -439,7 +439,9 @@ class ObjectRowsAction(BaseAction):
                     # None выводится пустой строкой
                     obj = u''
 
-                result[col] = force_unicode(obj)
+                if not isinstance(obj, (int, bool)):
+                    obj = force_unicode(obj)
+                result[col] = obj
 
         #заполним объект данными по дата индексам
         for col in self.get_column_data_indexes():
