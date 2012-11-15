@@ -443,6 +443,7 @@ def model_fields_to_controls(model, window,
     Добавление на окно полей по полям модели,
     - входящим в список (строк) @field_list
     - не входящим в список (строк) @exclude_list
+    exclude_list игнорируется при указанном field_list
     @kwargs - передача доп параметров в конструктор элементов
 
     Списки врлючения/исключения полей могут содержать
@@ -467,19 +468,21 @@ def model_fields_to_controls(model, window,
         else:
             return lambda s: True
 
-    # генерация функции, разрешающей обработку поля
-    include = make_checker(list(field_list or ()))
-
-    # генерация функции, запрещающей обработку поля
-    exclude = make_checker(list(exclude_list or ()) + [
-        'created', '*.created',
-        'modified', '*.modified',
-        'external_id', '*.external_id',
-    ])
+    if field_list:
+        # генерация функции, разрешающей обработку поля
+        is_valid = make_checker(list(field_list or ()))
+    else:
+        # генерация функции, запрещающей обработку поля
+        is_valid = (lambda fn: lambda x: not fn(x))(
+            make_checker(list(exclude_list or ()) + [
+                'created', '*.created',
+                'modified', '*.modified',
+                'external_id', '*.external_id',
+            ]))
 
     controls = []
     for f in model._meta.fields:
-        if not exclude(f.attname) or include(f.attname):
+        if is_valid(f.attname):
             try:
                 ctl = _create_control_for_field(f, model_register, **kwargs)
             except GenerationError:
