@@ -7,7 +7,6 @@ Author: Rinat F Sabitov
 from objectpack.ui import BaseListWindow, BaseSelectWindow
 from m3.ui.ext.panels import ExtObjectTree
 from m3.ui.ext import misc
-from m3.ui.ext.containers.grids import ExtGridColumn
 
 
 class BaseObjectTree(ExtObjectTree):
@@ -16,7 +15,8 @@ class BaseObjectTree(ExtObjectTree):
     """
     def __init__(self, *args, **kwargs):
         super(BaseObjectTree, self).__init__(*args, **kwargs)
-        self.store = misc.ExtJsonStore(auto_load=True, root='rows', id_property='id')
+        self.store = misc.ExtJsonStore(
+            auto_load=True, root='rows', id_property='id')
 
 
 class BaseTreeListWindow(BaseListWindow):
