@@ -1037,6 +1037,14 @@ class ObjectPack(BasePack, ISelectablePack):
                 data_index=sorting_key,
                 reverse=reverse)
             query = query.order_by(*sort_order)
+        else:
+            query = self.apply_default_sort_order(query)
+        return query
+
+    def apply_default_sort_order(self, query):
+        """Возвращает выборку, отсортированную по-умолчанию"""
+        if self.list_sort_order:
+            query = query.order_by(*self.list_sort_order)
         return query
 
     def prepare_row(self, obj, request, context):
