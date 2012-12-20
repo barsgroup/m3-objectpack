@@ -432,7 +432,9 @@ class ObjectRowsAction(BaseAction):
                     if callable(obj):
                         obj = obj()
 
-                if isinstance(obj, datetime.date):
+                if isinstance(obj, datetime.datetime):
+                    obj = obj.strftime('%d.%m.%Y %H:%M:%S')
+                elif isinstance(obj, datetime.date):
                     obj = obj.strftime('%d.%m.%Y')
 
                 if obj is None:
