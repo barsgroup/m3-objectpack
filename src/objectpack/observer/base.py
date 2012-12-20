@@ -30,7 +30,9 @@ class ObservableMixin(object):
         self._observer._prepare_for_listening(action, request, stack)
 
         # обработка контроллером
-        return super(ObservableMixin, self)._invoke(request, action, stack)
+        with action._catcher as catcher:
+            return super(ObservableMixin, self)._invoke(request, action, stack)
+        return catcher.result
 
     def append_pack(self, pack):
         """
@@ -297,6 +299,13 @@ class Observer(object):
         Конфигурирует @action, инжектируя в него методы handle и handler_for,
         взаимрдействующие со слушателями @listeners
         """
+        log_call = lambda listener, verb: self._log(
+            self.LOG_CALLS,
+            'Listener call:\n\t'
+                'Action\t %r\n\tListener %r\n\tVerb\t "%s"' %
+                (action, listener, verb)
+        )
+
         def handle(verb, arg):
             """
             Обработка данных @arg подписанными слушателями, которые имеют
@@ -305,10 +314,7 @@ class Observer(object):
             for listener in listeners:
                 handler = getattr(listener, verb, None)
                 if handler:
-                    self._log(self.LOG_CALLS,
-                        'Listener call:\n\t'
-                        'Action\t %r\n\tListener %r\n\tVerb\t "%s"' %
-                        (action, listener, verb))
+                    log_call(listener, verb)
                     # слушатель инстанцируется каждый раз
                     listener = listener()
                     # инжекция action/request в слушателя
@@ -329,6 +335,34 @@ class Observer(object):
                     return handle(verb, fn(*args, **kwargs))
             return wrapper
 
+        class ExceptionHandlingCM(object):
+            """
+            ContextManager, передающий исключения на обработку
+            в listeners. Если ни один из слушетелей не вернёт
+            True, исключение считается неотловленным
+            """
+            def __init__(self):
+                self.result = None
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *args):
+                for listener in listeners:
+                    handler = getattr(listener, 'catch', None)
+                    if handler:
+                        log_call(listener, 'catch')
+                        listener = listener()
+                        listener.action = action
+                        listener.request = request
+                        # обработчик должен вернуть Response
+                        # в случае успешной обработки исключения
+                        result = handler(listener, args)
+                        if result:
+                            self.result = result
+                            return True
+
+        action._catcher = ExceptionHandlingCM()
         action.handle = handle
         action.handler_for = handler_for
 
