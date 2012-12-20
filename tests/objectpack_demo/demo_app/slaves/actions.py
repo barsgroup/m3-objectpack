@@ -35,6 +35,12 @@ class ToolPack(objectpack.SlavePack):
         model=model, field_list=('name',)
     )
 
+    def configure_grid(self, grid):
+        super(ToolPack, self).configure_grid(grid)
+        grid.template = 'object-grid-w-param.js'
+        grid.session_key_value = 123123
+        grid.session_key_name = '%s_session_key' % self.short_name
+
 
 #-----------------------------------------------------------------------------
 class StaffPack(objectpack.SlavePack):
