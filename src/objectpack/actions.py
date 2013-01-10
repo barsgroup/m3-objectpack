@@ -22,7 +22,9 @@ from m3.ui.ext.fields.complex import ExtSearchField
 from m3.core.exceptions import RelatedError, ApplicationLogicException
 from m3.db import safe_delete
 
-import ui, tools, exceptions
+import ui
+import tools
+import exceptions
 
 
 #==============================================================================
@@ -550,7 +552,7 @@ class BasePack(m3_actions.ActionPack):
         """
         Имя пака для поиска в ControllerCache
         """
-        name = getattr(cls, '_auto_short_name', None)
+        name = cls.__dict__.get('_auto_short_name')
         if not name:
             name = '%s/%s' % (
                 inspect.getmodule(cls).__name__.replace('.actions', ''
@@ -601,7 +603,6 @@ class ObjectPack(BasePack, ISelectablePack):
             self.model._meta.verbose_name_plural or
             self.model._meta.verbose_name or
             repr(self.model)).capitalize()
-
 
     # Список колонок
 
