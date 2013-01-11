@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name="objectpack",
-    version="0.5.2",
+    version="0.6.0",
     description=read('DESCRIPTION'),
     license="GPL",
     keywords="django m3 m3-contrib",
@@ -25,7 +25,7 @@ setup(
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'License :: GPL',
+        'License :: OSI Approved :: GNU General Public License (GPL)',
         'Framework :: Django',
         'Environment :: Web Environment',
         'Natural Language :: Russian',
