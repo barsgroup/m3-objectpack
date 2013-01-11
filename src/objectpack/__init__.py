@@ -5,7 +5,7 @@ Created on July 23, 2012
 @author: pirogov
 """
 
-__version__ = '0.5.2'
+from version import __version__
 
 from actions import (
 
