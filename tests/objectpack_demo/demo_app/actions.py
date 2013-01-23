@@ -22,13 +22,21 @@ class PersonObjectPack(objectpack.ObjectPack):
     edit_window = add_window = objectpack.ui.ModelEditWindow.fabricate(model)
 
     columns = [
-        {'data_index': 'fullname', 'header': u'ФИО', 'sortable':True,
-            'sort_fields': ('name', 'surname'), 'filter': {
-            'type': 'string', 'custom_field':('name', 'surname')
-        }},
-        {'data_index': 'date_of_birth', 'header': u'Дата рождения', 'filter': {
-            'type': 'date'
-        }},
+        {
+            'data_index': 'fullname',
+            'header': u'ФИО',
+            'sortable': True,
+            'sort_fields': ('name', 'surname'),
+            'filter': {
+                'type': 'string',
+                'custom_field': ('name', 'surname')
+            }
+        },
+        {'data_index': 'date_of_birth', 'header': u'Дата рождения',
+            'filter': {
+                'type': 'date'
+            }
+        },
     ]
 
     def __init__(self):
