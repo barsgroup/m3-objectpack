@@ -688,8 +688,6 @@ class TabbedWindow(BaseWindow):
         self.items.append(tc)
 
     def set_params(self, params):
-        super(TabbedWindow, self).set_params(params)
-
         # установка параметров вкладок, формирование списка шаблонов вкладок
         self.tabs_templates = []
         for con in self.tabs:
@@ -704,6 +702,8 @@ class TabbedWindow(BaseWindow):
                 self._tab_container, ext.ExtObjectGrid):
             if hasattr(grid.top_bar, 'search_grid'):
                 grid.top_bar.search_grid.hidden = True
+
+        super(TabbedWindow, self).set_params(params)
 
 
 #==============================================================================
