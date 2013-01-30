@@ -933,7 +933,9 @@ class ObjectPack(BasePack, ISelectablePack):
         grid.allow_paging = self.allow_paging
         grid.store.remote_sort = self.allow_paging
 
-        grid.plugins.append(self.get_filter_plugin() or '')
+        filter_plugin = self.get_filter_plugin()
+        if filter_plugin:
+            grid.plugins.append(filter_plugin)
 
     def create_edit_window(self, create_new, request, context):
         """
