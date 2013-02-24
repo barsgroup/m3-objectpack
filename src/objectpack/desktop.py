@@ -4,7 +4,7 @@ Created on 23.07.2012
 @author: pirogov
 """
 from m3.ui import app_ui, actions
-
+from django.utils.translation import ugettext as _
 
 #==============================================================================
 # uificate_the_controller
@@ -259,11 +259,11 @@ class MainMenu(BaseMenu):
         })
 
         self._registries_menu = self.SubMenu(
-            u'Реестры', icon='menu-dicts-16', index=1)
+            _(u'Реестры'), icon='menu-dicts-16', index=1)
         self._dicts_menu = self.SubMenu(
-            u'Справочники', icon='menu-dicts-16', index=2)
+            _(u'Справочники'), icon='menu-dicts-16', index=2)
         self._administry_menu = self.SubMenu(
-            u'Администрирование', icon='menu-dicts-16', index=101)
+            _(u'Администрирование'), icon='menu-dicts-16', index=101)
 
     def dicts(self, *items):
         """

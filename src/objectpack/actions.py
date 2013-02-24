@@ -25,6 +25,7 @@ from m3.db import safe_delete
 import ui
 import tools
 import exceptions
+from django.utils.translation import ugettext as _
 
 
 #==============================================================================
@@ -82,7 +83,7 @@ class BaseWindowAction(BaseAction):
         Метод заполняет словарь self.win_params, который будет передан
         в окно. Этот словарь выступает как шина передачи данных
         от Actions/Packs к окну.
-        ( пример: self.win_params['title'] = u'Привет из ада' )
+        ( пример: self.win_params['title'] = _(u'Привет из ада') )
         """
         pass
 
@@ -99,7 +100,7 @@ class BaseWindowAction(BaseAction):
         экземпляру окна для тонкой настройки.
         ( Оставлена для особо тяжёлых случаев,
         когда не удаётся обойтись set_params )
-        ( пример: self.win.grid.top_bar.items[8].text = u'Ух ты, 9 кнопок' )
+        ( пример: self.win.grid.top_bar.items[8].text = _(u'Ух ты, 9 кнопок') )
         """
         pass
 
@@ -183,7 +184,7 @@ class ObjectEditWindowAction(BaseWindowAction):
 
         # заголовок окна по-умолчанию
         self.win_params['title'] = self.parent.format_window_title(
-            u'Добавление' if create_new else u'Редактирование')
+            _(u'Добавление') if create_new else _(u'Редактирование'))
 
         self.win_params = self.parent.get_edit_window_params(
             self.win_params, self.request, self.context)
@@ -504,7 +505,7 @@ class ObjectDeleteAction(BaseAction):
             raise ApplicationLogicException(e.args[0])
         except Exception, e:
             if e.__class__.__name__ == 'IntegrityError':
-                message = (u'Не удалось удалить элемент. '
+                message = _(u'Не удалось удалить элемент. '
                     u'Возможно на него есть ссылки.')
                 raise ApplicationLogicException(message)
             else:
@@ -610,7 +611,7 @@ class ObjectPack(BasePack, ISelectablePack):
     # необходима колонка с data_index = '__unicode__'
     columns = [
        {
-           'header':u'Наименование',
+           'header':_(u'Наименование'),
            'data_index':'__unicode__',
        },
 #        {
@@ -696,10 +697,10 @@ class ObjectPack(BasePack, ISelectablePack):
     # права доступа для базовых справочников
     PERM_EDIT = 'edit'
     sub_permissions = {
-        PERM_EDIT: u'Редактирование'
+        PERM_EDIT: _(u'Редактирование')
     }
 
-    MSG_DOESNOTEXISTS = (u'Запись не найдена в базе данных.<br/>' +
+    MSG_DOESNOTEXISTS = _(u'Запись не найдена в базе данных.<br/>' +
         u'Возможно, она была удалена. Пожалуйста, обновите таблицу.')
 
     # плоский список полей фильтрации
@@ -817,8 +818,8 @@ class ObjectPack(BasePack, ISelectablePack):
                     text = getattr(row, self.column_name_on_select)
                 except AttributeError:
                     raise Exception(
-                        u'Не получается получить поле %s для '
-                        u'DictSelectField.pack = %s' % (attr_name, self))
+                        _(u'Не получается получить поле {0} для '
+                        u'DictSelectField.pack = {1}').format(attr_name, self))
 
             # getattr может возвращать метод, например verbose_name
             if callable(text):
@@ -925,7 +926,7 @@ class ObjectPack(BasePack, ISelectablePack):
         if self.get_search_fields():
             #поиск по гриду если есть по чему искать
             grid.top_bar.search_field = ExtSearchField(
-                empty_text=u'Поиск', width=200, component_for_search=grid)
+                empty_text=_(u'Поиск'), width=200, component_for_search=grid)
             grid.top_bar.add_fill()
             grid.top_bar.items.append(grid.top_bar.search_field)
 
@@ -1104,8 +1105,8 @@ class ObjectPack(BasePack, ISelectablePack):
             result = safe_delete(obj)
         #в случае успеха safe_delete возвращет true
         if not result:
-            raise RelatedError(u'Не удалось удалить элемент %s. '
-                u'Возможно на него есть ссылки.' % obj_id)
+            raise RelatedError(_(u'Не удалось удалить элемент {0}. '
+                u'Возможно на него есть ссылки.'),format(obj_id))
         return obj
 
     def get_filter_plugin(self):

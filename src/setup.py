@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name="objectpack",
-    version="0.6.4",
+    version="0.6.5",
     description=read('DESCRIPTION'),
     license="GPL",
     keywords="django m3 m3-contrib",

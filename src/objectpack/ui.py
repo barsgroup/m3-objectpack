@@ -14,6 +14,7 @@ from m3.ui.ext.misc import store as ext_store
 from m3.ui.ext.containers.grids import ExtGridColumn
 
 import tools
+from django.utils.translation import ugettext as _
 
 
 #==============================================================================
@@ -72,9 +73,9 @@ class BaseEditWindow(ext_windows.ExtEditWindow, BaseWindow):
         self.__form = ext.ExtForm()
         self.items.append(self.form)
         # ОК:
-        self.save_btn = ext.ExtButton(text=u'Сохранить', handler="submitForm")
+        self.save_btn = ext.ExtButton(text=_(u'Сохранить'), handler="submitForm")
         # Отмена:
-        self.cancel_btn = ext.ExtButton(text=u'Отмена', handler="cancelForm")
+        self.cancel_btn = ext.ExtButton(text=_(u'Отмена'), handler="cancelForm")
         self._mro_exclude_list.append(self.cancel_btn)
 
     def _do_layout(self):
@@ -114,7 +115,7 @@ class BaseListWindow(BaseWindow):
         self.grid_filters = {}
         self.close_btn = self.btn_close = ext.ExtButton(
             name='close_btn',
-            text=u'Закрыть',
+            text=_(u'Закрыть'),
             handler='function(){Ext.getCmp("%s").close();}' % self.client_id
         )
         self._mro_exclude_list.append(self.close_btn)
@@ -212,7 +213,7 @@ class BaseSelectWindow(BaseListWindow):
         super(BaseSelectWindow, self)._init_components()
         self.grid.handler_dblclick = 'selectValue'
         self.select_btn = ext.ExtButton(
-            handler='selectValue', text=u'Выбрать')
+            handler='selectValue', text=_(u'Выбрать'))
         self.buttons.insert(0, self.select_btn)
         self._mro_exclude_list.append(self.select_btn)
         self.grid.columns.append(ExtGridColumn(data_index='__unicode__',
