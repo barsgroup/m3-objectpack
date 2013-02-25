@@ -14,7 +14,7 @@ from m3.ui.ext.misc import store as ext_store
 from m3.ui.ext.containers.grids import ExtGridColumn
 
 import tools
-from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _
 
 
 #==============================================================================
