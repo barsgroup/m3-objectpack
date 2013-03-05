@@ -2,6 +2,7 @@
 import os
 from setuptools import setup, find_packages
 
+
 def read(fname):
     try:
         return open(os.path.join(os.path.dirname(__file__), fname)).read()
@@ -10,7 +11,7 @@ def read(fname):
 
 setup(
     name="objectpack",
-    version="0.6.5",
+    version="0.6.6",
     description=read('DESCRIPTION'),
     license="GPL",
     keywords="django m3 m3-contrib",

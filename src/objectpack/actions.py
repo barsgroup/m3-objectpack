@@ -10,10 +10,12 @@ import datetime
 import re
 import inspect
 import types
+import json
 
 from django.db import models
 from django.db.models import fields as dj_fields
 from django.utils.encoding import force_unicode
+from django.utils.translation import ugettext_lazy as _
 from django.utils import simplejson
 
 from m3.ui import actions as m3_actions
@@ -25,7 +27,6 @@ from m3.db import safe_delete
 import ui
 import tools
 import exceptions
-from django.utils.translation import ugettext_lazy as _
 
 
 #==============================================================================
@@ -315,7 +316,8 @@ class ObjectRowsAction(BaseAction):
         Метод получает первоначальную выборку данных в виде QuerySet
         и помещает в атрибут self.query
         """
-        self.query = self.handle('query',
+        self.query = self.handle(
+            'query',
             self.parent.get_rows_query(self.request, self.context)
         )
 
@@ -324,7 +326,8 @@ class ObjectRowsAction(BaseAction):
         Метод применяет к выборке self.query фильтр по тексту
         из поля "Поиск" окна списка.
         """
-        self.query = self.handle('apply_search',
+        self.query = self.handle(
+            'apply_search',
             self.parent.apply_search(
                 self.query,
                 self.request,
@@ -336,7 +339,8 @@ class ObjectRowsAction(BaseAction):
         Метод применяет к выборке self.query фильтр, как правило поступающий
         от "колоночных фильтров"/фильтров в контекстных меню в окне списка.
         """
-        self.query = self.handle('apply_filter',
+        self.query = self.handle(
+            'apply_filter',
             self.parent.apply_filter(
                 self.query,
                 self.request,
@@ -348,7 +352,8 @@ class ObjectRowsAction(BaseAction):
         Метод применяет к выборке self.query сортировку
         по выбранному в окне списка столбцу.
         """
-        self.query = self.handle('apply_sort_order',
+        self.query = self.handle(
+            'apply_sort_order',
             self.parent.apply_sort_order(
                 self.query,
                 self.request,
@@ -466,21 +471,41 @@ class ObjectRowsAction(BaseAction):
         res.append(self.parent.id_field)
         return res
 
+    def handle_row_editing(self, request, context, data):
+        """
+        Обработка inline-редактирования грида.
+        Метод должен вернуть пару вида (удачно/неудачно, "сообщение"/None)
+        """
+        return self.handle(
+            'row_editing',
+            self.parent.handle_row_editing(request, context, data)
+        )
+
     def run(self, request, context):
         new_self = copy.copy(self)
         new_self.request = request
         new_self.context = context
-        new_self.set_query()
-        new_self.apply_search()
-        new_self.apply_filter()
-        new_self.apply_sort_order()
-        total_count = new_self.get_total_count()
-        new_self.apply_limit()
-        rows = new_self.get_rows()
-        return m3_actions.PreJsonResult({
-            'rows': rows,
-            'total': total_count
-        })
+
+        if 'xaction' in request.REQUEST:
+            success, message = self.handle_row_editing(
+                request=request,
+                context=context,
+                data=json.loads(request.REQUEST.get('rows')))
+            result = m3_actions.OperationResult(
+                success=success, message=message)
+        else:
+            new_self.set_query()
+            new_self.apply_search()
+            new_self.apply_filter()
+            new_self.apply_sort_order()
+            total_count = new_self.get_total_count()
+            new_self.apply_limit()
+            rows = new_self.get_rows()
+            result = m3_actions.PreJsonResult({
+                'rows': rows,
+                'total': total_count
+            })
+        return result
 
 
 #==============================================================================
@@ -505,7 +530,8 @@ class ObjectDeleteAction(BaseAction):
             raise ApplicationLogicException(e.args[0])
         except Exception, e:
             if e.__class__.__name__ == 'IntegrityError':
-                message = _(u'Не удалось удалить элемент. '
+                message = _(
+                    u'Не удалось удалить элемент. '
                     u'Возможно на него есть ссылки.')
                 raise ApplicationLogicException(message)
             else:
@@ -556,8 +582,10 @@ class BasePack(m3_actions.ActionPack):
         name = cls.__dict__.get('_auto_short_name')
         if not name:
             name = '%s/%s' % (
-                inspect.getmodule(cls).__name__.replace('.actions', ''
-                    ).replace('.', '/').lower(),
+                inspect.getmodule(cls).__name__.replace(
+                    '.actions', ''
+                ).replace(
+                    '.', '/').lower(),
                 cls.__name__.lower())
             cls._auto_short_name = name
         return name
@@ -577,7 +605,7 @@ class BasePack(m3_actions.ActionPack):
         # получение url для построения внутренних кэшей m3
         path = [r'/%s' % cls.get_short_name()]
         pack = cls.parent
-        while pack != None:
+        while pack is not None:
             path.append(pack.url)
             pack = pack.parent
         for cont in m3_actions.ControllerCache.get_controllers():
@@ -610,10 +638,10 @@ class ObjectPack(BasePack, ISelectablePack):
     # ВАЖНО: для корректной работы полей выбора,
     # необходима колонка с data_index = '__unicode__'
     columns = [
-       {
-           'header':_(u'Наименование'),
-           'data_index':'__unicode__',
-       },
+        {
+            'header': _(u'Наименование'),
+            'data_index': '__unicode__',
+        },
 #        {
 #            'data_index':'',
 #            'width':,
@@ -700,7 +728,8 @@ class ObjectPack(BasePack, ISelectablePack):
         PERM_EDIT: _(u'Редактирование')
     }
 
-    MSG_DOESNOTEXISTS = _(u'Запись не найдена в базе данных.<br/>' +
+    MSG_DOESNOTEXISTS = _(
+        u'Запись не найдена в базе данных.<br/>' +
         u'Возможно, она была удалена. Пожалуйста, обновите таблицу.')
 
     # плоский список полей фильтрации
@@ -817,8 +846,8 @@ class ObjectPack(BasePack, ISelectablePack):
                 try:
                     text = getattr(row, self.column_name_on_select)
                 except AttributeError:
-                    raise Exception(
-                        _(u'Не получается получить поле {0} для '
+                    raise Exception(_(
+                        u'Не получается получить поле {0} для '
                         u'DictSelectField.pack = {1}').format(attr_name, self))
 
             # getattr может возвращать метод, например verbose_name
@@ -957,6 +986,14 @@ class ObjectPack(BasePack, ISelectablePack):
         else:
             return self.list_window()
 
+    def handle_row_editing(self, request, context, data):
+        """
+        Метод принимает данные из редактируемого грида и возвращает
+        результат редактирования кортежем вида
+        (удачно/неудачно, "сообщение"/None)
+        """
+        return (False, None)
+
     def get_rows_query(self, request, context):
         """
         возвращает выборку из БД для получения списка данных
@@ -987,7 +1024,8 @@ class ObjectPack(BasePack, ISelectablePack):
             for item in request_filter:
                 # Для дат
                 if item['data']['value'] is basestring:
-                    m = re.match(r"([0-9]{2})\.([0-9]{2})\.([0-9]{4})$",
+                    m = re.match(
+                        r"([0-9]{2})\.([0-9]{2})\.([0-9]{4})$",
                         item['data']['value'])
                     if m:
                         item['data']['value'] = '{0}-{1}-{2}'.format(
@@ -995,7 +1033,8 @@ class ObjectPack(BasePack, ISelectablePack):
                         )
 
                 custom = None
-                col = filter(lambda col: col['data_index'] == item["field"],
+                col = filter(
+                    lambda col: col['data_index'] == item["field"],
                     self._columns_flat)[:1]
                 if col:
                     custom = col[0]['filter'].get('custom_field')
@@ -1007,14 +1046,17 @@ class ObjectPack(BasePack, ISelectablePack):
                     else:
                         #в другом случае ожидается список полей
                         if item['data']['type'] == 'list':
-                            params = [models.Q(**dict(zip(
-                                ("%s__icontains" % custom_fld,),
-                                item['data']['value']
-                        ))) for custom_fld in custom]
+                            params = [
+                                models.Q(**dict(zip(
+                                    ("%s__icontains" % custom_fld,),
+                                    item['data']['value']
+                                ))) for custom_fld in custom]
                         else:
-                            params = [models.Q(**{
-                            "%s__icontains" % custom_fld: item['data']['value']
-                        }) for custom_fld in custom]
+                            params = [
+                                models.Q(**{
+                                    "%s__icontains" % custom_fld: (
+                                        item['data']['value'])
+                                }) for custom_fld in custom]
 
                         q = reduce(lambda q1, q2: q1 | q2, params)
                     query = query.filter(q)
@@ -1105,8 +1147,9 @@ class ObjectPack(BasePack, ISelectablePack):
             result = safe_delete(obj)
         #в случае успеха safe_delete возвращет true
         if not result:
-            raise RelatedError(_(u'Не удалось удалить элемент {0}. '
-                u'Возможно на него есть ссылки.'),format(obj_id))
+            raise RelatedError(_(
+                u'Не удалось удалить элемент {0}. '
+                u'Возможно на него есть ссылки.'), format(obj_id))
         return obj
 
     def get_filter_plugin(self):
@@ -1120,16 +1163,17 @@ class ObjectPack(BasePack, ISelectablePack):
             if column.get('filter') and not column.get('columns'))
         if list_columns_filter:
             for k, v in list_columns_filter.items():
-                params = dict(
-                    type=v.get('type', 'string'),
-                    data_index=k
-                )
+                params = {
+                    'type': v.get('type', 'string'),
+                    'data_index': k
+                }
                 f_options = v.get('options', [])
                 if callable(f_options):
                     f_options = f_options()
-                params['options'] = "[%s]" % ','.join((("'%s'" % item)
-                    if isinstance(item, basestring)
-                    else ("['%s','%s']" % item) if item is not None else '[]')
+                params['options'] = "[%s]" % ','.join(
+                    (("'%s'" % item)
+                        if isinstance(item, basestring) else
+                        ((item is None and '[]') or ("['%s','%s']" % item)))
                     for item in f_options)
                 filter_items.append("""{
                     type:'%(type)s',
@@ -1139,7 +1183,6 @@ class ObjectPack(BasePack, ISelectablePack):
             return """
                  new Ext.ux.grid.GridFilters({filters:[%s]})
             """ % ','.join(filter_items)
-
 
     #-----------------------------------------------------------------------
     # По умолчанию ни меню ни десктоп не расширяется
@@ -1298,7 +1341,8 @@ def multiline_text_window_result(
         data = u'\n'.join(data)
     return m3_actions.OperationResult(
         success=success,
-        code=u"""
+        code=(
+            u"""
             (function() {
                 var msg_win = new Ext.Window({
                     title: '%s',
@@ -1318,8 +1362,7 @@ def multiline_text_window_result(
                 msg_win.show();
             })()
             """ % (
-                title,
-                width, height,
-                data.replace("\n", r"\n").replace(r"'", r'"')
-            )
+            title, width, height,
+            data.replace("\n", r"\n").replace(r"'", r'"'))
+        )
     )

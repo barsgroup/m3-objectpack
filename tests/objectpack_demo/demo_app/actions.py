@@ -32,7 +32,9 @@ class PersonObjectPack(objectpack.ObjectPack):
                 'custom_field': ('name', 'surname')
             }
         },
-        {'data_index': 'date_of_birth', 'header': u'Дата рождения',
+        {
+            'data_index': 'date_of_birth',
+            'header': u'Дата рождения',
             'filter': {
                 'type': 'date'
             }
@@ -74,10 +76,12 @@ class BandedColumnPack(objectpack.ObjectPack):
         },
         xrange(2, 12),
         mk_col(1)
-    )])(lambda idx: {
-        'header': '%s' % idx,
-        'data_index': 'field%s' % idx,
-        'width': 25,
-        'fixed': True,
-        'filter': {'type': 'string'}
-    })
+    )])(
+        lambda idx: {
+            'header': '%s' % idx,
+            'data_index': 'field%s' % idx,
+            'width': 25,
+            'fixed': True,
+            'filter': {'type': 'string'}
+        }
+    )
