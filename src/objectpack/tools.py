@@ -12,7 +12,7 @@ from django.db import transaction
 # QuerySplitter
 #==============================================================================
 class QuerySplitter(object):
-    '''
+    """
     Порционный загрузчик выборки в итеративном контексте
     TODO: придумать тест для покрытия Exception'ов
     >>> from django.test.client import RequestFactory
@@ -23,12 +23,12 @@ class QuerySplitter(object):
     ...     validator=lambda x: x % 2,
     ...     request=request)
     [5, 7, 9, 11, 13, 15, 17, 19, 21, 23]
-    '''
+    """
 
     def __init__(self, query, start, limit=0):
-        '''
+        """
         query - выборка, start и limit - откуда и сколько отрезать.
-        '''
+        """
         self._data = query
         self._start = start
         self._limit = limit
@@ -62,25 +62,26 @@ class QuerySplitter(object):
         raise StopIteration()
 
     def skip_last(self):
-        '''
+        """
         Команда "не учитывать прошлое значение"
-        '''
+        """
         if not self._cnt:
             raise IndexError('Can`t skip any more!')
         self._cnt -= 1
 
     @classmethod
-    def make_rows(cls, query,
+    def make_rows(
+            cls, query,
             row_fabric=lambda item: item,
             validator=lambda item: True,
             request=None, start=0, limit=25):
-        '''
+        """
         Формирует список элементов для грида из выборки.
         Параметры листания берутся из request`а, или из параметров start/limit.
         Элементы перед попаданием прогоняются через row_fabric.
         В результирующий список попадают только те элементы,
         вызов validator для которых возвращает True.
-        '''
+        """
         if request:
             start = extract_int(request, 'start') or start
             limit = extract_int(request, 'limit') or limit
@@ -100,12 +101,12 @@ class QuerySplitter(object):
 # ModelCache
 #==============================================================================
 class ModelCache(object):
-    '''
+    """
     Кэш get-ов объектов одной модели.
     В качестве ключа кэша - набор параметров для get-а
     Если в конструкторе указана фабрика объектов, то отсутствующие объекты
     создаются передачей аргументов фабрике.
-    '''
+    """
 
     def __init__(self, model, object_fabric=None):
         self._model = model
@@ -153,14 +154,14 @@ class ModelCache(object):
 # TransactionCM
 #==============================================================================
 class TransactionCM(object):
-    '''
+    """
     Транизакция в виде ContextManager
-    '''
+    """
     def __init__(self, using=None, catcher=None):
-        '''
+        """
         using - DB alias
         catcher - внешний обработчик исключений
-        '''
+        """
         self._using = using
         self._catcher = catcher or self._default_catcher
 
@@ -178,12 +179,14 @@ class TransactionCM(object):
 
     @staticmethod
     def _default_catcher(ex_type, ex_inst, traceback):
-        '''Обработчик исключений, используемый по-умолчанию'''
+        """
+        Обработчик исключений, используемый по-умолчанию
+        """
         return ex_type is None
 
 
 def extract_int(request, key):
-    '''
+    """
     Нормальный извлекатель списка чисел
     >>> from django.test.client import RequestFactory
     >>> rf = RequestFactory()
@@ -193,7 +196,7 @@ def extract_int(request, key):
     >>> request = rf.post('', {'int':1})
     >>> extract_int(request, 'int')
     1
-    '''
+    """
     try:
         return int(request.REQUEST.get(key, ''))
     except ValueError:
@@ -201,7 +204,7 @@ def extract_int(request, key):
 
 
 def extract_int_list(request, key):
-    '''
+    """
     Нормальный извлекатель списка чисел
     >>> from django.test.client import RequestFactory
     >>> rf = RequestFactory()
@@ -211,16 +214,16 @@ def extract_int_list(request, key):
     >>> request = rf.post('', {'list':'1,2,3,4'})
     >>> extract_int_list(request, 'list')
     [1, 2, 3, 4]
-    '''
+    """
     return map(int, filter(None, request.REQUEST.get(key, '').split(',')))
 
 
 def str_to_date(s):
-    '''
+    """
     Извлечение даты из строки
     >>> str_to_date('31.12.2012') == str_to_date('2012-12-31, Happy New Year')
     True
-    '''
+    """
     if s:
         s = s[:10]
         s = s.replace('-', '.')
@@ -237,11 +240,11 @@ def str_to_date(s):
 
 
 def extract_date(request, key, as_date=False):
-    '''
+    """
     Извлечение даты из request`а в формате DD.MM.YYYY
     (в таком виде приходит от ExtDateField)
     и приведение к Django-формату (YYYY-MM-DD)
-    '''
+    """
     res = str_to_date(request.REQUEST.get(key))
     if res and as_date:
         res = res.date()
@@ -249,7 +252,7 @@ def extract_date(request, key, as_date=False):
 
 
 def modify(obj, **kwargs):
-    '''
+    """
     Массовое дополнение атрибутов для объекта с его (объекта) возвратом
     >>> class Object(object): pass
     >>> cls = Object()
@@ -257,14 +260,14 @@ def modify(obj, **kwargs):
     >>> cls = modify(cls, **{'param1':1, })
     >>> cls.param1
     1
-    '''
+    """
     for attr, val in kwargs.iteritems():
         setattr(obj, attr, val)
     return obj
 
 
 def modifier(**kwargs):
-    '''
+    """
     Принимает атрибуты со значениями (в виде kwargs)
     Возвращает модификатор - функцию, модифицирующую передаваемый ей объект
     указанными атрибутами.
@@ -276,15 +279,14 @@ def modifier(**kwargs):
     >>> cls = w10(Object())
     >>> cls.width
     10
-    '''
-
+    """
     return lambda obj: modify(obj, **kwargs)
 
 
 def find_element_by_type(container, cls):
-    '''
+    """
     посик экземлпяров элементов во всех вложенных контейнерах
-    '''
+    """
     res = []
     for item in container.items:
         if isinstance(item, cls):
@@ -299,16 +301,17 @@ def find_element_by_type(container, cls):
 # collect_overlaps
 #==============================================================================
 def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
-    '''
+    """
     Возвращает список объектов из указанной выборки, которые пересекаются
     с указанным объектом по указанным полям начала и конца интервала
-    '''
+    """
     obj_bgn = getattr(obj, attr_begin, None)
     obj_end = getattr(obj, attr_end, None)
 
     if obj_bgn is None or obj_end is None:
         raise ValueError(
-        u'Объект интервальной модели должен иметь непустые границы интервала!')
+            u'Объект интервальной модели должен иметь '
+            u'непустые границы интервала!')
 
     if obj.id:
         queryset = queryset.exclude(id=obj.id)
@@ -323,12 +326,12 @@ def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
 
         def add():
             if any((
-                    bgn <= obj_bgn <= end,
-                    bgn <= obj_end <= end,
-                    obj_bgn <= bgn <= obj_end,
-                    obj_bgn <= end <= obj_end,
-                )):
-                    result.append(o)
+                bgn <= obj_bgn <= end,
+                bgn <= obj_end <= end,
+                obj_bgn <= bgn <= obj_end,
+                obj_bgn <= end <= obj_end,
+            )):
+                result.append(o)
 
         try:
             add()
@@ -342,7 +345,7 @@ def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
 
 
 #==============================================================================
-# istraversable
+# istraversable - проверка на "обходимость"
 #==============================================================================
 def istraversable(x):
     """

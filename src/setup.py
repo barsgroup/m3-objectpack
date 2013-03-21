@@ -11,7 +11,7 @@ def read(fname):
 
 setup(
     name="objectpack",
-    version="0.6.6",
+    version="0.7.0",
     description=read('DESCRIPTION'),
     license="GPL",
     keywords="django m3 m3-contrib",
@@ -19,7 +19,7 @@ setup(
     author="Alexey Pirogov",
     author_email="pirogov@bars-open.ru",
 
-    maintainer='Rinat F Sabitov',
+    maintainer='Alexey V Pirogov, Rinat F Sabitov',
     maintainer_email='rinat.sabitov@gmail.com',
 
     url="https://src.bars-open.ru/py/m3/m3_contrib/objectpack",

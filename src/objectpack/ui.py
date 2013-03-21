@@ -7,14 +7,13 @@ Created on 23.07.12
 import inspect
 
 from django.db import models as django_models
+from django.utils.translation import ugettext_lazy as _
 
 from m3.ui.ext import all_components as ext
 from m3.ui.ext import windows as ext_windows
 from m3.ui.ext.misc import store as ext_store
-from m3.ui.ext.containers.grids import ExtGridColumn
 
 import tools
-from django.utils.translation import ugettext_lazy as _
 
 
 #==============================================================================
@@ -32,27 +31,46 @@ class BaseWindow(ext_windows.ExtWindow):
 
     def _init_components(self):
         """
-        создание компонентов
+        Метод создаёт визуальные компоненты,
+        отражающие ПОЛЯ модели, но НЕ ОПРЕДЕЛЯЕТ РАСПОЛОЖЕНИЕ
+        компонентов в окне
         """
         pass
 
     def _do_layout(self):
         """
-        растановка компонентов
+        Метод располагает УЖЕ СОЗДАННЫЕ визуальные компоненты
+        на окне, создавая по необходимости контейнеры (ТОЛЬКО контейнеры)
         """
         pass
 
     def set_params(self, params):
         """
-        установка параметров окна
+        Метод принимает словарь, содержащий параметры окна,
+        передаваемые в окно слоем экшнов
         """
-        if not getattr(self, 'title', None):
-            self.title = params.get('title', u'')
+        # Параметры могут содержать общие настройки окна
+        self.title = params.get('title', self.title) or u''
+        self.width = params.get('width', self.width)
+        self.height = params.get('height', self.height)
+        self.maximized = params.get('maximized', self.maximized)
+
+        # Параметры могут содержать флаг режима "только для чтения"
         if params.get('read_only'):
             self.make_read_only()
 
     def make_read_only(self, access_off=True, exclude_list=None):
-        """Управление состоянием Read-only окна"""
+        """
+        Метод управляет режимом "только для чтения" окна
+
+        @access_off=True/False - включение/выключение режима
+        @exclude_list - список компонентов, которые не будут блокироваться
+        """
+        # Потомки могут дополнять список self._mro_exclude_list -
+        # список визуальных компонентов, которые не будут
+        # блокироваться в режиме "только для чтения".
+        # Т.о. метод обычно не требует перекрытья -
+        # - достаточно списка исключений
         super(BaseWindow, self).make_read_only(
             access_off, self._mro_exclude_list + (exclude_list or []))
 
@@ -66,33 +84,37 @@ class BaseEditWindow(ext_windows.ExtEditWindow, BaseWindow):
     """
     @property
     def form(self):
+        # Хак для совместимости с m3
         return self.__form
 
     def _init_components(self):
         super(BaseEditWindow, self)._init_components()
         self.__form = ext.ExtForm()
         self.items.append(self.form)
-        # ОК:
-        self.save_btn = ext.ExtButton(text=_(u'Сохранить'), handler="submitForm")
-        # Отмена:
-        self.cancel_btn = ext.ExtButton(text=_(u'Отмена'), handler="cancelForm")
+
+        self.save_btn = ext.ExtButton(
+            text=_(u'Сохранить'), handler="submitForm")
+        self.cancel_btn = ext.ExtButton(
+            text=_(u'Отмена'), handler="cancelForm")
+
+        # Кнопка "Отмена" не блокируется в режиме "только для чтения"
         self._mro_exclude_list.append(self.cancel_btn)
 
     def _do_layout(self):
         super(BaseEditWindow, self)._do_layout()
         self.modal = True
+
         self.buttons.extend([
             self.save_btn,
             self.cancel_btn,
         ])
-        # F2 -- ОК:
+
+        # Горячая клавиша F2 эквивалентна ОК:
         f2key = {'key': 113, 'fn': self.save_btn.handler}
         self.keys.append(f2key)
 
     def set_params(self, params):
-        """
-        установка параметров окна
-        """
+        # url, по которому находится action/view сохранения
         self.form.url = params['form_url']
         obj = params.get('object', None)
         if obj:
@@ -105,14 +127,14 @@ class BaseEditWindow(ext_windows.ExtEditWindow, BaseWindow):
 #==============================================================================
 class BaseListWindow(BaseWindow):
     """
-    окно для отображения линейного справочника
+    Базовое окно списка объектов
     """
-    def _init_components(self):
-        """
-        создание компонентов
-        """
-        self.grid = ext.ExtObjectGrid()
+    def __init__(self, *args, **kwargs):
+        super(BaseListWindow, self).__init__(*args, **kwargs)
         self.grid_filters = {}
+
+    def _init_components(self):
+        self.grid = ext.ExtObjectGrid()
         self.close_btn = self.btn_close = ext.ExtButton(
             name='close_btn',
             text=_(u'Закрыть'),
@@ -121,31 +143,25 @@ class BaseListWindow(BaseWindow):
         self._mro_exclude_list.append(self.close_btn)
 
     def _do_layout(self):
-        """
-        растановка компонентов
-        """
-        self.maximizable = True
-        self.minimizable = True
         self.layout = 'fit'
         self.items.append(self.grid)
-
         self.buttons.append(self.btn_close)
 
     def set_params(self, params):
-        """
-        установка параметров окна
-        """
-        assert 'pack' in params, 'incorrect params'
+        super(BaseListWindow, self).set_params(params)
+        self.maximizable = self.minimizable = True
+        assert 'pack' in params, _(
+            u'Параметры окна должны содержать экземпляр ActionPack'
+            u' настраивающего grid!'
+        )
         params['pack'].configure_grid(self.grid)
 
-        self.title = params.get('title')
-        self.width = params.get('width')
-        self.height = params.get('height')
-        self.maximized = params.get('maximized', False)
-
-    def add_grid_column_filter(self, column_name,
+    def add_grid_column_filter(
+            self, column_name,
             filter_control=None, filter_name=None, tooltip=None):
-        """ Добавление фильтра к колонке"""
+        """
+        Метод добавляет колоночный фильтр
+        """
         if not filter_name:
             filter_name = column_name
         if column_name in self.grid_filters:
@@ -161,7 +177,9 @@ class BaseListWindow(BaseWindow):
         self.grid_filters[column_name] = fltr
 
     def del_grid_column_filter(self, column_name, filter_name=None):
-        """ Удаление фильтра с колонки"""
+        """
+        Метод удаляет колоночный фильтр
+        """
         if not filter_name:
             filter_name = column_name
         if column_name in self.grid_filters:
@@ -170,7 +188,7 @@ class BaseListWindow(BaseWindow):
             if len(self.grid_filters[column_name]) == 0:
                 del self.grid_filters[column_name]
 
-    def render_filter(self, filter_):
+    def _render_filter(self, filter_):
         lst = []
         if filter_['filter_control']:
             return filter_['filter_control']
@@ -189,12 +207,12 @@ class BaseListWindow(BaseWindow):
             for col in self.grid.columns:
                 if col.data_index in self.grid_filters:
                     if len(self.grid_filters[col.data_index]) == 1:
-                        filter_str = self.render_filter(
+                        filter_str = self._render_filter(
                             self.grid_filters[col.data_index].values()[0])
                     else:
                         filters = []
                         for fltr in self.grid_filters[col.data_index].values():
-                            filters.append(self.render_filter(fltr))
+                            filters.append(self._render_filter(fltr))
                         filter_str = '[%s]' % ','.join(filters)
                     col.extra['filter'] = filter_str
         return super(BaseListWindow, self).render()
@@ -205,26 +223,22 @@ class BaseListWindow(BaseWindow):
 #==============================================================================
 class BaseSelectWindow(BaseListWindow):
     """
-    окно выбора из линейного справочника
+    Окно выбора из списка объектов
     """
-    column_name_on_select = '__unicode__'
-
     def _init_components(self):
         super(BaseSelectWindow, self)._init_components()
-        self.grid.handler_dblclick = 'selectValue'
         self.select_btn = ext.ExtButton(
             handler='selectValue', text=_(u'Выбрать'))
-        self.buttons.insert(0, self.select_btn)
         self._mro_exclude_list.append(self.select_btn)
-        self.grid.columns.append(ExtGridColumn(data_index='__unicode__',
-            hidden=True))
+
+    def _do_layout(self):
+        super(BaseSelectWindow, self)._do_layout()
+        self.buttons.insert(0, self.select_btn)
 
     def set_params(self, params):
-        """
-        установка параметров окна
-        """
         super(BaseSelectWindow, self).set_params(params)
         self.template_globals = 'select-window.js'
+        self.grid.handler_dblclick = 'selectValue'
 
 
 #==============================================================================
@@ -302,7 +316,7 @@ class ColumnsConstructor(object):
 
         def _cleaned(self):
             """
-            Возвращает элемент с очищенный от пустых подэлементов
+            Возвращает элемент очищенный от пустых подэлементов
             или None, если непустых подэлементов нет
             """
             self.items = filter(None, [i._cleaned() for i in self.items])

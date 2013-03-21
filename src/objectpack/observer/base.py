@@ -6,7 +6,11 @@ Created on 03.08.2012
 import re
 import inspect
 
+import tools
+
 from m3.ui import actions as m3_actions
+
+ACTION_NAME_ATTR = '_observing_name'
 
 
 #==============================================================================
@@ -155,7 +159,7 @@ class Observer(object):
         - строкой с именем класса в формате "package/ClassName"
         """
         if inspect.isclass(pack):
-            pack = self._name_class(pack)
+            pack = tools._name_class(pack)
         return self._pack_instances_by_name.get(pack)
 
     def _log(self, level, message):
@@ -165,27 +169,18 @@ class Observer(object):
         if self._verbose_level >= level:
             self._logger(message)
 
-    @staticmethod
-    def _name_class(clazz):
-        """
-        Генерация имени для класса
-        """
-        return '%s/%s' % (
-            inspect.getmodule(clazz).__package__, clazz.__name__)
-
     def _name_action(self, action, pack_name=None):
         """
         Получение / генерация полного имени для @action
         """
-        name = getattr(action, '_observing_name', None)
+        name = getattr(action, ACTION_NAME_ATTR, None)
         if not name:
-            pack_name = pack_name or self._name_class(action.parent.__class__)
-            # имя подписки будет иметь вид "пакет/КлассПака/КлассAction"
-            name = '%s/%s' % (pack_name, action.__class__.__name__)
+            name = tools.name_action(action, pack_name)
             # название подписки проставляется в экземпляр action
             action._observing_name = name
 
-            self._log(self.LOG_MORE,
+            self._log(
+                self.LOG_MORE,
                 'Name gererated:\n\tAction\t %r\n\tname\t "%s"'
                 % (action, name))
 
@@ -197,15 +192,18 @@ class Observer(object):
         """
         self._action_listeners = {}
         # слушатели сортируются по приоритету
-        listeners = [l[1] for l in
-            sorted(self._registered_listeners, key=lambda x: x[0])]
+        listeners = [
+            l[1] for l in
+            sorted(self._registered_listeners, key=lambda x: x[0])
+        ]
         # зарегистрированные actions получают подписчиков
         for name in self._actions:
             action_listeners = []
             for is_listen, listener in listeners:
                 if is_listen(name):
                     action_listeners.append(listener)
-                    self._log(self.LOG_MORE,
+                    self._log(
+                        self.LOG_MORE,
                         'Action linked:\n\tshort_name\t "%s"'
                         '\n\tListener\t %r' % (name, listener))
             self._action_listeners[name] = action_listeners
@@ -217,10 +215,11 @@ class Observer(object):
         """
         # каждый отдельный Pack должен регистрироваться ровно один раз
         # уникльность Pack определяется следующим ключом
-        pack_name = self._name_class(pack.__class__)
+        pack_name = tools._name_class(pack.__class__)
         if pack_name in self._pack_instances_by_name:
             # попытка перерегистрации отмечается предупреждением
-            self._log(self.LOG_WARNINGS,
+            self._log(
+                self.LOG_WARNINGS,
                 'WARNING! Pack reregistration blocked!:\n\tPack: %s'
                 % pack_name)
             return False
@@ -228,7 +227,8 @@ class Observer(object):
         else:
             # ActionPack запоминается, как уже зарегистрированный
             self._pack_instances_by_name[pack_name] = pack
-            self._log(self.LOG_MORE,
+            self._log(
+                self.LOG_MORE,
                 'Pack reregistered:\n\tPack: %s'
                 % pack_name)
 
@@ -287,7 +287,8 @@ class Observer(object):
         self._registered_listeners.append(
             (priority, (is_listen, listener))
         )
-        self._log(self.LOG_MORE,
+        self._log(
+            self.LOG_MORE,
             'Listener registered:\n\tListener %r' % listener)
 
         self._reconfigure()
@@ -302,8 +303,8 @@ class Observer(object):
         log_call = lambda listener, verb: self._log(
             self.LOG_CALLS,
             'Listener call:\n\t'
-                'Action\t %r\n\tListener %r\n\tVerb\t "%s"' %
-                (action, listener, verb)
+            'Action\t %r\n\tListener %r\n\tVerb\t "%s"' %
+            (action, listener, verb)
         )
 
         def handle(verb, arg):

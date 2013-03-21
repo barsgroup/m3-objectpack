@@ -27,6 +27,7 @@ from m3.db import safe_delete
 import ui
 import tools
 import exceptions
+import observer
 
 
 #==============================================================================
@@ -40,6 +41,25 @@ class BaseAction(m3_actions.Action):
     def url(self):
         # автоматически генерируемый url
         return r'/%s' % self.__class__.__name__.lower()
+
+    def get_permission_code(self):
+        code = getattr(self, '_permission_code', None)
+        if not code:
+            # код права генерируется динамически
+            # (если не назначен Observer`ом)
+            self._permission_code = getattr(
+                self, observer.ACTION_NAME_ATTR, None
+            ) or observer.name_action(self)
+        return code
+
+    @property
+    def need_check_permission(self):
+        # Пак определяет, нужно ли проверять права для экшна
+        return getattr(
+            self.parent,
+            'need_check_permission_for',
+            lambda x: False
+        )(self)
 
     @staticmethod
     def handle(verb, arg):
@@ -67,11 +87,6 @@ class BaseWindowAction(BaseAction):
     """
     Базовый Action показа окна
     """
-    win_params = {}  # параметы для формирования окна
-    request = None  # request выолнения
-    context = None  # context выполнения, будет возвращен экшеном
-    win = None  # экземпляр окна которое вернет экшен
-
     def create_window(self):
         """
         Метод инстанцирует окно и помещает экземпляр в атрибут self.win
@@ -80,6 +95,14 @@ class BaseWindowAction(BaseAction):
         raise NotImplementedError()
 
     def set_windows_params(self):
+        # TODO: Выпилить, ато опечатка портит всю семантику!
+        self.set_window_params()
+
+    def _apply_windows_params(self):
+        # TODO: Выпилить, ато опечатка портит всю семантику!
+        self._apply_window_params()
+
+    def set_window_params(self):
         """
         Метод заполняет словарь self.win_params, который будет передан
         в окно. Этот словарь выступает как шина передачи данных
@@ -88,7 +111,7 @@ class BaseWindowAction(BaseAction):
         """
         pass
 
-    def _apply_windows_params(self):
+    def _apply_window_params(self):
         """
         Метод передает словарь параметров в окно.
         ( Обычно не требует перекрытия )
@@ -111,12 +134,14 @@ class BaseWindowAction(BaseAction):
         ( обычно не требует перекрытия )
         """
         new_self = copy.copy(self)
-        new_self.win_params = (self.__class__.win_params or {}).copy()
+        new_self.win_params = (
+            getattr(self.__class__, 'win_params', None) or {}
+        ).copy()
         new_self.request = request
         new_self.context = context
-        new_self.set_windows_params()
+        new_self.set_window_params()
         new_self.create_window()
-        new_self._apply_windows_params()
+        new_self._apply_window_params()
         new_self.configure_window()
         return m3_actions.ExtUIScriptResult(
             new_self.win, context=new_self.context)
@@ -129,18 +154,18 @@ class ObjectListWindowAction(BaseWindowAction):
     """
     Базовый Action показа окна списка объектов.
     """
-    url = '/list-window$'
     is_select_mode = False  # режим показа окна (True - выбор, False - список)
 
-    def set_windows_params(self):
+    def set_window_params(self):
         params = self.win_params
+        params['is_select_mode'] = self.is_select_mode
         params['pack'] = self.parent
         params['title'] = self.parent.title
-        params['is_select_mode'] = self.is_select_mode
         params['height'] = self.parent.height
         params['width'] = self.parent.width
-        params['read_only'] = not self.parent.has_sub_permission(
-            self.request.user, self.parent.PERM_EDIT, self.request)
+        params['read_only'] = getattr(self.parent, 'read_only', None) or (
+            not self.has_permission(self.request.user))
+
         self.win_params = self.parent.get_list_window_params(
             params, self.request, self.context)
 
@@ -158,8 +183,12 @@ class ObjectSelectWindowAction(ObjectListWindowAction):
     """
     Базовый Action показа окна списка выбора объекта из списка.
     """
-    url = '/select-window$'
     is_select_mode = True
+
+    def set_window_params(self):
+        super(ObjectSelectWindowAction, self).set_window_params()
+        # В окне выбора можно только ВЫБИРАТЬ!
+        self.win_params['read_only'] = True
 
 
 #==============================================================================
@@ -169,39 +198,35 @@ class ObjectEditWindowAction(BaseWindowAction):
     """
     Базовый Action показа окна редактирования объекта.
     """
-    url = '/edit-window$'
-
-    def set_windows_params(self):
+    def set_window_params(self):
         try:
             obj, create_new = self.parent.get_obj(self.request, self.context)
         except self.parent.get_not_found_exception():
             raise ApplicationLogicException(self.parent.MSG_DOESNOTEXISTS)
 
-        self.win_params['object'] = obj
-        self.win_params['create_new'] = create_new
-        self.win_params['form_url'] = (
-            self.parent.save_action.get_absolute_url()
+        params = self.win_params.copy()
+        params['object'] = obj
+        params['create_new'] = create_new
+        params['form_url'] = self.parent.save_action.get_absolute_url()
+
+        read_only = getattr(self.parent, 'read_only', None) or (
+            not self.has_permission(self.request.user))
+
+        params['read_only'] = read_only
+        params['title'] = self.parent.format_window_title(
+            _(u'Просмотр') if read_only else
+            _(u'Добавление') if create_new else
+            _(u'Редактирование')
         )
 
-        # заголовок окна по-умолчанию
-        self.win_params['title'] = self.parent.format_window_title(
-            _(u'Добавление') if create_new else _(u'Редактирование'))
-
         self.win_params = self.parent.get_edit_window_params(
-            self.win_params, self.request, self.context)
+            params, self.request, self.context)
 
     def create_window(self):
         assert 'create_new' in self.win_params, (
-            u'You must call "set_windows_params" method of superclass!')
+            u'You must call "set_window_params" method of superclass!')
         self.win = self.parent.create_edit_window(
             self.win_params['create_new'], self.request, self.context)
-
-    def configure_window(self):
-        # проверим право редактирования
-        if not self.parent.has_sub_permission(
-                self.request.user, self.parent.PERM_EDIT, self.request):
-            exclude_list = ['close_btn', 'cancel_btn']
-            self.win.make_read_only(True, exclude_list)
 
 
 #==============================================================================
@@ -209,7 +234,7 @@ class ObjectEditWindowAction(BaseWindowAction):
 #==============================================================================
 class ObjectAddWindowAction(ObjectEditWindowAction):
     """
-    Базовый Action показа окна редактирования объекта.
+    Базовый Action показа окна добавления объекта.
     """
     # Отдельный action для уникальности short_name
     pass
@@ -222,13 +247,6 @@ class ObjectSaveAction(BaseAction):
     """
     Базовый Action сохранения отредактированного объекта.
     """
-    url = '/save$'
-    request = None
-    context = None
-    win = None
-    obj = None
-    create_new = None
-
     class AlreadySaved(Exception):
         """
         Исключение, с помощью которого расширение,
@@ -306,11 +324,6 @@ class ObjectRowsAction(BaseAction):
     """
     Базовый Action получения данных для отображения в окне списка объектов.
     """
-    url = '/rows$'
-    request = None
-    context = None
-    query = None
-
     def set_query(self):
         """
         Метод получает первоначальную выборку данных в виде QuerySet
@@ -388,8 +401,8 @@ class ObjectRowsAction(BaseAction):
 
     def prepare_object(self, obj):
         """
-        возвращает словарь для составления результирующего списка
-        на вход получает объект, полученный из QuerySet'a
+        Возвращает словарь, для составления результирующего списка.
+        @obj - объект, полученный из QuerySet'a
         """
         if hasattr(self.parent, 'prepare_row'):
             obj = self.parent.prepare_row(obj, self.request, self.context)
@@ -460,11 +473,15 @@ class ObjectRowsAction(BaseAction):
         return self.handle('prepare_obj', result_dict)
 
     def get_total_count(self):
-        'подсчет общего кол-ва объектов'
+        """
+        Возвращает общее кол-во объектов
+        """
         return self.query.count()
 
     def get_column_data_indexes(self):
-        'список дата индеков для формирования jsona'
+        """
+        Возвращает список data_index колонок, для формирования json
+        """
         res = ['__unicode__', ]
         for col in getattr(self.parent, '_columns_flat', []):
             res.append(col['data_index'])
@@ -473,7 +490,7 @@ class ObjectRowsAction(BaseAction):
 
     def handle_row_editing(self, request, context, data):
         """
-        Обработка inline-редактирования грида.
+        Обрабатывает inline-редактирования грида.
         Метод должен вернуть пару вида (удачно/неудачно, "сообщение"/None)
         """
         return self.handle(
@@ -515,15 +532,11 @@ class ObjectDeleteAction(BaseAction):
     """
     Действие по удалению объекта
     """
-
-    url = '/delete_row$'
-    request = None
-    context = None
-
     def try_delete_objs(self):
         """
         удаляет обекты и пытается перехватить исключения
         """
+        # TODO: разгрести этот УЖАС!
         try:
             self.delete_objs()
         except RelatedError, e:
@@ -540,7 +553,7 @@ class ObjectDeleteAction(BaseAction):
 
     def delete_objs(self):
         """
-        удаляет обекты
+        Удаляет обекты
         """
         ids = m3_actions.utils.extract_int_list(
             self.request, self.parent.id_param_name)
@@ -548,7 +561,9 @@ class ObjectDeleteAction(BaseAction):
             self.delete_obj(i)
 
     def audit(self, obj):
-        """docstring for audit"""
+        """
+        Обработка успешно удалённых объектов
+        """
         pass
 
     def delete_obj(self, id_):
@@ -694,7 +709,7 @@ class ObjectPack(BasePack, ISelectablePack):
     search_fields = None
     allow_paging = True
 
-    #пак будет настраивать грид на возможность редактирования
+    # пак будет настраивать грид на возможность редактирования
     read_only = False
 
     # Порядок сортировки элементов списка. Работает следующим образом:
@@ -715,7 +730,7 @@ class ObjectPack(BasePack, ISelectablePack):
     # если None - то удаление возможно при наличии add_window/edit_window
     can_delete = None
 
-    # Группа отвечающие за отображение форм:
+    # классы отвечающие за отображение форм:
     list_window = ui.BaseListWindow  # Форма списка
     select_window = ui.BaseSelectWindow  # Форма выбора @UndefinedVariable
 
@@ -723,10 +738,28 @@ class ObjectPack(BasePack, ISelectablePack):
     width, height = 510, 400
 
     # права доступа для базовых справочников
-    PERM_EDIT = 'edit'
+    PERM_EDIT = 'edit'  # TODO: Выпилить!
+
     sub_permissions = {
-        PERM_EDIT: _(u'Редактирование')
+        PERM_EDIT: _(u'Редактирование')  # TODO: Выпилить!
     }
+
+    #------------------------------------------------------------------------
+    # Проверять права для базовых экшнов:
+    CHECK_PERMISSION_FOR_LIST = False
+    CHECK_PERMISSION_FOR_EDIT = False
+    CHECK_PERMISSION_FOR_ADD = False
+    CHECK_PERMISSION_FOR_DELETE = False
+
+    @property
+    def need_check_permission(self):
+        return (
+            self.CHECK_PERMISSION_FOR_LIST or
+            self.CHECK_PERMISSION_FOR_EDIT or
+            self.CHECK_PERMISSION_FOR_ADD or
+            self.CHECK_PERMISSION_FOR_DELETE
+        )
+    #------------------------------------------------------------------------
 
     MSG_DOESNOTEXISTS = _(
         u'Запись не найдена в базе данных.<br/>' +
@@ -734,6 +767,7 @@ class ObjectPack(BasePack, ISelectablePack):
 
     # плоский список полей фильтрации
     _all_search_fields = None
+
     # словарь data_index:sort_order
     _sort_fields = None
 
@@ -791,7 +825,7 @@ class ObjectPack(BasePack, ISelectablePack):
 
         # построение плоского списка колонок
         self._columns_flat = []
-        self._all_search_fields = self.search_fields or []
+        self._all_search_fields = (self.search_fields or [])[:]
         self._sort_fields = {}
 
         def flatify(cols):
@@ -830,14 +864,18 @@ class ObjectPack(BasePack, ISelectablePack):
             self.actions.append(getattr(self, action_attr_name))
 
     def get_default_action(self):
-        """Воздвращает действие по умолчанию
+        """
+        Возвращает действие по умолчанию
         (действие для значка на раб.столе/пункта меню)
-        Используется пи упрощенном встраивании в UI (add_to_XXX=True)"""
+        Используется пи упрощенном встраивании в UI (add_to_XXX=True)
+        """
         return self.list_window_action
 
     def get_display_text(self, key, attr_name=None):
-        """ Получить отображаемое значение записи
-        (или атрибута attr_name) по ключу key """
+        """
+        Возвращает отображаемое значение записи
+        (или атрибута attr_name) по ключу key
+        """
         row = self.get_row(key)
         if row is not None:
             try:
@@ -858,20 +896,21 @@ class ObjectPack(BasePack, ISelectablePack):
 
     def get_edit_window_params(self, params, request, context):
         """
-        возвращает словарь параметров
+        Возвращает словарь параметров,
         которые будут переданы окну редактирования
         """
         return params
 
     def get_list_window_params(self, params, request, context):
         """
-        возвращает словарь параметров которые будут переданы окну списка
+        Возвращает словарь параметров,
+        которые будут переданы окну списка
         """
         return params
 
     def format_window_title(self, action):
         """
-        Форматирование заголовка окна.
+        Возвращает отформатированный заголовка окна.
         Заголовок примет вид "Модель: Действие"
         (например "Сотрудник: Добавление")
         """
@@ -881,42 +920,46 @@ class ObjectPack(BasePack, ISelectablePack):
     def get_list_url(self):
         """
         Возвращает адрес формы списка элементов справочника.
-        Используется для присвоения адресов в прикладном приложении.
+        Используется для присвоения адресов в прикладном приложении
         """
         return self.list_window_action.get_absolute_url()
 
     def get_select_url(self):
         """
-        Возвращает адрес формы списка элементов справочника.
-        Используется для присвоения адресов в прикладном приложении.
+        Возвращает адрес формы выбора из списка элементов справочника.
+        Используется для присвоения адресов в прикладном приложении
         """
         return self.select_window_action.get_absolute_url()
 
     def get_edit_url(self):
         """
-        Возвращает адрес формы редактирования элемента справочника.
+        Возвращает адрес формы редактирования элемента справочника
         """
         if self.edit_window_action:
             return self.edit_window_action.get_absolute_url()
 
     def get_rows_url(self):
         """
-        Возвращает адрес по которому запрашиваются элементы грида
+        Возвращает адрес, по которому запрашиваются элементы грида
         """
         return self.rows_action.get_absolute_url()
 
     def get_autocomplete_url(self):
-        """ Получить адрес для запроса элементов
-        подходящих введенному в поле тексту """
+        """
+        Возвращает адрес для запроса элементов,
+        подходящих введенному в поле тексту
+        """
         return self.get_rows_url()
 
     def get_not_found_exception(self):
-        """возвращает Группа исключения 'не найден'"""
+        """
+        Возвращает класс исключения 'объект не найден'
+        """
         return self.model.DoesNotExist
 
     def configure_grid(self, grid):
         """
-        конфигурирования grid для работы с этим паком
+        Конфигурирует grid для работы с этим паком,
         создает колонки и задает экшены
         """
         get_url = lambda x: x.get_absolute_url() if x else None
@@ -951,7 +994,7 @@ class ObjectPack(BasePack, ISelectablePack):
         populate(cc, self.columns)
         cc.configure_grid(grid)
 
-        #TODO перенести в Группа грида сделать метод add_search_field
+        #TODO перенести в класс грида, сделать метод add_search_field
         if self.get_search_fields():
             #поиск по гриду если есть по чему искать
             grid.top_bar.search_field = ExtSearchField(
@@ -1118,7 +1161,7 @@ class ObjectPack(BasePack, ISelectablePack):
 
     def get_obj(self, request, context):
         """
-        возвращает tuple (объет, create_new)
+        Возвращает кортеж (объет, create_new)
         для создания, редатирования записи
         """
         obj_id = tools.extract_int(request, self.id_param_name) or 0
@@ -1128,17 +1171,17 @@ class ObjectPack(BasePack, ISelectablePack):
 
     def save_row(self, obj, create_new, request, context):
         """
-        сохраняет объект
-        при необходимости делается raise ApplicationLogicException
+        Сохраняет объект.
+        При необходимости возбуждается ValidationError, или OverlapError
         """
         obj.save()
 
     def delete_row(self, obj_id, request, context):
         """
-        удаление объекта
-        если вернет модель то она отдасться аудитору
+        Удаляет объект по @obj_id.
+        Возвращает удалённый объект - т.е. объект модели,
+        который уже не представлен в БД
         """
-
         obj = self.model.objects.get(id=obj_id)
         result = True
         if hasattr(obj, 'safe_delete'):
@@ -1154,7 +1197,7 @@ class ObjectPack(BasePack, ISelectablePack):
 
     def get_filter_plugin(self):
         """
-        построение плагина фильтрации
+        Возвращает плагин фильтрации
         """
         filter_items = []
         list_columns_filter = dict(
@@ -1183,6 +1226,21 @@ class ObjectPack(BasePack, ISelectablePack):
             return """
                  new Ext.ux.grid.GridFilters({filters:[%s]})
             """ % ','.join(filter_items)
+
+    #-----------------------------------------------------------------------
+    def need_check_permission_for(self, action):
+        """
+        Возвращает решение о том, нужно ли проверять права для экшна
+        """
+        if action is self.list_window_action:
+            return self.CHECK_PERMISSION_FOR_LIST
+        if action is self.edit_window_action:
+            return self.CHECK_PERMISSION_FOR_EDIT
+        if action is self.new_window_action:
+            return self.CHECK_PERMISSION_FOR_ADD
+        if action is self.delete_action:
+            return self.CHECK_PERMISSION_FOR_DELETE
+        return False
 
     #-----------------------------------------------------------------------
     # По умолчанию ни меню ни десктоп не расширяется
