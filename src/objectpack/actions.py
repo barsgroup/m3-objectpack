@@ -47,7 +47,7 @@ class BaseAction(m3_actions.Action):
         if not code:
             # код права генерируется динамически
             # (если не назначен Observer`ом)
-            self._permission_code = getattr(
+            code = self._permission_code = getattr(
                 self, observer.ACTION_NAME_ATTR, None
             ) or observer.name_action(self)
         return code
