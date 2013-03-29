@@ -6,25 +6,28 @@ Created on 23.07.2012
 from m3.ui import app_ui, actions
 from django.utils.translation import ugettext as _
 
+
 #==============================================================================
 # uificate_the_controller
 #==============================================================================
 def uificate_the_controller(
-        controller, metarole, icon_collection=None,
+        controller, metarole=app_ui.GENERIC_USER, icon_collection=None,
         menu_root=None, top_menu_root=None):
     """
     Интеграция в интерфейс рабочего стола паков контроллера
     """
     for pack in controller.top_level_packs:
-        Desktop.from_pack(pack, for_metarole=metarole, icons=icon_collection)
-        MainMenu.from_pack(pack, for_metarole=metarole, icons=icon_collection,
-                           menu_root=menu_root)
-        TopMenu.from_pack(pack, for_metarole=metarole, icons=icon_collection,
+        Desktop.from_pack(
+            pack, for_metarole=metarole, icons=icon_collection)
+        MainMenu.from_pack(
+            pack, for_metarole=metarole, icons=icon_collection,
+            menu_root=menu_root)
+        TopMenu.from_pack(
+            pack, for_metarole=metarole, icons=icon_collection,
             menu_root=top_menu_root)
 
+
 #==============================================================================
-
-
 def _add_to(metarole, to_, items):
     #if _users.metaroles.get_metarole(metarole)
     for item in items:
@@ -229,8 +232,6 @@ class BaseMenu(_UIFabric):
             pack_to(self._menu_root))(data)
 
         return super(BaseMenu, self)._populate(metarole, data)
-
-
 
 
 #==============================================================================

@@ -11,12 +11,10 @@ __appname__ = u'ObjectPack Demo'
 __require__ = {
     # пакеты М3
     'm3': '1.0',
-    'kladr': '1.1',
-    'm3_audit': '1.0',
-    'm3_users': '1.0',
     #'objectpack': 'default',
 }
 
 __require_local__ = {
-    'objectpack': '../../'
+    'objectpack': '../../',
+    #'m3': '../../../m3',
 }

@@ -87,7 +87,7 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    #'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -96,11 +96,13 @@ SECRET_KEY = '0i1ha9wvq8!_g!^&qfdrel@-rcz3#up7*x54gsezgpv5ppsxqa'
 # List of callables that know how to import templates from various sources.
 if not DEBUG:
     TEMPLATE_LOADERS = (
-        ('django.template.loaders.cached.Loader', (
-        'django.template.loaders.filesystem.Loader',
-        'django.template.loaders.app_directories.Loader',
-        'm3.ui.ext.js_template_loader.load_template_source',
-        )),
+        (
+            'django.template.loaders.cached.Loader', (
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+                'm3.ui.ext.js_template_loader.load_template_source',
+            )
+        ),
     )
 else:
     TEMPLATE_LOADERS = (
@@ -111,10 +113,9 @@ else:
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
+    #'django.contrib.sessions.middleware.SessionMiddleware',
     #'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
+    #'django.contrib.auth.middleware.AuthenticationMiddleware',
 )
 
 ROOT_URLCONF = 'objectpack_demo.urls'
@@ -137,13 +138,12 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 
 INSTALLED_APPS = (
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.sites',
-    'django.contrib.messages',
+    #'django.contrib.auth',
+    #'django.contrib.contenttypes',
+    #'django.contrib.sessions',
+    #'django.contrib.sites',
+    #'django.contrib.messages',
     'django.contrib.staticfiles',
-    'm3_users',
     'objectpack',
     'demo_app',
     'demo_app.slaves',
@@ -175,3 +175,5 @@ LOGGING = {
         },
     }
 }
+
+CONTROLLER_SHOLUD_USE_OLD_PERMISSION_CHECKING = False

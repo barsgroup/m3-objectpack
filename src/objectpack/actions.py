@@ -42,7 +42,7 @@ class BaseAction(m3_actions.Action):
         # автоматически генерируемый url
         return r'/%s' % self.__class__.__name__.lower()
 
-    def get_permission_code(self):
+    def get_perm_code(self, subpermission=None):
         code = getattr(self, '_permission_code', None)
         if not code:
             # код права генерируется динамически
@@ -50,6 +50,8 @@ class BaseAction(m3_actions.Action):
             code = self._permission_code = getattr(
                 self, observer.ACTION_NAME_ATTR, None
             ) or observer.name_action(self)
+        if subpermission:
+            code = '%s#%s' % (code, subpermission)
         return code
 
     @property
@@ -164,7 +166,7 @@ class ObjectListWindowAction(BaseWindowAction):
         params['height'] = self.parent.height
         params['width'] = self.parent.width
         params['read_only'] = getattr(self.parent, 'read_only', None) or (
-            not self.has_permission(self.request.user))
+            not self.has_perm(self.request))
 
         self.win_params = self.parent.get_list_window_params(
             params, self.request, self.context)
@@ -210,7 +212,7 @@ class ObjectEditWindowAction(BaseWindowAction):
         params['form_url'] = self.parent.save_action.get_absolute_url()
 
         read_only = getattr(self.parent, 'read_only', None) or (
-            not self.has_permission(self.request.user))
+            not self.has_perm(self.request))
 
         params['read_only'] = read_only
         params['title'] = self.parent.format_window_title(
