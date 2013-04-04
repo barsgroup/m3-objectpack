@@ -238,6 +238,7 @@ class BaseSelectWindow(BaseListWindow):
     def set_params(self, params):
         super(BaseSelectWindow, self).set_params(params)
         self.template_globals = 'select-window.js'
+        self.column_name_on_select = params['column_name_on_select']
         self.grid.handler_dblclick = 'selectValue'
 
 

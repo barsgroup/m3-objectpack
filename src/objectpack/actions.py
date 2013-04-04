@@ -191,6 +191,8 @@ class ObjectSelectWindowAction(ObjectListWindowAction):
         super(ObjectSelectWindowAction, self).set_window_params()
         # В окне выбора можно только ВЫБИРАТЬ!
         self.win_params['read_only'] = True
+        self.win_params['column_name_on_select'] = (
+            self.parent.column_name_on_select)
 
 
 #==============================================================================
