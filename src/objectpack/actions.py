@@ -27,7 +27,6 @@ from m3.db import safe_delete
 import ui
 import tools
 import exceptions
-import observer
 
 
 #==============================================================================
@@ -42,17 +41,17 @@ class BaseAction(m3_actions.Action):
         # автоматически генерируемый url
         return r'/%s' % self.__class__.__name__.lower()
 
-    def get_perm_code(self, subpermission=None):
-        code = getattr(self, '_permission_code', None)
-        if not code:
-            # код права генерируется динамически
-            # (если не назначен Observer`ом)
-            code = self._permission_code = getattr(
-                self, observer.ACTION_NAME_ATTR, None
-            ) or observer.name_action(self)
-        if subpermission:
-            code = '%s#%s' % (code, subpermission)
-        return code
+    # def get_perm_code(self, subpermission=None):
+    #     code = getattr(self, '_permission_code', None)
+    #     if not code:
+    #         # код права генерируется динамически
+    #         # (если не назначен Observer`ом)
+    #         code = self._permission_code = getattr(
+    #             self, observer.ACTION_NAME_ATTR, None
+    #         ) or observer.name_action(self)
+    #     if subpermission:
+    #         code = '%s#%s' % (code, subpermission)
+    #     return code
 
     @property
     def need_check_permission(self):
