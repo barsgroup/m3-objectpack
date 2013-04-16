@@ -519,7 +519,7 @@ class ObjectRowsAction(BaseAction):
         new_self.request = request
         new_self.context = context
 
-        if 'xaction' in request.REQUEST:
+        if request.REQUEST.get('xaction') not in ['read', None]:
             success, message = self.handle_row_editing(
                 request=request,
                 context=context,
