@@ -36,31 +36,38 @@ class BaseAction(m3_actions.Action):
     """
     Прототип для actions ObjectPack`а
     """
+    # код подправа, используемый при формировании кода права экшна
+    # стандартным способом. Если код не указан - экшн формирует
+    # свой код права независимо от пака
+    perm_code = None
+
     @property
     def url(self):
         # автоматически генерируемый url
         return r'/%s' % self.__class__.__name__.lower()
 
-    # def get_perm_code(self, subpermission=None):
-    #     code = getattr(self, '_permission_code', None)
-    #     if not code:
-    #         # код права генерируется динамически
-    #         # (если не назначен Observer`ом)
-    #         code = self._permission_code = getattr(
-    #             self, observer.ACTION_NAME_ATTR, None
-    #         ) or observer.name_action(self)
-    #     if subpermission:
-    #         code = '%s#%s' % (code, subpermission)
-    #     return code
+    def get_perm_code(self, subpermission=None):
+        if self.perm_code is None:
+            code = super(BaseAction, self).get_perm_code(subpermission)
+        else:
+            code = self.parent.get_perm_code(
+                '/'.join([self.perm_code, subpermission]))
+        return code
 
     @property
     def need_check_permission(self):
-        # Пак определяет, нужно ли проверять права для экшна
-        return getattr(
-            self.parent,
-            'need_check_permission_for',
-            lambda x: False
-        )(self)
+        # Если определен perm_code, то необходимость проверки прав
+        # будет зависеть от присутствия perm_code среди sub_permissions пака
+        # и соответствующего флага пака
+        if self.perm_code is not None:
+            result = (
+                self.parent.need_check_permission
+                and
+                self.perm_code in self.parent.sub_permissions
+            )
+        else:
+            result = False
+        return result
 
     @staticmethod
     def handle(verb, arg):
@@ -157,6 +164,8 @@ class ObjectListWindowAction(BaseWindowAction):
     """
     is_select_mode = False  # режим показа окна (True - выбор, False - список)
 
+    perm_code = 'view'
+
     def set_window_params(self):
         params = self.win_params
         params['is_select_mode'] = self.is_select_mode
@@ -201,6 +210,8 @@ class ObjectEditWindowAction(BaseWindowAction):
     """
     Базовый Action показа окна редактирования объекта.
     """
+    perm_code = 'edit'
+
     def set_window_params(self):
         try:
             obj, create_new = self.parent.get_obj(self.request, self.context)
@@ -239,6 +250,8 @@ class ObjectAddWindowAction(ObjectEditWindowAction):
     """
     Базовый Action показа окна добавления объекта.
     """
+    perm_code = 'add'
+
     # Отдельный action для уникальности short_name
     pass
 
@@ -535,6 +548,8 @@ class ObjectDeleteAction(BaseAction):
     """
     Действие по удалению объекта
     """
+    perm_code = 'delete'
+
     def try_delete_objs(self):
         """
         удаляет обекты и пытается перехватить исключения
@@ -739,30 +754,6 @@ class ObjectPack(BasePack, ISelectablePack):
 
     #размеры окна выбора по умолчанию
     width, height = 510, 400
-
-    # права доступа для базовых справочников
-    PERM_EDIT = 'edit'  # TODO: Выпилить!
-
-    sub_permissions = {
-        PERM_EDIT: _(u'Редактирование')  # TODO: Выпилить!
-    }
-
-    #------------------------------------------------------------------------
-    # Проверять права для базовых экшнов:
-    CHECK_PERMISSION_FOR_LIST = False
-    CHECK_PERMISSION_FOR_EDIT = False
-    CHECK_PERMISSION_FOR_ADD = False
-    CHECK_PERMISSION_FOR_DELETE = False
-
-    @property
-    def need_check_permission(self):
-        return (
-            self.CHECK_PERMISSION_FOR_LIST or
-            self.CHECK_PERMISSION_FOR_EDIT or
-            self.CHECK_PERMISSION_FOR_ADD or
-            self.CHECK_PERMISSION_FOR_DELETE
-        )
-    #------------------------------------------------------------------------
 
     MSG_DOESNOTEXISTS = _(
         u'Запись не найдена в базе данных.<br/>' +
@@ -1229,21 +1220,6 @@ class ObjectPack(BasePack, ISelectablePack):
             return """
                  new Ext.ux.grid.GridFilters({filters:[%s]})
             """ % ','.join(filter_items)
-
-    #-----------------------------------------------------------------------
-    def need_check_permission_for(self, action):
-        """
-        Возвращает решение о том, нужно ли проверять права для экшна
-        """
-        if action is self.list_window_action:
-            return self.CHECK_PERMISSION_FOR_LIST
-        if action is self.edit_window_action:
-            return self.CHECK_PERMISSION_FOR_EDIT
-        if action is self.new_window_action:
-            return self.CHECK_PERMISSION_FOR_ADD
-        if action is self.delete_action:
-            return self.CHECK_PERMISSION_FOR_DELETE
-        return False
 
     #-----------------------------------------------------------------------
     # По умолчанию ни меню ни десктоп не расширяется
