@@ -50,8 +50,10 @@ class BaseAction(m3_actions.Action):
         if self.perm_code is None:
             code = super(BaseAction, self).get_perm_code(subpermission)
         else:
-            code = self.parent.get_perm_code(
-                '/'.join([self.perm_code, subpermission]))
+            perm_code = self.perm_code + (
+                ('/' + subpermission) if subpermission else ''
+            )
+            code = self.parent.get_perm_code(perm_code)
         return code
 
     @property
