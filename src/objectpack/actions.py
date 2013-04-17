@@ -522,10 +522,13 @@ class ObjectRowsAction(BaseAction):
         new_self.context = context
 
         if request.REQUEST.get('xaction') not in ['read', None]:
+            data = json.loads(request.REQUEST.get('rows'))
+            if not isinstance(data, list):
+                data = [data]
             success, message = self.handle_row_editing(
                 request=request,
                 context=context,
-                data=json.loads(request.REQUEST.get('rows')))
+                data=data)
             result = m3_actions.OperationResult(
                 success=success, message=message)
         else:
