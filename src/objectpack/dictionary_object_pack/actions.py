@@ -22,7 +22,7 @@ class DictionaryObjectPack(objectpack.ObjectPack):
             'searchable': True
         },
         {
-            'data_index': 'name',
+            'data_index': '__unicode__',
             'header': _(u'наименование'),
             'searchable': True
         },
@@ -44,4 +44,3 @@ class DictionaryObjectPack(objectpack.ObjectPack):
         """
         if self.add_to_menu:
             return menu.dicts(menu.Item(self.title, self))
-
