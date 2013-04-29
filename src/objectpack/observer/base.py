@@ -125,7 +125,7 @@ class Observer(object):
         def post_run(self, *args):
             return self._execute('after', *args)
 
-    def __init__(self, logger=lambda msg: None, verbose_level=None):
+    def __init__(self, logger=lambda msg: None, verbose_level=LOG_WARNINGS):
         """
         Создание наблюдателя.
         @logger - метод логирования: callable-объект,
