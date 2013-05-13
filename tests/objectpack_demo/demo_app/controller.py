@@ -33,6 +33,5 @@ class StarToHash(object):
     listen = ['.*/BandedColumnPack/.*']
 
     def prepare_obj(self, obj):
-        if obj.get('field1', None) == u'*':
-            obj['field1'] = '#'
+        obj['field1'] = obj.get('field1', False) and (obj['id'] % 2)
         return obj

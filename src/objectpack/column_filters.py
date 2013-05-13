@@ -5,6 +5,7 @@
 from django.db.models import Q
 from django.utils.translation import ugettext as _
 
+
 def choices(field, choices):
     """
     Возвращает списковый фильтр для поля @field
@@ -14,7 +15,7 @@ def choices(field, choices):
         filt = Q()
         for k, v in choices:
             if k in val:
-                filt |= Q(**{field:v})
+                filt |= Q(**{field: v})
         return filt
     return {
         'type': 'list',

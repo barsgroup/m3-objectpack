@@ -41,12 +41,6 @@ class PersonObjectPack(objectpack.ObjectPack):
         },
     ]
 
-    def create_list_window(self, *args, **kwargs):
-        win = super(PersonObjectPack, self).create_list_window(*args, **kwargs)
-        import pdb
-        pdb.set_trace()
-        return win
-
     def __init__(self):
         super(PersonObjectPack, self).__init__()
         self.list_window_action.short_name = 'foo'
@@ -84,6 +78,7 @@ class BandedColumnPack(objectpack.ObjectPack):
         mk_col(1)
     )])(
         lambda idx: {
+            'type': 'checkbox',
             'header': '%s' % idx,
             'data_index': 'field%s' % idx,
             'width': 25,

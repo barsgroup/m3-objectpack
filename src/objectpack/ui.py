@@ -325,7 +325,7 @@ class ColumnsConstructor(object):
 
         def _normalized_depth(self):
             """
-            Приведение всех подэлементов к одиному уровню вложенности
+            Приведение всех подэлементов к одному уровню вложенности
             Возвращается максимальная вложенность
             """
             depths = [i._normalized_depth() for i in self.items]
@@ -363,10 +363,20 @@ class ColumnsConstructor(object):
         """
         Простая колонка
         """
+        _ext_classes = {
+            None: ext.ExtGridColumn,
+            'checkbox': ext.ExtGridCheckColumn,
+        }
+
         def __init__(self, **kwargs):
             params = {'header': 'None'}
             params.update(kwargs)
-            self._column = ext.ExtGridColumn(**params)
+
+            ui_clazz = params.pop('type', None)
+            if not callable(ui_clazz):
+                ui_clazz = self._ext_classes[ui_clazz]
+
+            self._column = ui_clazz(**params)
 
         def _cleaned(self):
             return self
@@ -396,6 +406,35 @@ class ColumnsConstructor(object):
         fake_col = self.BandedCol(items=self.items)
         fake_col._populate(grid, level=None, is_top_level=True)
 
+    @classmethod
+    def from_config(cls, config, ignore_attrs=None):
+        """
+        Создание экземпляра на основе конфигурации @config
+        """
+        cc = cls()
+
+        def populate(root, cols):
+            for c in cols:
+                # параметры создаваемой колонки
+                params = {}
+                params.update(c)
+                sub_cols = params.pop('columns', None)
+
+                # удаляются атрибуты, указанные игнорируемыми
+                for a in (ignore_attrs or []):
+                    params.pop(a, None)
+
+                params['header'] = unicode(params.pop('header', ''))
+                if not sub_cols is None:
+                    new_root = cc.BandedCol(**params)
+                    root.add(new_root)
+                    populate(new_root, sub_cols)
+                else:
+                    root.add(cc.Col(**params))
+
+        populate(cc, config)
+        return cc
+
 
 #==============================================================================
 # ModelEditWindow
@@ -418,7 +457,7 @@ class ModelEditWindow(BaseEditWindow):
     def _do_layout(self):
         super(ModelEditWindow, self)._do_layout()
 
-        # автовысота окна
+        # автоматически вычисляемая высота окна
         self.height = None
         self.layout = 'form'
         self.layout_config = {'autoHeight': True}
@@ -452,7 +491,8 @@ class ModelEditWindow(BaseEditWindow):
 
 
 #==============================================================================
-def model_fields_to_controls(model, window,
+def model_fields_to_controls(
+        model, window,
         field_list=None, exclude_list=None,
         model_register=None, **kwargs):
     """
@@ -462,7 +502,7 @@ def model_fields_to_controls(model, window,
     exclude_list игнорируется при указанном field_list
     @kwargs - передача доп параметров в конструктор элементов
 
-    Списки врлючения/исключения полей могут содержать
+    Списки включения / исключения полей могут содержать
     wildcards вида 'x*' или '*x', которые трактуются как префиксы и суффиксы.
 
     При создании полей для связанных моделей ActionPack для модели ищется
@@ -519,7 +559,7 @@ class GenerationError(Exception):
 
 def _create_control_for_field(f, model_register=None, **kwargs):
     """
-    содает контроль для поля f = models.Field from model
+    создает контрол для поля f = models.Field from model
     """
     name = f.attname
 
@@ -531,8 +571,8 @@ def _create_control_for_field(f, model_register=None, **kwargs):
 
     elif isinstance(f, (
             django_models.CharField,
-            django_models.TimeField,  # время вводится в StringField
-            )):
+            # время вводится в StringField
+            django_models.TimeField)):
         ctl = ext.ExtStringField(max_length=f.max_length, **kwargs)
 
     elif isinstance(f, django_models.TextField):
@@ -562,11 +602,24 @@ def _create_control_for_field(f, model_register=None, **kwargs):
         ctl = ext.ExtFileUploadField(**kwargs)
 
     else:
-        raise GenerationError(u'Не могу сгенирировать контрол для %s' % f)
+        raise GenerationError(u'Не могу создать контрол для %s' % f)
 
     ctl.name = name
-    ctl.label = unicode(f.verbose_name)
+    ctl.label = unicode(f.verbose_name or name)
     ctl.allow_blank = f.blank
+
+    # простановка значения по-умолчанию, если таковое указано для поля
+    default = getattr(f, 'default', None)
+    if default:
+        if callable(default):
+            default = default()
+        ctl.value = default
+        # если поле - combobox, то поставляется не только значение, но и текст
+        if hasattr(ctl, 'display_field'):
+            for k, v in (f.choices or []):
+                if default == k:
+                    ctl.display_field = v
+
     return ctl
 
 

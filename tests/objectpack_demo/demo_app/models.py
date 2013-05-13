@@ -2,6 +2,8 @@
 """
 Модели
 """
+import datetime
+
 from django.db import models
 
 import objectpack
@@ -26,10 +28,15 @@ class Person(models.Model):
     patronymic = models.CharField(
         u'Отчество', max_length=50)
     date_of_birth = models.DateField(
-        u'Дата рождения', null=True)
+        u'Дата рождения',
+        null=True,
+        default=datetime.date.today
+    )
     gender = models.SmallIntegerField(
         u'Пол',
-        choices=GENDERS)
+        choices=GENDERS,
+        default=GENDERS[1][0]
+    )
 
     @property
     def fullname(self):
@@ -58,4 +65,4 @@ class FakeModel(objectpack.VirtualModel):
     def __init__(self, id_obj):
         self.id = id_obj
         for i in xrange(1, 12):
-            setattr(self, 'field%s' % i, ['', '*'][i <= id_obj])
+            setattr(self, 'field%s' % i, i <= id_obj)

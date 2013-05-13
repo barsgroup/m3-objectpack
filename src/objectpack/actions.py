@@ -661,6 +661,9 @@ class ObjectPack(BasePack, ISelectablePack):
     """
     Пакет с действиями, специфичными для работы с редактирование модели
     """
+    # фабрика колонок по данным атрибута 'columns'
+    # (callable-объект, возвращающий объект с методом 'configure_grid(grid)')
+    column_constructor_fabric = ui.ColumnsConstructor.from_config
 
     # Заголовок окна справочника
     # если не перекрыт в потомках - берется из модели
@@ -968,29 +971,15 @@ class ObjectPack(BasePack, ISelectablePack):
             grid.url_edit = get_url(self.edit_window_action)
             grid.url_delete = get_url(self.delete_action)
 
-        # построение колонок
-        cc = ui.ColumnsConstructor()
-
-        def populate(root, cols):
-            for c in cols:
-                sub_cols = c.get('columns', None)
-                # параметры создаваемой колонки
-                params = {}
-                params.update(c)
-                params.pop('columns', None)
-                params.pop('searchable', None)
-                params.pop('search_fields', None)
-                params.pop('sort_fields', None)
-                params.pop('filter', None)
-
-                params['header'] = unicode(params.pop('header', ''))
-                if not sub_cols is None:
-                    new_root = cc.BandedCol(**params)
-                    root.add(new_root)
-                    populate(new_root, sub_cols)
-                else:
-                    root.add(cc.Col(**params))
-        populate(cc, self.columns)
+        # построение колонок классом-констуктором
+        cc = self.column_constructor_fabric(
+            config=self.columns,
+            ignore_attrs=[
+                'searchable',
+                'search_fields',
+                'sort_fields',
+                'filter'
+            ])
         cc.configure_grid(grid)
 
         #TODO перенести в класс грида, сделать метод add_search_field
