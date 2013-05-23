@@ -8,6 +8,22 @@ from itertools import ifilter, islice, imap
 from django.db.models import query, manager
 
 
+def kwargs_only(*keys):
+    keys = set(keys)
+
+    def wrapper(fn):
+        def inner(self, *args, **kwargs):
+            wrong_keys = set(kwargs.keys()) - keys
+            if wrong_keys:
+                raise TypeError(
+                    '%s is an invalid keyword argument(s)'
+                    ' for this function' % (
+                        ', '.join('"%s"' % k for k in wrong_keys)))
+            return fn(self, args, **kwargs)
+        return inner
+    return wrapper
+
+
 #==============================================================================
 # VirtualModelManager
 #==============================================================================
@@ -80,13 +96,28 @@ class VirtualModelManager(object):
             op = lambda obj: obj
         return reduce(folder, reversed(key), op)
 
-    def filter(self, **kwargs):  # @ReservedAssignment
+    @classmethod
+    def _from_q(cls, q):
+        fns = [
+            cls._make_getter(c[0], c[1], allow_op=True)
+            if isinstance(c, tuple) else
+            cls._from_q(c)
+            for c in q.children
+        ]
+        comb = all if q.connector == q.AND else any
+        return lambda obj: comb(f(obj) for f in fns)
+
+    def filter(self, *args, **kwargs):
         procs = self._procs[:]
+        fns = []
+        if args:
+            fns.extend(self._from_q(q) for q in args)
         if kwargs:
-            fns = [
+            fns.extend(
                 self._make_getter(key, val, allow_op=True)
                 for key, val in kwargs.iteritems()
-            ]
+            )
+        if fns:
             procs.append(
                 lambda items: ifilter(
                     lambda obj: all(fn(obj) for fn in fns), items))
@@ -94,14 +125,52 @@ class VirtualModelManager(object):
 
     def order_by(self, *args):
         procs = self._procs[:]
-        if args:
-            getters = map(self._make_getter, args)
-            key_fn = lambda obj: tuple(g(obj) for g in getters)
-            procs.append(lambda data: iter(sorted(data, key=key_fn)))
+
+        getters, dirs = [], []
+        for a in args:
+            if a.startswith('-'):
+                d = -1
+                a = a[1:]
+            else:
+                d = 1
+            getters.append(self._make_getter(a))
+            dirs.append(d)
+
+        same_dir = abs(sum(dirs)) == len(dirs)  # все ключи одного направления
+        any_reversed = -1 in dirs  # есть ключи обратного направления
+
+        if getters:
+            # генератор процедур сортировки
+            make_proc = lambda **kwargs: lambda data: (
+                iter(sorted(data, **kwargs)))
+
+            if same_dir:
+                # все ключи одного направления - сортируем по ключевой ф-ции
+                if len(getters) == 1:
+                    # ключ всего один
+                    key_fn = getters[0]
+                else:
+                    # ключей несколько, но все одного направления
+                    key_fn = lambda obj: tuple(g(obj) for g in getters)
+                proc = make_proc(key=key_fn, reverse=any_reversed)
+            else:
+                # направления ключей различны - сортируем функцией сравнения
+                def make_cmp_fn(pairs):
+                    def inner(o1, o2):
+                        for f, d in pairs:
+                            res = d * cmp(f(o1), f(o2))
+                            if res:
+                                return res
+                        return 0
+                    return inner
+                proc = make_proc(cmp=make_cmp_fn(zip(getters, dirs)))
+
+            procs.append(proc)
+
         return self._fork_with(procs)
 
     def get(self, *args, **kwargs):
-        if not kwargs and args:
+        if args and not kwargs:
             kwargs['id'] = args[0]
         result = list(self.filter(**kwargs))
         if not result:
@@ -109,6 +178,26 @@ class VirtualModelManager(object):
         elif len(result) > 1:
             raise self._clz.MultipleObjectsReturned()
         return result[0]
+
+    def values(self, *args):
+        return (
+            dict(zip(args, t))
+            for t in self.values_list(*args)
+        )
+
+    @kwargs_only('flat')
+    def values_list(self, args, flat=False):
+        if flat and len(args) > 1:
+            raise TypeError(
+                "'flat' is not valid when values_list is "
+                "called with more than one field"
+            )
+        if flat:
+            getter = self._make_getter(args[0])
+            return imap(getter, self)
+        else:
+            getters = map(self._make_getter, args)
+            return (tuple(g(o) for g in getters) for o in self)
 
     def select_related(self):
         return self
@@ -264,7 +353,8 @@ def model_proxy_metaclass(name, bases, dic):
                 def wrapped(fn):
                     def inner(*args, **kwargs):
                         result = fn(*args, **kwargs)
-                        if isinstance(result,
+                        if isinstance(
+                                result,
                                 (manager.Manager, query.QuerySet)):
                             return self.__class__(result, self._proxy_cls)
                         return result
