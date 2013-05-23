@@ -20,7 +20,7 @@ class VirtualModelManager(object):
         'gte': lambda val: lambda x: x >= val,
         'lt': lambda val: lambda x: x < val,
         'gt': lambda val: lambda x: x > val,
-        'isnull': lambda val: lambda x: bool(x) == val,
+        'isnull': lambda val: lambda x: (x is None or x.id is None) == val,
     }
 
     def __init__(self, model_clz=None, procs=None, **kwargs):
@@ -47,9 +47,13 @@ class VirtualModelManager(object):
         return list(self)[arg]
 
     def __iter__(self):
-        return reduce(lambda arg, fn: fn(arg), self._procs,
-            imap(self._clz._from_id, self._clz._get_ids(
-                **self._ids_getter_kwargs)))
+        return reduce(
+            lambda arg, fn: fn(arg),
+            self._procs,
+            imap(
+                self._clz._from_id,
+                self._clz._get_ids(
+                    **self._ids_getter_kwargs)))
 
     def _fork_with(self, procs=None, **kwargs):
         kw = self._ids_getter_kwargs.copy()
@@ -79,8 +83,10 @@ class VirtualModelManager(object):
     def filter(self, **kwargs):  # @ReservedAssignment
         procs = self._procs[:]
         if kwargs:
-            fns = [self._make_getter(key, val, allow_op=True)
-                for key, val in kwargs.iteritems()]
+            fns = [
+                self._make_getter(key, val, allow_op=True)
+                for key, val in kwargs.iteritems()
+            ]
             procs.append(
                 lambda items: ifilter(
                     lambda obj: all(fn(obj) for fn in fns), items))

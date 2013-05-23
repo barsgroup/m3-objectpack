@@ -5,6 +5,7 @@ Author: Rinat F Sabitov
 Description:
 '''
 import objectpack
+from objectpack import tree_object_pack
 
 import models
 
@@ -47,7 +48,7 @@ class PersonObjectPack(objectpack.ObjectPack):
 
 
 #==============================================================================
-# PersonObjectPack
+# BandedColumnPack
 #==============================================================================
 class BandedColumnPack(objectpack.ObjectPack):
     """Демонстрация Banded Columns"""
@@ -86,3 +87,26 @@ class BandedColumnPack(objectpack.ObjectPack):
             'filter': {'type': 'string'}
         }
     )
+
+
+#==============================================================================
+# TreePack
+#==============================================================================
+class TreePack(tree_object_pack.TreeObjectPack):
+    """
+    Пример пака для работы с моделью-деревом
+    """
+    model = models.TreeNode
+
+    add_to_desktop = True
+
+    columns = [
+        {
+            "data_index": "name",
+            "header": "Name",
+        },
+        {
+            "data_index": "code",
+            "header": "Code",
+        }
+    ]

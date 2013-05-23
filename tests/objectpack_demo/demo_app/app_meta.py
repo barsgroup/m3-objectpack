@@ -25,6 +25,7 @@ def register_actions():
     controller.action_controller.packs.extend([
         actions.PersonObjectPack(),
         actions.BandedColumnPack(),
+        actions.TreePack(),
     ])
 
 

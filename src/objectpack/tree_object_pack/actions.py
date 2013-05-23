@@ -16,6 +16,8 @@ class TreeObjectPack(objectpack.ObjectPack):
     Набор действий для работы с объектами,
     находящимися в древовидной иерархии.
     """
+    # поле модели - ссылка на родителя
+    parent_field = 'parent'
 
     list_window = ui.BaseTreeListWindow
     select_window = ui.BaseTreeSelectWindow
@@ -37,7 +39,8 @@ class TreeObjectPack(objectpack.ObjectPack):
                 # если корневой узел поддерева не указан, будут выводиться
                 # деревья самого верхнего уровня (не имеющие родителей)
                 current_node_id = None
-            result = result.filter(parent__id=current_node_id)
+            result = result.filter(
+                **{('%s__id' % self.parent_field): current_node_id})
         return result
 
     def configure_grid(self, grid):
@@ -52,7 +55,7 @@ class TreeObjectPack(objectpack.ObjectPack):
         win = super(TreeObjectPack, self).create_edit_window(
             create_new, request, context)
         if hasattr(context, 'parent_id'):
-            win.form.from_object(dict(parent_id=int(context.parent_id)))
+            win.form.from_object({'parent_id': int(context.parent_id)})
         return win
 
 
@@ -62,19 +65,33 @@ class TreeObjectRowsAction(objectpack.ObjectRowsAction):
     """
 
     def set_query(self):
-        """docstring for set_query"""
+        """
+        выборка данных
+        """
         super(TreeObjectRowsAction, self).set_query()
-        # получение списка id узлов дерева, имеющих ответвления
-        self._parents = self.parent.model.objects.filter(
-            parent__isnull=False,
-        ).values_list('parent__id', flat=True)
+        # формирование предиката "лист"/"не лист"
+        if hasattr(self.parent.model, 'is_leaf'):
+            # модель может сама предоставлять признак "лист"/"не лист"
+            self.is_leaf = lambda o: o.is_leaf
+        else:
+            # для моделей, не предоставляющих информацию о ветвлении,
+            # формируется предикат на основе связей узлов дерева
+            key = self.parent.parent_field
+            parents = self.parent.model.objects.filter(**{
+                ('%s__isnull' % key): False,
+            }).values_list(
+                '%s__id' % key,
+                flat=True
+            )
+            self.is_leaf = lambda o: o.id not in parents
 
     def prepare_object(self, obj):
-        """docstring for prepare_object"""
-        obj = super(TreeObjectRowsAction, self).prepare_object(obj)
-        # признак "ветка"/"лист"
-        obj['leaf'] = int(obj['id']) not in self._parents
-        return obj
+        """
+        Сериализация объекта
+        """
+        data = super(TreeObjectRowsAction, self).prepare_object(obj)
+        data['leaf'] = self.is_leaf(obj)
+        return data
 
     def run(self, *args, **kwargs):
         result = super(TreeObjectRowsAction, self).run(*args, **kwargs)

@@ -66,3 +66,92 @@ class FakeModel(objectpack.VirtualModel):
         self.id = id_obj
         for i in xrange(1, 12):
             setattr(self, 'field%s' % i, i <= id_obj)
+
+
+#==============================================================================
+# TreeNode
+#==============================================================================
+class TreeNode(objectpack.VirtualModel):
+    """
+    Виртуальная модель, представляющая собой дерево
+    """
+
+    class FakeParent(object):
+        def __init__(self, i):
+            self.id = i
+
+    @classmethod
+    def _get_ids(cls):
+        data = [
+            {
+                'name': "root1",
+                "items": [
+                    {
+                        'name': "leaf1",
+                        'items': [
+                            ('leaf3', "code3"),
+                            ('leaf4', "code4"),
+                            {
+                                'name': "leaf1",
+                                'items': [
+                                    ('leaf3', "code3"),
+                                    ('leaf4', "code4"),
+                                    {
+                                        'name': "leaf1",
+                                        'items': [
+                                            ('leaf3', "code3"),
+                                            ('leaf4', "code4"),
+                                        ],
+                                    },
+                                ],
+                            },
+                        ],
+                    },
+                    ("leaf2", "code2"),
+                ],
+            },
+            ('root2', "code1000")
+        ]
+
+        def make_id(cnt=[0]):
+            cnt[0] += 1
+            return cnt[0]
+
+        def walk(parent, items):
+            for i in items:
+                if isinstance(i, tuple):
+                    yield {
+                        'id': make_id(),
+                        'parent': parent,
+                        'name': i[0],
+                        'data': i[1],
+                        'leaf': True
+                    }
+                else:
+                    new_parent = make_id()
+                    yield {
+                        'id': new_parent,
+                        'parent': parent,
+                        'name': i['name'],
+                        'data': None
+                    }
+                    for j in walk(new_parent, i['items']):
+                        yield j
+
+        result = list(walk(None, data))
+        return result
+
+    @property
+    def is_leaf(self):
+        return self._is_leaf
+
+    def __init__(self, params):
+        self.id = params['id']
+        self.name = params['name']
+        self.data = params['data']
+        self.parent = self.FakeParent(params['parent'])
+        self._is_leaf = params.get('leaf', False)
+
+    class _meta:
+        verbose_name = u"Дерево"
+        verbose_name_plural = u"Дерево"
