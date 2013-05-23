@@ -102,11 +102,12 @@ class TreePack(tree_object_pack.TreeObjectPack):
 
     columns = [
         {
-            "data_index": "name",
-            "header": "Name",
+            "data_index": "kind",
+            "header": u"Вид",
+            "searchable": True
         },
         {
-            "data_index": "code",
-            "header": "Code",
+            "data_index": "name",
+            "header": u"Кличка",
         }
     ]

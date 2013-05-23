@@ -84,33 +84,19 @@ class TreeNode(objectpack.VirtualModel):
     def _get_ids(cls):
         data = [
             {
-                'name': "root1",
-                "items": [
+                'name': 'Кошачьи',
+                'items': [
                     {
-                        'name': "leaf1",
+                        'name': 'Крупные',
                         'items': [
-                            ('leaf3', "code3"),
-                            ('leaf4', "code4"),
-                            {
-                                'name': "leaf1",
-                                'items': [
-                                    ('leaf3', "code3"),
-                                    ('leaf4', "code4"),
-                                    {
-                                        'name': "leaf1",
-                                        'items': [
-                                            ('leaf3', "code3"),
-                                            ('leaf4', "code4"),
-                                        ],
-                                    },
-                                ],
-                            },
+                            ('Лев', '"Бонифаций"'),
+                            ('Тигр', '"Шерхан"'),
                         ],
                     },
-                    ("leaf2", "code2"),
+                    ('Кот', '"Матроскин"'),
                 ],
             },
-            ('root2', "code1000")
+            ('Собака', '"Дружок"')
         ]
 
         def make_id(cnt=[0]):
@@ -123,8 +109,8 @@ class TreeNode(objectpack.VirtualModel):
                     yield {
                         'id': make_id(),
                         'parent': parent,
-                        'name': i[0],
-                        'data': i[1],
+                        'kind': i[0],
+                        'name': i[1],
                         'leaf': True
                     }
                 else:
@@ -132,8 +118,7 @@ class TreeNode(objectpack.VirtualModel):
                     yield {
                         'id': new_parent,
                         'parent': parent,
-                        'name': i['name'],
-                        'data': None
+                        'kind': i['name'],
                     }
                     for j in walk(new_parent, i['items']):
                         yield j
@@ -147,10 +132,10 @@ class TreeNode(objectpack.VirtualModel):
 
     def __init__(self, params):
         self.id = params['id']
-        self.name = params['name']
-        self.data = params['data']
-        self.parent = self.FakeParent(params['parent'])
+        self.kind = params.get('kind')
+        self.name = params.get('name')
         self._is_leaf = params.get('leaf', False)
+        self.parent = self.FakeParent(params['parent'])
 
     class _meta:
         verbose_name = u"Дерево"
