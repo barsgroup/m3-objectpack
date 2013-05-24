@@ -3,7 +3,8 @@
 Виртуальная модель и proxy-обертка для работы с группой моделей
 """
 import copy
-from itertools import ifilter, islice, imap
+
+from itertools import ifilter, ifilterfalse, islice, imap
 
 from django.db.models import query, manager
 
@@ -24,12 +25,18 @@ def kwargs_only(*keys):
     return wrapper
 
 
+_call_if_need = lambda x: x() if callable(x) else x
+
+
 #==============================================================================
 # VirtualModelManager
 #==============================================================================
 class VirtualModelManager(object):
-
+    """
+    Имитация QueryManager`а Django для VirtualModel
+    """
     _operators = {
+        'contains': lambda val: lambda x: val in x,
         'iexact': lambda val: lambda x, y = val.lower(): x.lower() == y,
         'icontains': lambda val: lambda x, y = val.lower(): y in x.lower(),
         'lte': lambda val: lambda x: x <= val,
@@ -37,6 +44,7 @@ class VirtualModelManager(object):
         'lt': lambda val: lambda x: x < val,
         'gt': lambda val: lambda x: x > val,
         'isnull': lambda val: lambda x: (x is None or x.id is None) == val,
+        'in': lambda vals: lambda x: x in vals,
     }
 
     def __init__(self, model_clz=None, procs=None, **kwargs):
@@ -68,8 +76,9 @@ class VirtualModelManager(object):
             self._procs,
             imap(
                 self._clz._from_id,
-                self._clz._get_ids(
-                    **self._ids_getter_kwargs)))
+                _call_if_need(
+                    self._clz._get_ids(
+                        **self._ids_getter_kwargs))))
 
     def _fork_with(self, procs=None, **kwargs):
         kw = self._ids_getter_kwargs.copy()
@@ -107,7 +116,7 @@ class VirtualModelManager(object):
         comb = all if q.connector == q.AND else any
         return lambda obj: comb(f(obj) for f in fns)
 
-    def filter(self, *args, **kwargs):
+    def _filter(self, combinator, args, kwargs):
         procs = self._procs[:]
         fns = []
         if args:
@@ -119,9 +128,15 @@ class VirtualModelManager(object):
             )
         if fns:
             procs.append(
-                lambda items: ifilter(
+                lambda items: combinator(
                     lambda obj: all(fn(obj) for fn in fns), items))
         return self._fork_with(procs)
+
+    def filter(self, *args, **kwargs):
+        return self._filter(ifilter, args, kwargs)
+
+    def exclude(self, *args, **kwargs):
+        return self._filter(ifilterfalse, args, kwargs)
 
     def order_by(self, *args):
         procs = self._procs[:]
@@ -210,6 +225,28 @@ class VirtualModelManager(object):
 # VirtualModel
 #==============================================================================
 class VirtualModel(object):
+    """
+    Виртуальная модель, реализующая Django-ORM-совместимый API, для
+    работы с произвольными данными.
+
+    Пример модели:
+    >>> M = VirtualModel.from_data(
+    ...     lambda: (
+    ...         {'x': x, 'y': y * 10}
+    ...         for x in xrange(5)
+    ...         for y in xrange(5)
+    ...     ),
+    ...     auto_ids=True
+    ... )
+
+    Теперь с моделью можно работать так:
+    >>> M.objects.count()
+    25
+    >>> M.objects.filter(x__gte=2).exclude(y__in=[10, 20, 30]).count()
+    6
+    >>> list(M.objects.filter(x=0).order_by("-y").values_list("y", flat=True))
+    [40, 30, 20, 10, 0]
+    """
 
     class DoesNotExist(Exception):
         pass
@@ -219,13 +256,50 @@ class VirtualModel(object):
 
     @classmethod
     def _get_ids(cls):
+        """
+        Метод возвращает iterable, или callable, возвращаюший iterable,
+        для каждого элемента которого (iterable)
+        будет инстанцирован объект класса
+        (каждый эл-т итератора передаётся в конструктор)
+        """
         return NotImplemented
 
     @classmethod
-    def _from_id(cls, id_obj):
-        return cls(id_obj)
+    def _from_id(cls, data):
+        return cls(data)
 
     objects = VirtualModelManager()
+
+    @classmethod
+    def from_data(cls, data, auto_ids=False, class_name="NewVirtualModel"):
+        """
+        Возвращает субкласс, основанный на переданных данных
+        @data - iterable из словарей
+        @auto_ids - если True, поле id объектов модели
+                    будет генерироваться автоматически
+        @class_name - имя класса-потомка
+        """
+        if auto_ids:
+            def get_ids(cls):
+                cnt = 1
+                for d in _call_if_need(data):
+                    d['id'] = cnt
+                    yield d
+                    cnt += 1
+        else:
+            get_ids = lambda cls: data
+
+        return type(
+            class_name,
+            (cls,),
+            {
+                '_get_ids': classmethod(get_ids),
+                '__init__': lambda self, data: self.__dict__.update(data),
+                '__repr__': lambda self: '%s(%r)' % (
+                    self.__class__.__name__,
+                    self.__dict__)
+            }
+        )
 
 
 #==============================================================================
