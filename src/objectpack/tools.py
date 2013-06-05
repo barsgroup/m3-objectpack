@@ -4,6 +4,7 @@ Created on 23.07.2012
 @author: pirogov
 """
 import datetime
+from functools import wraps
 
 from django.db import transaction
 
@@ -356,3 +357,34 @@ def istraversable(x):
         or hasattr(x, '__next__')
         or hasattr(x, '__getitem__')
     )
+
+
+#==============================================================================
+# Кэширующий декоратор
+#==============================================================================
+def cached_to(attr_name):
+    """
+    Оборачивает простые методы (без аргументов) и property getters,
+    с целью закэшировать первый полученный результат
+    """
+    def wrapper(fn):
+        @wraps(fn)
+        def inner(self):
+            if hasattr(self, attr_name):
+                result = getattr(self, attr_name)
+            else:
+                result = fn(self)
+                setattr(self, attr_name, result)
+            return result
+        return inner
+    return wrapper
+
+
+#==============================================================================
+# парсеры для декларации контекста
+#==============================================================================
+def int_or_zero(s):
+    return 0 if not s else int(s)
+
+def int_list(s):
+    return [int(i.strip()) for i in s.split(',')]

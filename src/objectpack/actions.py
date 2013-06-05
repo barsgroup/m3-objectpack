@@ -41,6 +41,11 @@ class BaseAction(m3_actions.Action):
     # свой код права независимо от пака
     perm_code = None
 
+    @tools.cached_to('__cached_context_declaration')
+    def context_declaration(self):
+        # контекст экшну декларирует пак
+        return self.parent.declare_context(self)
+
     @property
     def url(self):
         # автоматически генерируемый url
@@ -57,6 +62,7 @@ class BaseAction(m3_actions.Action):
         return code
 
     @property
+    @tools.cached_to('__cached_need_check_permission')
     def need_check_permission(self):
         # Если определен perm_code, то необходимость проверки прав
         # будет зависеть от присутствия perm_code среди sub_permissions пака
@@ -578,8 +584,7 @@ class ObjectDeleteAction(BaseAction):
         """
         Удаляет обекты
         """
-        ids = m3_actions.utils.extract_int_list(
-            self.request, self.parent.id_param_name)
+        ids = getattr(self.context, self.parent.id_param_name)
         for i in ids:
             self.delete_obj(i)
 
@@ -612,6 +617,12 @@ class BasePack(m3_actions.ActionPack):
     Потомок ActionPack, реализующий автогенерацию short_name, url
     """
 
+    def declare_context(self, action):
+        """
+        Декларация контекста для экшна
+        """
+        return None
+
     @classmethod
     def get_short_name(cls):
         """
@@ -629,6 +640,7 @@ class BasePack(m3_actions.ActionPack):
         return name
 
     @property
+    @tools.cached_to('__cached_short_name')
     def short_name(self):
         # имя пака для поиска в ControllerCache в виде атрибута
         # для совместимости с m3
@@ -864,6 +876,17 @@ class ObjectPack(BasePack, ISelectablePack):
         setattr(self, action_attr_name, new_action)
         if getattr(self, action_attr_name):
             self.actions.append(getattr(self, action_attr_name))
+
+    def declare_context(self, action):
+        """
+        Возвращает декларацию контекста для экшна
+        """
+        result = None
+        if action is self.edit_window_action:
+            result = {self.id_param_name: {'type': tools.int_or_zero}}
+        elif action is self.delete_action:
+            result = {self.id_param_name: {'type': tools.int_list}}
+        return result
 
     def get_default_action(self):
         """
@@ -1152,7 +1175,7 @@ class ObjectPack(BasePack, ISelectablePack):
         Возвращает кортеж (объет, create_new)
         для создания, редатирования записи
         """
-        obj_id = tools.extract_int(request, self.id_param_name) or 0
+        obj_id = getattr(context, self.id_param_name, 0)
         create_new = (obj_id == 0)
         record = self.get_row(obj_id)
         return record, create_new
