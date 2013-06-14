@@ -27,6 +27,7 @@ from m3.db import safe_delete
 import ui
 import tools
 import exceptions
+import filters
 
 
 #==============================================================================
@@ -723,6 +724,8 @@ class ObjectPack(BasePack, ISelectablePack):
 #        },
     ]
 
+    filter_engine_clz = filters.MenuFilterEngine
+
     # Настройки вида справочника (задаются конечным разработчиком)
     model = None
 
@@ -868,6 +871,13 @@ class ObjectPack(BasePack, ISelectablePack):
                             search_fields = [search_fields]
                         self._all_search_fields.extend(search_fields)
         flatify(self.columns)
+
+        # подключение механизма фильтрации
+        self._filter_engine = self.filter_engine_clz([
+            (c['data_index'], c['filter'])
+            for c in self._columns_flat
+            if 'filter' in c
+        ])
 
     def replace_action(self, action_attr_name, new_action):
         """заменяет экшен в паке"""
@@ -1017,9 +1027,7 @@ class ObjectPack(BasePack, ISelectablePack):
         grid.allow_paging = self.allow_paging
         grid.store.remote_sort = self.allow_paging
 
-        filter_plugin = self.get_filter_plugin()
-        if filter_plugin:
-            grid.plugins.append(filter_plugin)
+        self._filter_engine.configure_grid(grid)
 
     def create_edit_window(self, create_new, request, context):
         """
@@ -1073,52 +1081,7 @@ class ObjectPack(BasePack, ISelectablePack):
         Применение фильтрации к выборке @query.
         Фильтрация может опираться на параметры запроса (@request/@context)
         """
-        if hasattr(context, 'q'):
-            request_filter = simplejson.loads(context.q)
-            for item in request_filter:
-                # Для дат
-                if item['data']['value'] is basestring:
-                    m = re.match(
-                        r"([0-9]{2})\.([0-9]{2})\.([0-9]{4})$",
-                        item['data']['value'])
-                    if m:
-                        item['data']['value'] = '{0}-{1}-{2}'.format(
-                            *m.group(3, 2, 1)
-                        )
-
-                custom = None
-                col = filter(
-                    lambda col: col['data_index'] == item["field"],
-                    self._columns_flat)[:1]
-                if col:
-                    custom = col[0]['filter'].get('custom_field')
-                if custom:
-                    #к нам пришел кастомный обработчик для фильтра
-                    if callable(custom):
-                        #если это метод, тады сразу фильтруем по его результату
-                        q = custom(item['data']['value'])
-                    else:
-                        #в другом случае ожидается список полей
-                        if item['data']['type'] == 'list':
-                            params = [
-                                models.Q(**dict(zip(
-                                    ("%s__icontains" % custom_fld,),
-                                    item['data']['value']
-                                ))) for custom_fld in custom]
-                        else:
-                            params = [
-                                models.Q(**{
-                                    "%s__icontains" % custom_fld: (
-                                        item['data']['value'])
-                                }) for custom_fld in custom]
-
-                        q = reduce(lambda q1, q2: q1 | q2, params)
-                    query = query.filter(q)
-                else:
-                    query = query.filter(**{
-                        "%s__icontains" % item['field']: item['data']['value']
-                    })
-        return query
+        return self._filter_engine.apply_filter(query, request, context)
 
     def apply_search(self, query, request, context):
         """Возвращает переданную выборку

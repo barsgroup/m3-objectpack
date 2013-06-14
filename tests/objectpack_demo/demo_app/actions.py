@@ -4,10 +4,16 @@ File: actions.py
 Author: Rinat F Sabitov
 Description:
 '''
+from functools import partial
+
 import objectpack
 from objectpack import tree_object_pack
+from objectpack.filters import FilterByField, ColumnFilterEngine
 
 import models
+
+
+_PF = partial(FilterByField, models.Person)
 
 
 #==============================================================================
@@ -40,11 +46,59 @@ class PersonObjectPack(objectpack.ObjectPack):
                 'type': 'date'
             }
         },
+        {
+            'data_index': 'gender',
+            'header': u'Пол',
+            'filter': {
+                'type': 'list',
+                'options': models.Person.GENDERS
+            }
+        }
     ]
 
-    def __init__(self):
-        super(PersonObjectPack, self).__init__()
-        self.list_window_action.short_name = 'foo'
+
+#==============================================================================
+# CFPersonObjectPack
+#==============================================================================
+class CFPersonObjectPack(objectpack.ObjectPack):
+    """
+    Пак физ.лиц, демонстрирующий использование колоночных фильтров
+    """
+    title = u'Физические лица (колоночные фильтры)'
+
+    model = models.Person
+    _is_primary_for_model = False
+
+    add_to_desktop = True
+    add_to_menu = True
+
+    filter_engine_clz = ColumnFilterEngine
+
+    columns = [
+        {
+            'data_index': 'fullname',
+            'header': u'ФИО',
+            'sortable': True,
+            'sort_fields': ('name', 'surname'),
+            'filter': (
+                _PF('name', 'name__icontains') &
+                _PF('surname', 'surname__icontains')
+            )
+        },
+        {
+            'data_index': 'date_of_birth',
+            'header': u'Дата рождения',
+            'filter': (
+                _PF('date_of_birth', 'date_of_birth__gte', tooltip=u'с') &
+                _PF('date_of_birth', 'date_of_birth__lte', tooltip=u'по')
+            )
+        },
+        {
+            'data_index': 'gender',
+            'header': u'Пол',
+            'filter': _PF('gender')
+        }
+    ]
 
 
 #==============================================================================
@@ -108,6 +162,6 @@ class TreePack(tree_object_pack.TreeObjectPack):
         },
         {
             "data_index": "name",
-            "header": u"Кличка",
+            "header": u"Кличка"
         }
     ]

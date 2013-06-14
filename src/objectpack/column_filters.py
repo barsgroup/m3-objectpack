@@ -6,21 +6,14 @@ from django.db.models import Q
 from django.utils.translation import ugettext as _
 
 
-def choices(field, choices):
+def choices(field, data):
     """
     Возвращает списковый фильтр для поля @field
-    с указанными вариантами @choices
+    с указанными вариантами @data (Django model choices)
     """
-    def callback(val):
-        filt = Q()
-        for k, v in choices:
-            if k in val:
-                filt |= Q(**{field: v})
-        return filt
     return {
         'type': 'list',
-        'options': [ch[0] for ch in choices],
-        'custom_field': callback
+        'options': data,
     }
 
 
@@ -29,7 +22,7 @@ def yes_no(field):
     Возвращает списковый фильтр
     с вариантами "Да"/"Нет" для boolean-поля @field
     """
-    return choices(field, ((_(u'Да'), True), (_(u'Нет'), False)))
+    return choices(field, ((1, _(u'Да')), (0, _(u'Нет'))))
 
 
 def within(field_from, field_to):
