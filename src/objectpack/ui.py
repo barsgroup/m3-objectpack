@@ -608,9 +608,12 @@ def _create_control_for_field(f, model_register=None, **kwargs):
     ctl.label = unicode(f.verbose_name or name)
     ctl.allow_blank = f.blank
 
+    if ctl.allow_blank and hasattr(ctl, 'hide_clear_trigger'):
+        ctl.hide_clear_trigger = False
+
     # простановка значения по-умолчанию, если таковое указано для поля
     default = getattr(f, 'default', None)
-    if default:
+    if default and default is not django_models.NOT_PROVIDED:
         if callable(default):
             default = default()
         ctl.value = default
@@ -618,7 +621,8 @@ def _create_control_for_field(f, model_register=None, **kwargs):
         if hasattr(ctl, 'display_field'):
             for k, v in (f.choices or []):
                 if default == k:
-                    ctl.display_field = v
+                    ctl.default_text = v
+                    break
 
     return ctl
 
@@ -790,7 +794,7 @@ class TabbedEditWindow(TabbedWindow, BaseEditWindow):
 
 
 #==============================================================================
-# ComboBoxWithStore
+# ObjectGridTab
 #==============================================================================
 class ObjectGridTab(WindowTab):
     """
@@ -931,7 +935,7 @@ class ObjectTab(WindowTab):
 #==============================================================================
 # ComboBoxWithStore
 #==============================================================================
-class ComboBoxWithStore(ext.ExtComboBox):
+class ComboBoxWithStore(ext.ExtDictSelectField):
     """
     Потомок m3-комбобокса со втроенным стором
     Контрол имеет два свойства:
@@ -942,6 +946,8 @@ class ComboBoxWithStore(ext.ExtComboBox):
 
     def __init__(self, data=None, url=None, **kwargs):
         super(ComboBoxWithStore, self).__init__(**kwargs)
+        self.hide_trigger = False
+        self.hide_clear_trigger = True
         self._make_store(data, url)
 
     def _make_store(self, data=None, url=None):
