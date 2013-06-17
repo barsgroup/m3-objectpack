@@ -256,8 +256,8 @@ class CustomFilter(AbstractFilter):
             u'filterName: "%s"' % self._uid,
             u'xtype: "%s"' % self._xtype,
         ]
-        if self.tooltip:
-            control.append(u'tooltip: "%s"' % self.tooltip)
+        if self._tooltip:
+            control.append(u'tooltip: "%s"' % self._tooltip)
         control = u'{%s}' % u','.join(control)
         return [control]
 
