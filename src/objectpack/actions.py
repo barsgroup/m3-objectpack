@@ -1341,8 +1341,9 @@ class SelectorWindowAction(BaseAction):
 
         win.callback_url = new_self.callback_url
 
-        #if new_self.multi_select:
-            #win.enable_multi_select()
+        if new_self.multi_select:
+            win.multi_select = True
+            win._enable_multi_select()
 
         return m3_actions.ExtUIScriptResult(win, new_context)
 

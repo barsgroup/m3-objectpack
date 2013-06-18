@@ -235,8 +235,13 @@ class BaseSelectWindow(BaseListWindow):
         super(BaseSelectWindow, self)._do_layout()
         self.buttons.insert(0, self.select_btn)
 
+    def _enable_multi_select(self):
+        self.grid.sm = ext.ExtGridCheckBoxSelModel()
+
     def set_params(self, params):
         super(BaseSelectWindow, self).set_params(params)
+        if params.get('multi_select', False):
+            self._enable_multi_select()
         self.template_globals = 'select-window.js'
         self.column_name_on_select = params['column_name_on_select']
         self.grid.handler_dblclick = 'selectValue'
