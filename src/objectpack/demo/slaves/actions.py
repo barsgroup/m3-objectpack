@@ -2,7 +2,7 @@
 
 import objectpack
 
-from m3.ui import actions as m3_actions
+from m3 import actions as m3_actions
 
 import models
 import ui

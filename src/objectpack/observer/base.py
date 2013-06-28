@@ -8,7 +8,7 @@ import inspect
 
 import tools
 
-from m3.ui import actions as m3_actions
+from m3 import actions as m3_actions
 
 ACTION_NAME_ATTR = '_observing_name'
 

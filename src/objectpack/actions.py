@@ -7,22 +7,20 @@ Created on 23.07.2012
 
 import copy
 import datetime
-import re
 import inspect
 import types
 import json
 
-from django.db import models
 from django.db.models import fields as dj_fields
 from django.utils.encoding import force_unicode
 from django.utils.translation import ugettext_lazy as _
-from django.utils import simplejson
 
-from m3.ui import actions as m3_actions
-from m3.ui.actions.interfaces import ISelectablePack
-from m3.ui.ext.fields.complex import ExtSearchField
-from m3.core.exceptions import RelatedError, ApplicationLogicException
+from m3 import actions as m3_actions
+from m3.actions.interfaces import ISelectablePack
+from m3 import RelatedError, ApplicationLogicException
 from m3.db import safe_delete
+from m3_ext.ui.fields.complex import ExtSearchField
+from m3_ext.ui import results as ui_results
 
 import ui
 import tools
@@ -160,7 +158,7 @@ class BaseWindowAction(BaseAction):
         new_self.create_window()
         new_self._apply_window_params()
         new_self.configure_window()
-        return m3_actions.ExtUIScriptResult(
+        return ui_results.ExtUIScriptResult(
             new_self.win, context=new_self.context)
 
 
@@ -1345,7 +1343,7 @@ class SelectorWindowAction(BaseAction):
             win.multi_select = True
             win._enable_multi_select()
 
-        return m3_actions.ExtUIScriptResult(win, new_context)
+        return ui_results.ExtUIScriptResult(win, new_context)
 
 
 def multiline_text_window_result(

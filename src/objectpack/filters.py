@@ -13,7 +13,7 @@ from operator import or_, and_
 from django.db import models
 from django.utils import simplejson
 
-from m3.ui.actions import DeclarativeActionContext
+from m3.actions import DeclarativeActionContext
 
 from .ui import _create_control_for_field
 from .tools import str_to_date

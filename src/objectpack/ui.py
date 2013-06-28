@@ -9,9 +9,9 @@ import inspect
 from django.db import models as django_models
 from django.utils.translation import ugettext_lazy as _
 
-from m3.ui.ext import all_components as ext
-from m3.ui.ext import windows as ext_windows
-from m3.ui.ext.misc import store as ext_store
+from m3_ext.ui import all_components as ext
+from m3_ext.ui import windows as ext_windows
+from m3_ext.ui.misc import store as ext_store
 
 import tools
 

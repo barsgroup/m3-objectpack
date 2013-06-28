@@ -5,8 +5,8 @@ Author: Rinat F Sabitov
 """
 
 from objectpack.ui import BaseListWindow, BaseSelectWindow
-from m3.ui.ext.panels import ExtObjectTree
-from m3.ui.ext import misc
+from m3_ext.ui.panels import ExtObjectTree
+from m3_ext.ui import misc
 
 
 class BaseObjectTree(ExtObjectTree):

@@ -3,7 +3,7 @@
 Инструменарий для упрощённого создания ActionPack`ов для зависимых моделей
 """
 
-from m3.ui.actions import utils
+from m3.actions import utils
 
 import objectpack
 

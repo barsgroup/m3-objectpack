@@ -1,9 +1,4 @@
 #coding:utf-8
-'''
-File: actions.py
-Author: Rinat F Sabitov
-Description:
-'''
 from functools import partial
 
 import objectpack
@@ -20,7 +15,9 @@ _PF = partial(FilterByField, models.Person)
 # PersonObjectPack
 #==============================================================================
 class PersonObjectPack(objectpack.ObjectPack):
-    """docstring for PersonObjectPack"""
+    """
+    ObjectPack для модели Person
+    """
 
     model = models.Person
     add_to_desktop = True

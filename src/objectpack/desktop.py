@@ -3,7 +3,8 @@
 Created on 23.07.2012
 @author: pirogov
 """
-from m3.ui import app_ui, actions
+from m3 import actions
+from m3_ext.ui import app_ui
 from django.utils.translation import ugettext as _
 
 
