@@ -34,7 +34,7 @@ setup(
         'Programming Language :: Python',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
-    packages=package_dir={'': 'src'},
+    package_dir={'': 'src'},
     packages=find_packages('src', exclude=['example', 'example.*']),
     install_requires=[],
     include_package_data=True,
