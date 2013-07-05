@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import objectpack
-from demo_app import controller
+import controller
 
 import models
 
@@ -15,11 +15,11 @@ class GarageEditWindow(objectpack.TabbedEditWindow):
             model=models.Garage, field_list=('name',)
         ),
         objectpack.ObjectGridTab.fabricate_from_pack(
-            pack_name='demo_app.slaves/StaffPack',
+            pack_name='objectpack.demo/StaffPack',
             pack_register=controller.obs,
         ),
         objectpack.ObjectGridTab.fabricate_from_pack(
-            pack_name='demo_app.slaves/ToolPack',
+            pack_name='objectpack.demo/ToolPack',
             pack_register=controller.obs
         ),
     ]

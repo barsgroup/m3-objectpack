@@ -1,11 +1,14 @@
 #coding:utf-8
 from functools import partial
 
+from m3 import actions as m3_actions
+
 import objectpack
 from objectpack import tree_object_pack
 from objectpack.filters import FilterByField, ColumnFilterEngine
 
 import models
+import ui
 
 
 _PF = partial(FilterByField, models.Person)
@@ -162,3 +165,75 @@ class TreePack(tree_object_pack.TreeObjectPack):
             "header": u"Кличка"
         }
     ]
+
+
+#==============================================================================
+# Паки гаражей с инструментом и сотрудницами
+#==============================================================================
+class GaragePack(objectpack.ObjectPack):
+    """
+    Гаражи
+    """
+    model = models.Garage
+
+    add_to_menu = True
+    add_to_desktop = True
+
+    add_window = objectpack.ModelEditWindow.fabricate(model)
+    edit_window = ui.GarageEditWindow
+
+
+class ToolPack(objectpack.SlavePack):
+    """
+    Инвентарь гаража
+    """
+    model = models.GarageTool
+
+    parents = ['garage']
+
+    add_window = edit_window = objectpack.ModelEditWindow.fabricate(
+        model=model, field_list=('name',)
+    )
+
+
+class StaffPack(objectpack.SlavePack):
+    """
+    Сотрудники гаража
+    """
+    model = models.GarageStaff
+
+    parents = ['garage']
+
+    can_delete = True
+
+    def __init__(self):
+        super(StaffPack, self).__init__()
+
+        self.save_staff_action = SaveStaffAction()
+        self.select_person_action = SelectPersonAction()
+
+        self.replace_action('new_window_action', self.select_person_action)
+        self.actions.append(self.save_staff_action)
+
+
+class SelectPersonAction(objectpack.SelectorWindowAction):
+    """
+    Экшн отображения списка физ.лиц
+    """
+    def configure_action(self, request, context):
+        self.callback_url = self.parent.save_staff_action.get_absolute_url()
+        self.data_pack = self.parent._get_model_pack('Person')
+
+
+class SaveStaffAction(objectpack.BaseAction):
+    """
+    Экшн прикрепления физ.лиц к гаражу
+    """
+    url = r'/save_staff$'
+
+    def run(self, request, context):
+        ids = objectpack.extract_int_list(request, 'id')
+        for i in ids:
+            obj = models.GarageStaff(person_id=i)
+            self.parent.save_row(obj, True, request, context)
+        return m3_actions.OperationResult()

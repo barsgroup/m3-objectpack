@@ -27,6 +27,10 @@ def register_actions():
         actions.CFPersonObjectPack(),
         actions.BandedColumnPack(),
         actions.TreePack(),
+
+        actions.GaragePack(),
+        actions.ToolPack(),
+        actions.StaffPack(),
     ])
 
 
