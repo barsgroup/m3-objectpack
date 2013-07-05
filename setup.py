@@ -21,7 +21,6 @@ setup(
 
     maintainer='Alexey V Pirogov, Rinat F Sabitov',
     maintainer_email='rinat.sabitov@gmail.com',
-
     url="https://src.bars-open.ru/py/m3/m3_contrib/objectpack",
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -35,7 +34,8 @@ setup(
         'Programming Language :: Python',
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
-    packages=find_packages(exclude=['example', 'example.*']),
+    package_dir={'': 'src'},
+    packages=find_packages('src', exclude=['example', 'example.*']),
     install_requires=[],
     include_package_data=True,
     zip_safe=False,
