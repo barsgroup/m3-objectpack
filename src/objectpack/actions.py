@@ -894,6 +894,8 @@ class ObjectPack(BasePack, ISelectablePack):
         result = None
         if action is self.edit_window_action:
             result = {self.id_param_name: {'type': tools.int_or_zero}}
+        elif action is self.save_action:
+            result = {self.id_param_name: {'type': 'int', 'default': 0}}
         elif action is self.delete_action:
             result = {self.id_param_name: {'type': tools.int_list}}
         return result
