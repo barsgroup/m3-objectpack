@@ -37,6 +37,22 @@ class SlavePack(objectpack.ObjectPack):
                 ))
         return result
 
+    def declare_context(self, action):
+        """
+        Возвращает декларацию контекста для экшна
+        """
+        result = super(SlavePack, self).declare_context(action)
+        if action in (
+            self.edit_window_action,
+            self.new_window_action,
+            self.save_action
+        ):
+            # для экшнов редактирования/создания декларируются id родителей
+            result = result or {}
+            for p in self._parents:
+                result[p[0]] = {'type': 'int'}
+        return result
+
     def _get_parents_from_request(self, request, field_name_suffix=''):
         result = {}
         for id_param_name, title, field_name in self._parents:
