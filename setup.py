@@ -11,7 +11,7 @@ def read(fname):
 
 setup(
     name="objectpack",
-    version="0.7.3.6",
+    version="2.0.0",
     description=read('DESCRIPTION'),
     license="GPL",
     keywords="django m3 m3-contrib",
@@ -23,7 +23,7 @@ setup(
     maintainer_email='rinat.sabitov@gmail.com',
     url="https://src.bars-open.ru/py/m3/m3_contrib/objectpack",
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Framework :: Django',
@@ -35,7 +35,6 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     package_dir={'': 'src'},
-    packages=find_packages('src', exclude=['example', 'example.*']),
     install_requires=[],
     include_package_data=True,
     zip_safe=False,
