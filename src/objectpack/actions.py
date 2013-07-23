@@ -620,7 +620,7 @@ class BasePack(m3_actions.ActionPack):
         """
         Декларация контекста для экшна
         """
-        return None
+        return {}
 
     @classmethod
     def get_short_name(cls):
