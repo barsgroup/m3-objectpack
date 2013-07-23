@@ -889,7 +889,7 @@ class ObjectPack(BasePack, ISelectablePack):
         """
         Возвращает декларацию контекста для экшна
         """
-        result = None
+        result = super(ObjectPack, self).declare_context(action)
         if action is self.edit_window_action:
             result = {self.id_param_name: {'type': tools.int_or_zero}}
         elif action is self.save_action:

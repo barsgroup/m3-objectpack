@@ -3,6 +3,9 @@ glob:.pydevproject
 glob:.settings/*
 glob:*.pyc
 glob:*.pyo
+glob:dist/*
+glob:build/*
+glob:objectpack.egg-info/*
 syntax: glob
 docs/_build/*
 src/build/*
