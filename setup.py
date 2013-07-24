@@ -11,16 +11,11 @@ def read(fname):
 
 setup(
     name="objectpack",
-    version="2.0.2",
+    version="2.0.3",
+    license='Apache License, Version 2.0',
     description=read('DESCRIPTION'),
-    license="GPL",
-    keywords="django m3 m3-contrib",
-
     author="Alexey Pirogov",
     author_email="pirogov@bars-open.ru",
-
-    maintainer='Alexey V Pirogov, Rinat F Sabitov',
-    maintainer_email='rinat.sabitov@gmail.com',
     url="https://src.bars-open.ru/py/m3/m3_contrib/objectpack",
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -35,8 +30,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP :: Dynamic Content',
     ],
     package_dir={'': 'src'},
-    install_requires=[],
+    packages=find_packages('src'),
     include_package_data=True,
-    zip_safe=False,
     long_description=read('README'),
 )
