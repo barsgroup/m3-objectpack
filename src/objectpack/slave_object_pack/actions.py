@@ -3,8 +3,6 @@
 Инструменарий для упрощённого создания ActionPack`ов для зависимых моделей
 """
 
-from m3.ui.actions import utils
-
 import objectpack
 
 
@@ -22,6 +20,13 @@ class SlavePack(objectpack.ObjectPack):
 
     @property
     def _parents(self):
+        """
+        Возвращает структуру вида:
+        [
+            (id_param_name род.пака, род.поле),
+            ...
+        ]
+        """
         if self.__parents_cached:
             return self.__parents_cached
         result = self.__parents_cached = []
@@ -32,7 +37,6 @@ class SlavePack(objectpack.ObjectPack):
             if pack:
                 result.append((
                     pack.id_param_name,
-                    pack.title,
                     parent
                 ))
         return result
@@ -43,40 +47,37 @@ class SlavePack(objectpack.ObjectPack):
         """
         result = super(SlavePack, self).declare_context(action)
         if action in (
+            self.list_window_action,
+            self.rows_action,
             self.edit_window_action,
             self.new_window_action,
             self.save_action
         ):
-            # для экшнов редактирования/создания декларируются id родителей
+            # для экшнов декларируются id родителей
             result = result or {}
             for p in self._parents:
                 result[p[0]] = {'type': 'int'}
         return result
 
-    def _get_parents_from_request(self, request, field_name_suffix=''):
-        result = {}
-        for id_param_name, title, field_name in self._parents:
-            parent_id = utils.extract_int(request, id_param_name)
-            if not parent_id:
-                raise ValueError(
-                    u'Не указано ' + id_param_name)
-            result[field_name + field_name_suffix] = parent_id
-        return result
+    def _get_parents_dict(self, context, key_fmt='%s'):
+        """
+        Возвращает словарь из параметров контекста, представляющих родителей
+        """
+        return dict(
+            (key_fmt % field_name, getattr(context, id_param_name))
+            for id_param_name, field_name in self._parents
+        )
 
     def save_row(self, obj, create_new, request, context):
         obj.__dict__.update(
-            self._get_parents_from_request(request, field_name_suffix='_id')
+            self._get_parents_dict(context, key_fmt='%s_id')
         )
         return super(SlavePack, self).save_row(
             obj, create_new, request, context)
 
     def get_rows_query(self, request, context):
         q = super(SlavePack, self).get_rows_query(request, context)
-        try:
-            q = q.filter(**self._get_parents_from_request(request))
-        except ValueError:
-            q = self.model.objects.none()
-        return q
+        return q.filter(**self._get_parents_dict(context))
 
     # SlavePack обычно не является основным для модели
     _is_primary_for_model = False
