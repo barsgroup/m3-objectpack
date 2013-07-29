@@ -10,6 +10,7 @@ import datetime
 import inspect
 import types
 import json
+import warnings
 
 from django.db.models import fields as dj_fields
 from django.utils.encoding import force_unicode
@@ -84,16 +85,6 @@ class BaseAction(m3_actions.Action):
         """
         return arg
 
-    @staticmethod
-    def handler_for(verb):
-        """
-        Декоратор-заглушка для точек расширения.
-        При регистрации в обсервер перекрывается
-        """
-        def wrapper(fn):
-            return fn
-        return wrapper
-
 
 #==============================================================================
 # BaseWindowAction
@@ -111,10 +102,16 @@ class BaseWindowAction(BaseAction):
 
     def set_windows_params(self):
         # TODO: Выпилить, ато опечатка портит всю семантику!
+        warnings.warn(
+            'Please, replace "set_windowS_params"->"set_window_params"!',
+            category=FutureWarning)
         self.set_window_params()
 
     def _apply_windows_params(self):
         # TODO: Выпилить, ато опечатка портит всю семантику!
+        warnings.warn(
+            'Please, replace "_apply_windowS_params"->"_apply_window_params"!',
+            category=FutureWarning)
         self._apply_window_params()
 
     def set_window_params(self):
@@ -774,7 +771,7 @@ class ObjectPack(BasePack, ISelectablePack):
     select_window = ui.BaseSelectWindow  # Форма выбора @UndefinedVariable
 
     #размеры окна выбора по умолчанию
-    width, height = 510, 400
+    width, height = 600, 400
 
     MSG_DOESNOTEXISTS = _(
         u'Запись не найдена в базе данных.<br/>' +
@@ -890,10 +887,12 @@ class ObjectPack(BasePack, ISelectablePack):
         Возвращает декларацию контекста для экшна
         """
         result = super(ObjectPack, self).declare_context(action)
-        if action is self.edit_window_action:
+        if action in (
+            self.edit_window_action,
+            self.new_window_action,
+            self.save_action
+        ):
             result = {self.id_param_name: {'type': tools.int_or_zero}}
-        elif action is self.save_action:
-            result = {self.id_param_name: {'type': 'int', 'default': 0}}
         elif action is self.delete_action:
             result = {self.id_param_name: {'type': tools.int_list}}
         return result
@@ -1138,7 +1137,7 @@ class ObjectPack(BasePack, ISelectablePack):
         Возвращает кортеж (объет, create_new)
         для создания, редатирования записи
         """
-        obj_id = getattr(context, self.id_param_name, 0)
+        obj_id = context.id_param_name
         create_new = (obj_id == 0)
         record = self.get_row(obj_id)
         return record, create_new

@@ -778,8 +778,8 @@ class TabbedWindow(BaseWindow):
         # TODO: найти причину
         for grid in tools.find_element_by_type(
                 self._tab_container, ext.ExtObjectGrid):
-            if hasattr(grid.top_bar, 'search_grid'):
-                grid.top_bar.search_grid.hidden = True
+            if hasattr(grid.top_bar, 'search_field'):
+                grid.top_bar.search_field.hidden = True
 
         super(TabbedWindow, self).set_params(params)
 
