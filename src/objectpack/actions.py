@@ -1137,7 +1137,7 @@ class ObjectPack(BasePack, ISelectablePack):
         Возвращает кортеж (объет, create_new)
         для создания, редатирования записи
         """
-        obj_id = context.id_param_name
+        obj_id = getattr(context, self.id_param_name)
         create_new = (obj_id == 0)
         record = self.get_row(obj_id)
         return record, create_new
