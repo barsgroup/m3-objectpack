@@ -48,6 +48,7 @@ class SlavePack(objectpack.ObjectPack):
         result = super(SlavePack, self).declare_context(action)
         if action in (
             self.list_window_action,
+            self.select_window_action,
             self.rows_action,
             self.edit_window_action,
             self.new_window_action,
