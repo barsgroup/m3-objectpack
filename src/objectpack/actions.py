@@ -14,7 +14,6 @@ import warnings
 
 from django.db.models import fields as dj_fields
 from django.utils.encoding import force_unicode
-from django.utils.translation import ugettext_lazy as _
 
 from m3 import actions as m3_actions
 from m3.actions.interfaces import ISelectablePack
@@ -232,9 +231,9 @@ class ObjectEditWindowAction(BaseWindowAction):
 
         params['read_only'] = read_only
         params['title'] = self.parent.format_window_title(
-            _(u'Просмотр') if read_only else
-            _(u'Добавление') if create_new else
-            _(u'Редактирование')
+            u'Просмотр' if read_only else
+            u'Добавление' if create_new else
+            u'Редактирование'
         )
 
         self.win_params = self.parent.get_edit_window_params(
@@ -568,7 +567,7 @@ class ObjectDeleteAction(BaseAction):
             raise ApplicationLogicException(e.args[0])
         except Exception, e:
             if e.__class__.__name__ == 'IntegrityError':
-                message = _(
+                message = (
                     u'Не удалось удалить элемент. '
                     u'Возможно на него есть ссылки.')
                 raise ApplicationLogicException(message)
@@ -688,7 +687,7 @@ class ObjectPack(BasePack, ISelectablePack):
     # необходима колонка с data_index = '__unicode__'
     columns = [
         {
-            'header': _(u'Наименование'),
+            'header': u'Наименование',
             'data_index': '__unicode__',
         },
 #        {
@@ -773,9 +772,10 @@ class ObjectPack(BasePack, ISelectablePack):
     #размеры окна выбора по умолчанию
     width, height = 600, 400
 
-    MSG_DOESNOTEXISTS = _(
-        u'Запись не найдена в базе данных.<br/>' +
-        u'Возможно, она была удалена. Пожалуйста, обновите таблицу.')
+    MSG_DOESNOTEXISTS = (
+        u'Запись не найдена в базе данных.<br/>'
+        u'Возможно, она была удалена. Пожалуйста, обновите таблицу.'
+    )
 
     # плоский список полей фильтрации
     _all_search_fields = None
@@ -918,9 +918,10 @@ class ObjectPack(BasePack, ISelectablePack):
                 try:
                     text = getattr(row, self.column_name_on_select)
                 except AttributeError:
-                    raise Exception(_(
+                    raise Exception((
                         u'Не получается получить поле {0} для '
-                        u'DictSelectField.pack = {1}').format(attr_name, self))
+                        u'DictSelectField.pack = {1}'
+                    ).format(attr_name, self))
 
             # getattr может возвращать метод, например verbose_name
             if callable(text):
@@ -1018,7 +1019,7 @@ class ObjectPack(BasePack, ISelectablePack):
         if self.get_search_fields():
             #поиск по гриду если есть по чему искать
             grid.top_bar.search_field = ExtSearchField(
-                empty_text=_(u'Поиск'), width=200, component_for_search=grid)
+                empty_text=u'Поиск', width=200, component_for_search=grid)
             grid.top_bar.add_fill()
             grid.top_bar.items.append(grid.top_bar.search_field)
 
@@ -1163,9 +1164,10 @@ class ObjectPack(BasePack, ISelectablePack):
             result = safe_delete(obj)
         #в случае успеха safe_delete возвращет true
         if not result:
-            raise RelatedError(_(
+            raise RelatedError((
                 u'Не удалось удалить элемент {0}. '
-                u'Возможно на него есть ссылки.'), format(obj_id))
+                u'Возможно на него есть ссылки.'
+            ), format(obj_id))
         return obj
 
     def get_filter_plugin(self):

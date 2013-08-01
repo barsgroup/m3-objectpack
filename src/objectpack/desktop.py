@@ -5,7 +5,6 @@ Created on 23.07.2012
 """
 from m3 import actions
 from m3_ext.ui import app_ui
-from django.utils.translation import ugettext as _
 
 
 #==============================================================================
@@ -261,11 +260,11 @@ class MainMenu(BaseMenu):
         })
 
         self._registries_menu = self.SubMenu(
-            _(u'Реестры'), icon='menu-dicts-16', index=1)
+            u'Реестры', icon='menu-dicts-16', index=1)
         self._dicts_menu = self.SubMenu(
-            _(u'Справочники'), icon='menu-dicts-16', index=2)
+            u'Справочники', icon='menu-dicts-16', index=2)
         self._administry_menu = self.SubMenu(
-            _(u'Администрирование'), icon='menu-dicts-16', index=101)
+            u'Администрирование', icon='menu-dicts-16', index=101)
 
     def dicts(self, *items):
         """

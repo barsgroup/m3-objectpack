@@ -6,7 +6,6 @@ Description:
 """
 
 import objectpack
-from django.utils.translation import ugettext_lazy as _
 
 
 class DictionaryObjectPack(objectpack.ObjectPack):
@@ -18,12 +17,12 @@ class DictionaryObjectPack(objectpack.ObjectPack):
     columns = [
         {
             'data_index': 'code',
-            'header': _(u'код'),
+            'header': u'код',
             'searchable': True
         },
         {
             'data_index': '__unicode__',
-            'header': _(u'наименование'),
+            'header': u'наименование',
             'searchable': True
         },
     ]

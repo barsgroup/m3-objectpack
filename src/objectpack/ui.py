@@ -7,7 +7,6 @@ Created on 23.07.12
 import inspect
 
 from django.db import models as django_models
-from django.utils.translation import ugettext_lazy as _
 
 from m3_ext.ui import all_components as ext
 from m3_ext.ui import windows as ext_windows
@@ -93,9 +92,9 @@ class BaseEditWindow(ext_windows.ExtEditWindow, BaseWindow):
         self.items.append(self.form)
 
         self.save_btn = ext.ExtButton(
-            text=_(u'Сохранить'), handler="submitForm")
+            text=u'Сохранить', handler="submitForm")
         self.cancel_btn = ext.ExtButton(
-            text=_(u'Отмена'), handler="cancelForm")
+            text=u'Отмена', handler="cancelForm")
 
         # Кнопка "Отмена" не блокируется в режиме "только для чтения"
         self._mro_exclude_list.append(self.cancel_btn)
@@ -137,7 +136,7 @@ class BaseListWindow(BaseWindow):
         self.grid = ext.ExtObjectGrid()
         self.close_btn = self.btn_close = ext.ExtButton(
             name='close_btn',
-            text=_(u'Закрыть'),
+            text=u'Закрыть',
             handler='function(){Ext.getCmp("%s").close();}' % self.client_id
         )
         self._mro_exclude_list.append(self.close_btn)
@@ -150,7 +149,7 @@ class BaseListWindow(BaseWindow):
     def set_params(self, params):
         super(BaseListWindow, self).set_params(params)
         self.maximizable = self.minimizable = True
-        assert 'pack' in params, _(
+        assert 'pack' in params, (
             u'Параметры окна должны содержать экземпляр ActionPack'
             u' настраивающего grid!'
         )
@@ -228,7 +227,7 @@ class BaseSelectWindow(BaseListWindow):
     def _init_components(self):
         super(BaseSelectWindow, self)._init_components()
         self.select_btn = ext.ExtButton(
-            handler='selectValue', text=_(u'Выбрать'))
+            handler='selectValue', text=u'Выбрать')
         self._mro_exclude_list.append(self.select_btn)
 
     def _do_layout(self):

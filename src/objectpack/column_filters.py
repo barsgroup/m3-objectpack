@@ -3,7 +3,6 @@
 Фабрики фильтров для колонок гридов
 """
 from django.db.models import Q
-from django.utils.translation import ugettext as _
 
 
 def choices(field, data):
@@ -22,7 +21,7 @@ def yes_no(field):
     Возвращает списковый фильтр
     с вариантами "Да"/"Нет" для boolean-поля @field
     """
-    return choices(field, ((1, _(u'Да')), (0, _(u'Нет'))))
+    return choices(field, ((1, u'Да'), (0, u'Нет')))
 
 
 def within(field_from, field_to):
