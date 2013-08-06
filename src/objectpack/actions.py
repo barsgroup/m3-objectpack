@@ -1324,7 +1324,6 @@ class SelectorWindowAction(BaseAction):
         new_self.configure_action(request, context)
 
         assert new_self.data_pack, u'Не задан ActionPack-источник данных!'
-        assert new_self.callback_url, u'Не задан Callback!'
 
         new_context = new_self.configure_context(request, context)
 
