@@ -952,6 +952,7 @@ class ComboBoxWithStore(ext.ExtDictSelectField):
         super(ComboBoxWithStore, self).__init__(**kwargs)
         self.hide_trigger = False
         self.hide_clear_trigger = True
+        self.hide_dict_select_trigger = True
         self._make_store(data, url)
 
     def _make_store(self, data=None, url=None):
