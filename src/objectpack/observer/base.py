@@ -5,12 +5,17 @@ Created on 03.08.2012
 """
 import re
 import inspect
+import warnings
 
 import tools
 
 from m3 import actions as m3_actions
 
 ACTION_NAME_ATTR = '_observing_name'
+
+
+def _warn(msg):
+    warnings.warn(msg, FutureWarning, 3)
 
 
 #==============================================================================
@@ -67,7 +72,44 @@ class ObservableController(ObservableMixin, m3_actions.ActionController):
     """
     Контроллер, поддерживающий механизм подписки через Observer
     """
-    pass
+    class VerboseDeclarativeContext(m3_actions.DeclarativeActionContext):
+
+        _internal_attrs = ['m3_window_id']
+
+        def __init__(self, debug, **kwargs):
+            m3_actions.DeclarativeActionContext.__init__(self, **kwargs)
+            self.__debug = debug
+            self.__declared = []
+
+        def build(self, request, rules):
+            self.__declared = rules.keys() + self._internal_attrs
+            try:
+                m3_actions.DeclarativeActionContext.build(self, request, rules)
+            except m3_actions.CriticalContextBuildingError as e:
+                if self.__debug:
+                    raise
+                else:
+                    _warn(repr(e))
+            for k, v in request.REQUEST.items():
+                if not hasattr(self, k):
+                    setattr(self, k, v)
+
+        def __getattr__(self, attr):
+            if not attr.startswith('__'):
+                if attr not in self.__declared:
+                    _warn('Attribute "%s" not declared!' % attr)
+            return self.__dict__[attr]
+
+    def build_context(self, request, rules):
+        '''
+        Выполняет построение контекста вызова операции ActionContext
+        на основе переданного request
+        '''
+        if isinstance(rules, dict):
+            from django.conf import settings
+            return self.VerboseDeclarativeContext(debug=settings.DEBUG)
+        else:
+            return m3_actions.ActionContext()
 
 
 #==============================================================================
