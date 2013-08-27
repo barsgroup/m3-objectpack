@@ -5,7 +5,8 @@ Created on 03.08.2012
 """
 import re
 import inspect
-import warnings
+import sys
+import logging
 
 import tools
 
@@ -14,8 +15,13 @@ from m3 import actions as m3_actions
 ACTION_NAME_ATTR = '_observing_name'
 
 
-def _warn(msg):
-    warnings.warn(msg, FutureWarning, 3)
+def _warn(msg, level=3):
+    """
+    Костыль для вывода предупреждений в лог
+    """
+    frame = sys._getframe(level)
+    fmt = '%%s (%s:%s)' % (frame.f_globals['__name__'], frame.f_lineno)
+    logging.warn(fmt % msg)
 
 
 #==============================================================================
@@ -74,7 +80,7 @@ class ObservableController(ObservableMixin, m3_actions.ActionController):
     """
     class VerboseDeclarativeContext(m3_actions.DeclarativeActionContext):
 
-        _internal_attrs = ['m3_window_id']
+        __internal_attrs = ['m3_window_id']
 
         def __init__(self, debug, **kwargs):
             m3_actions.DeclarativeActionContext.__init__(self, **kwargs)
@@ -82,23 +88,31 @@ class ObservableController(ObservableMixin, m3_actions.ActionController):
             self.__declared = []
 
         def build(self, request, rules):
-            self.__declared = rules.keys() + self._internal_attrs
+            self.__declared = rules.keys() + self.__internal_attrs
             try:
                 m3_actions.DeclarativeActionContext.build(self, request, rules)
             except m3_actions.CriticalContextBuildingError as e:
                 if self.__debug:
                     raise
                 else:
-                    _warn(repr(e))
+                    _warn('%r, url="%s"' % (e, request.path_info))
             for k, v in request.REQUEST.items():
                 if not hasattr(self, k):
                     setattr(self, k, v)
 
-        def __getattr__(self, attr):
+        def __getattr__(self, attr, default=(((),),)):
             if not attr.startswith('__'):
                 if attr not in self.__declared:
                     _warn('Attribute "%s" not declared!' % attr)
-            return self.__dict__[attr]
+            try:
+                return self.__dict__[attr]
+            except KeyError:
+                if default == (((),),):
+                    raise AttributeError(
+                        "'%s' object has no attribute '%s'" % (
+                            self.__class__.__name__, attr
+                        ))
+                return default
 
     def build_context(self, request, rules):
         '''
