@@ -1167,8 +1167,8 @@ class ObjectPack(BasePack, ISelectablePack):
             raise RelatedError((
                 u'Не удалось удалить элемент {0}. '
                 u'Возможно на него есть ссылки.'
-            ), format(obj_id))
-        return obj
+            ).format(obj_id))
+        returnobj
 
     def get_filter_plugin(self):
         """
