@@ -3,6 +3,7 @@
 Виртуальная модель и proxy-обертка для работы с группой моделей
 """
 import copy
+from collections import Iterable
 
 from itertools import ifilter, ifilterfalse, islice, imap
 
@@ -414,7 +415,17 @@ def model_proxy_metaclass(name, bases, dic):
             return iter(self)
 
         def __getitem__(self, *args):
-            return map(self._proxy_cls, self._get_query().__getitem__(*args))
+            def wrap(obj):
+                if isinstance(obj, (list, dict)):
+                    return obj
+                return self._proxy_cls(obj)
+
+            result = self._get_query().__getitem__(*args)
+
+            if isinstance(result, Iterable):
+                return map(wrap, result)
+            else:
+                return wrap(result)
 
         def __getattr__(self, attr):
             # все атрибуты, которые не перекрыты,
