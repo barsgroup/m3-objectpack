@@ -11,7 +11,7 @@ def read(fname):
 
 setup(
     name="objectpack",
-    version="2.0.14",
+    version="2.0.15",
     license='Apache License, Version 2.0',
     description=read('DESCRIPTION'),
     author="Alexey Pirogov",
