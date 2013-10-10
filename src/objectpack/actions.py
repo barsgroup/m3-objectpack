@@ -1168,7 +1168,7 @@ class ObjectPack(BasePack, ISelectablePack):
                 u'Не удалось удалить элемент {0}. '
                 u'Возможно на него есть ссылки.'
             ).format(obj_id))
-        returnobj
+        return obj
 
     def get_filter_plugin(self):
         """
