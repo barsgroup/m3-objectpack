@@ -36,6 +36,7 @@ class QuerySplitter(object):
 
         self._chunk = None
         self._cnt = 0
+        self._no_more_data = False
 
     def __iter__(self):
         if not self._limit:
@@ -50,10 +51,13 @@ class QuerySplitter(object):
             raise StopIteration()
 
         # если порция кончилась, берем следующую
-        if not self._chunk:
+        if not self._chunk and not self._no_more_data:
             self._chunk = list(
                 self._data[self._start: self._start + self._limit])
-            self._start += self._limit
+            if len(self._chunk) < self._limit:
+                self._no_more_data = True
+            else:
+                self._start += self._limit
 
         # отдаём порцию поэлементно
         if self._chunk:
