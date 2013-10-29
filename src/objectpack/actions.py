@@ -445,11 +445,9 @@ class ObjectRowsAction(BaseAction):
                 # ищем поле в модели
                 try:
                     fld = obj._meta.get_field_by_name(col)[0]
-                except AttributeError:
-                    fld = None
-                except IndexError:
-                    fld = None
-                except dj_fields.FieldDoesNotExist:
+                except (
+                    AttributeError, IndexError, dj_fields.FieldDoesNotExist
+                ):
                     fld = None
                 # получаем значение
                 obj = getattr(obj, col, None)
