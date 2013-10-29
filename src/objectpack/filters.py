@@ -194,7 +194,10 @@ class FilterByField(AbstractFilter):
     _tooltip = None
     _parser = None
 
-    def __init__(self, model, field_name, lookup=None, tooltip=None):
+    def __init__(
+        self, model, field_name, lookup=None, tooltip=None,
+        **field_fabric_params
+    ):
         """
         @model - модель, на основе поля которой и будет строиться фильтр
         @filed_name - имя поля модели
@@ -206,6 +209,7 @@ class FilterByField(AbstractFilter):
         self._field_name = field_name
         self._lookup = lookup or (lambda x: models.Q(**{field_name: x}))
         self._tooltip = tooltip
+        self._field_fabric_params = field_fabric_params
         fld = self._model._meta.get_field(self._field_name)
         for bases, parser_key in self.parsers_map:
             if isinstance(fld, bases):
@@ -216,7 +220,9 @@ class FilterByField(AbstractFilter):
 
     def get_script(self):
         control = _create_control_for_field(
-            self._model._meta.get_field(self._field_name))
+            self._model._meta.get_field(self._field_name),
+            **self._field_fabric_params
+        )
         control._put_config_value('filterName', self._uid)
         control._put_config_value('tooltip', self._tooltip or control.label)
         control.name = self._uid
