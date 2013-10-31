@@ -716,8 +716,6 @@ class TabbedWindow(BaseWindow):
     # описание классов вкладок (iterable)
     tabs = None
 
-    template_globals = 'tabbed-window.js'
-
     def _init_components(self):
         # описание вкладок должно должны быть итерабельным
         assert tools.istraversable(self.tabs), 'Wrond type of "tabs"!'
@@ -765,6 +763,8 @@ class TabbedWindow(BaseWindow):
         self.items.append(tc)
 
     def set_params(self, params):
+        self.template_globals = 'tabbed-window.js'
+
         # установка параметров вкладок, формирование списка шаблонов вкладок
         self.tabs_templates = []
         for con in self.tabs:
