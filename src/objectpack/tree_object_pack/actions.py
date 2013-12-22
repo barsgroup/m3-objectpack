@@ -58,12 +58,22 @@ class TreeObjectPack(objectpack.ObjectPack):
             win.form.from_object({'parent_id': int(context.parent_id)})
         return win
 
+    def save_row(self, obj, create_new, request, context):
+        setattr(obj, '%s_id' % self.parent_field, context.parent_id or None)
+        obj.save()
+
     def declare_context(self, action):
         decl = super(TreeObjectPack, self).declare_context(action)
         if action is self.new_window_action:
             # id может и не прийти,
             # если добавление производится в корень
             decl[self.id_param_name]['default'] = 0
+        if action in (
+            self.edit_window_action,
+            self.new_window_action,
+            self.save_action
+        ):
+            decl['parent_id'] = {'type': 'int', 'default': 0}
         return decl
 
 
