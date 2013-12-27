@@ -236,14 +236,18 @@ class ObjectEditWindowAction(BaseWindowAction):
             u'Редактирование'
         )
 
-        self.win_params = self.parent.get_edit_window_params(
-            params, self.request, self.context)
+        self.win_params = self.handle(
+            'set_window_params',
+            self.parent.get_edit_window_params(
+                params, self.request, self.context))
 
     def create_window(self):
         assert 'create_new' in self.win_params, (
             u'You must call "set_window_params" method of superclass!')
-        self.win = self.parent.create_edit_window(
-            self.win_params['create_new'], self.request, self.context)
+        self.win = self.handle(
+            'create_window',
+            self.parent.create_edit_window(
+                self.win_params['create_new'], self.request, self.context))
 
 
 #==============================================================================
@@ -666,6 +670,11 @@ class ObjectPack(BasePack, ISelectablePack):
     """
     Пакет с действиями, специфичными для работы с редактирование модели
     """
+    get_object = lambda id: True
+    get_objects = lambda filter=None, sorting=None, limit=None, offset=0: True
+    put_objects = lambda list_of_dicts: True
+    delete_objects = lambda list_of_ids: True
+
     # фабрика колонок по данным атрибута 'columns'
     # (callable-объект, возвращающий объект с методом 'configure_grid(grid)')
     column_constructor_fabric = ui.ColumnsConstructor.from_config
@@ -717,9 +726,6 @@ class ObjectPack(BasePack, ISelectablePack):
     ]
 
     filter_engine_clz = filters.MenuFilterEngine
-
-    # Настройки вида справочника (задаются конечным разработчиком)
-    model = None
 
     # название поля, идентифицирующего объект и название параметра,
     # который будет передаваться в запросе на модификацию/удаление
