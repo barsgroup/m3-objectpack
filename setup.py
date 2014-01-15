@@ -12,7 +12,7 @@ def read(fname):
 setup(
     name="objectpack",
     version="2.0.20.1",
-    license='Apache License, Version 2.0',
+    license='License :: OSI Approved :: MIT License',
     description=read('DESCRIPTION'),
     author="Alexey Pirogov",
     author_email="pirogov@bars-open.ru",
