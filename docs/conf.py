@@ -12,6 +12,7 @@
 # serve to show the default.
 
 import sys, os
+import datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -41,8 +42,10 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'objectpack'
-copyright = u'2012, Alexey Pirogov'
+project_id = 'objectpack'
+project = u'ObjectPack'
+company = u'BARS Group'
+copyright = u"2009-%s, %s" % (datetime.now().year, company)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -165,7 +168,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'objectpackdoc'
+htmlhelp_basename = 'default'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -184,8 +187,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'objectpack.tex', u'objectpack Documentation',
-   u'Alexey Pirogov', 'manual'),
+    (master_doc, '%s.tex' % project_id, project, company, 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -214,8 +216,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'objectpack', u'objectpack Documentation',
-     [u'Alexey Pirogov'], 1)
+    (master_doc, project_id, project, [company], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -227,11 +228,11 @@ man_pages = [
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
-texinfo_documents = [
-  ('index', 'objectpack', u'objectpack Documentation',
-   u'Alexey Pirogov', 'objectpack', 'One line description of project.',
-   'Miscellaneous'),
-]
+# texinfo_documents = [
+#   ('index', 'objectpack', u'objectpack Documentation',
+#    u'Alexey Pirogov', 'objectpack', 'One line description of project.',
+#    'Miscellaneous'),
+# ]
 
 # Documents to append as an appendix to all manuals.
 #texinfo_appendices = []
@@ -241,3 +242,8 @@ texinfo_documents = [
 
 # How to display URL addresses: 'footnote', 'no', or 'inline'.
 #texinfo_show_urls = 'footnote'
+
+epub_title = project
+epub_author = company
+epub_publisher = company
+epub_copyright = u"2009-%s, %s" % (datetime.now().year, company)
