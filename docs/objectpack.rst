@@ -25,6 +25,14 @@ objectpack Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`exceptions` Module
+------------------------
+
+.. automodule:: objectpack.exceptions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`tools` Module
 -------------------
 
@@ -41,18 +49,12 @@ objectpack Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`version` Module
----------------------
-
-.. automodule:: objectpack.version
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 Subpackages
 -----------
 
 .. toctree::
 
+    objectpack.observer
     objectpack.slave_object_pack
-
+    objectpack.tree_object_pack
+    objectpack.dictionary_object_pack

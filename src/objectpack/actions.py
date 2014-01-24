@@ -1,8 +1,10 @@
 #coding: utf-8
 """
-Created on 23.07.2012
+:Created: 23.07.2012
 
-@author: pirogov
+:Author: pirogov
+
+Содержит главный класс библиотеки и набор actions для него.
 """
 
 import copy
@@ -35,22 +37,41 @@ class BaseAction(m3_actions.Action):
     """
     Прототип для actions ObjectPack`а
     """
-    # код подправа, используемый при формировании кода права экшна
-    # стандартным способом. Если код не указан - экшн формирует
-    # свой код права независимо от пака
+
     perm_code = None
+    """
+    Код подправа, используемый при формировании кода права экшна
+    стандартным способом. Если код не указан - экшн формирует
+    свой код права независимо от пака
+    """
 
     @tools.cached_to('__cached_context_declaration')
     def context_declaration(self):
-        # контекст экшну декларирует пак
+        """
+        Делегирует декларацию контекста в пак
+
+        :return: Правила для DeclarativeActionContext
+        :rtype: dict
+        """
         return self.parent.declare_context(self)
 
     @property
     def url(self):
-        # автоматически генерируемый url
+        """
+        Автоматически генерируемый url
+
+        :rtype: str
+        """
         return r'/%s' % self.__class__.__name__.lower()
 
     def get_perm_code(self, subpermission=None):
+        """
+
+        :param subpermission: Код подправа доступа
+        :type subpermission: str
+        :return: code - Код доступа
+        :rtype: str
+        """
         if self.perm_code is None:
             code = super(BaseAction, self).get_perm_code(subpermission)
         else:
@@ -63,9 +84,15 @@ class BaseAction(m3_actions.Action):
     @property
     @tools.cached_to('__cached_need_check_permission')
     def need_check_permission(self):
-        # Если определен perm_code, то необходимость проверки прав
-        # будет зависеть от присутствия perm_code среди sub_permissions пака
-        # и соответствующего флага пака
+        """
+        Небходимость проверки прав
+
+        Если определен perm_code, то необходимость проверки прав
+        будет зависеть от присутствия perm_code среди sub_permissions пака
+        и соответствующего флага пака
+
+        :rtype: bool
+        """
         if self.perm_code is not None:
             result = (
                 self.parent.need_check_permission
@@ -81,6 +108,12 @@ class BaseAction(m3_actions.Action):
         """
         Заглушка для точек расширения.
         При регистрации в обсервер перекрывается
+
+        :param verb: Имя точки расширения
+        :type verb: str
+        :param arg: Объект для передачи в точку расширения
+        :type arg: any
+        :return arg:
         """
         return arg
 
@@ -95,19 +128,28 @@ class BaseWindowAction(BaseAction):
     def create_window(self):
         """
         Метод инстанцирует окно и помещает экземпляр в атрибут self.win
-        ( пример: self.win = EditWindow() )
+
+        .. code::
+
+            def create_window(self):
+                self.win = EditWindow()
         """
         raise NotImplementedError()
 
     def set_windows_params(self):
-        # TODO: Выпилить, ато опечатка портит всю семантику!
+        """
+        :deprecated:
+        :TODO: Выпилить, ато опечатка портит всю семантику!
+        """
         warnings.warn(
             'Please, replace "set_windowS_params"->"set_window_params"!',
             category=FutureWarning)
         self.set_window_params()
 
     def _apply_windows_params(self):
-        # TODO: Выпилить, ато опечатка портит всю семантику!
+        """
+        :TODO: Выпилить, ато опечатка портит всю семантику!
+        """
         warnings.warn(
             'Please, replace "_apply_windowS_params"->"_apply_window_params"!',
             category=FutureWarning)
@@ -117,15 +159,22 @@ class BaseWindowAction(BaseAction):
         """
         Метод заполняет словарь self.win_params, который будет передан
         в окно. Этот словарь выступает как шина передачи данных
-        от Actions/Packs к окну.
-        ( пример: self.win_params['title'] = _(u'Привет из ада') )
+        от Actions/Packs к окну
+
+        .. code::
+
+            def set_window_params(self):
+                self.win_params['title'] = _(u'Привет из ада')
         """
         pass
 
     def _apply_window_params(self):
         """
         Метод передает словарь параметров в окно.
-        ( Обычно не требует перекрытия )
+
+        .. note:
+
+            Обычно не требует перекрытия
         """
         self.win.set_params(self.win_params)
 
@@ -133,16 +182,26 @@ class BaseWindowAction(BaseAction):
         """
         Точка расширения, предоставляющая доступ к настроенному
         экземпляру окна для тонкой настройки.
-        ( Оставлена для особо тяжёлых случаев,
-        когда не удаётся обойтись set_params )
-        ( пример: self.win.grid.top_bar.items[8].text = _(u'Ух ты, 9 кнопок') )
+
+        .. note::
+
+           Оставлена для особо тяжёлых случаев, когда не удаётся
+           обойтись set_params
+
+        .. code::
+
+            def configure_window(self):
+                self.win.grid.top_bar.items[8].text = _(u'Ух ты, 9 кнопок')
         """
         pass
 
     def run(self, request, context):
         """
         Тело Action, вызывается при обработке запроса к серверу.
-        ( обычно не требует перекрытия )
+
+        .. note::
+
+           Обычно не требует перекрытия
         """
         new_self = copy.copy(self)
         new_self.win_params = (
@@ -163,13 +222,18 @@ class BaseWindowAction(BaseAction):
 #==============================================================================
 class ObjectListWindowAction(BaseWindowAction):
     """
-    Базовый Action показа окна списка объектов.
+    Базовый Action показа окна списка объектов
     """
-    is_select_mode = False  # режим показа окна (True - выбор, False - список)
+    is_select_mode = False
+    """Режим показа окна (True - выбор, False - список)"""
 
     perm_code = 'view'
+    """Код доступа"""
 
     def set_window_params(self):
+        """
+        Смотри `
+        """
         params = self.win_params
         params['is_select_mode'] = self.is_select_mode
         params['pack'] = self.parent
@@ -194,7 +258,9 @@ class ObjectListWindowAction(BaseWindowAction):
 #==============================================================================
 class ObjectSelectWindowAction(ObjectListWindowAction):
     """
-    Базовый Action показа окна списка выбора объекта из списка.
+    Базовый Action показа окна списка выбора объекта из списка
+
+    .. tip:: Используется с m3_ext.ui.fields.complex.ExtDictSelectField
     """
     is_select_mode = True
 
@@ -560,7 +626,10 @@ class ObjectDeleteAction(BaseAction):
 
     def try_delete_objs(self):
         """
-        удаляет обекты и пытается перехватить исключения
+        Удаляет обекты и пытается перехватить исключения
+
+        :except RelatedError, IntegrityError:
+        :exception m3.ApplicationLogicException:
         """
         # TODO: разгрести этот УЖАС!
         try:
@@ -579,7 +648,7 @@ class ObjectDeleteAction(BaseAction):
 
     def delete_objs(self):
         """
-        Удаляет обекты
+        Удаляет обекты по ключам из контекста
         """
         ids = getattr(self.context, self.parent.id_param_name)
         for i in ids:
@@ -593,7 +662,9 @@ class ObjectDeleteAction(BaseAction):
 
     def delete_obj(self, id_):
         """
-        Удаление объекта по идентификатору @id_
+        Удаление объекта по идентификатору :id_
+
+        :param id_:
         """
         obj = self.parent.delete_row(id_, self.request, self.context)
         self.audit(obj)
@@ -617,13 +688,22 @@ class BasePack(m3_actions.ActionPack):
     def declare_context(self, action):
         """
         Декларация контекста для экшна
+
+        .. code::
+
+            def declare_context(self, action):
+                if action is self.do_right_things_action:
+                    return {
+                        'things': {'type': 'list'},
+                        'done': {'type': 'boolean'}
+                    }
         """
         return {}
 
     @classmethod
     def get_short_name(cls):
         """
-        Имя пака для поиска в ControllerCache
+        Генерирует имя пака для поиска в ControllerCache
         """
         name = cls.__dict__.get('_auto_short_name')
         if not name:
@@ -639,17 +719,25 @@ class BasePack(m3_actions.ActionPack):
     @property
     @tools.cached_to('__cached_short_name')
     def short_name(self):
-        # имя пака для поиска в ControllerCache в виде атрибута
-        # для совместимости с m3
+        """
+        Имя пака для поиска в ControllerCache в виде атрибута
+
+        .. note:: Для совместимости с m3
+        """
         return self.get_short_name()
 
     @property
     def url(self):
+        """
+        Относительный url пака
+        """
         return r'/%s' % self.short_name
 
     @classmethod
     def absolute_url(cls):
-        # получение url для построения внутренних кэшей m3
+        """
+        Получение url для построения внутренних кэшей m3
+        """
         path = [r'/%s' % cls.get_short_name()]
         pack = cls.parent
         while pack is not None:
@@ -670,132 +758,221 @@ class ObjectPack(BasePack, ISelectablePack):
     """
     Пакет с действиями, специфичными для работы с редактирование модели
     """
+
     get_object = lambda id: True
+    """
+    :TODO: ЧТО ЭТО? Уточнить у Пирогова А.
+    """
     get_objects = lambda filter=None, sorting=None, limit=None, offset=0: True
     put_objects = lambda list_of_dicts: True
     delete_objects = lambda list_of_ids: True
 
-    # фабрика колонок по данным атрибута 'columns'
-    # (callable-объект, возвращающий объект с методом 'configure_grid(grid)')
     column_constructor_fabric = ui.ColumnsConstructor.from_config
+    """
+    Фабрика колонок по данным атрибута 'columns'
 
-    # Заголовок окна справочника
-    # если не перекрыт в потомках - берется из модели
+    .. note::
+
+        callable-объект, возвращающий объект с методом 'configure_grid(grid)'
+    """
+
     @property
     def title(self):
+        """
+        Заголовок окна справочника, если не перекрыт
+        в потомках - берется из модели
+        """
         return unicode(
             self.model._meta.verbose_name_plural or
             self.model._meta.verbose_name or
             repr(self.model)).capitalize()
 
-    # Список колонок
+    model = None
+    """
+    Класс django-модели, для которой будет формироваться справочник
+    """
 
-    # ВАЖНО: для корректной работы полей выбора,
-    # необходима колонка с data_index = '__unicode__'
     columns = [
         {
             'header': u'Наименование',
             'data_index': '__unicode__',
         },
-#        {
-#            'data_index':'',
-#            'width':,
-#            'header':u'',
-#            'serchable':True,
-#            'sortable':True,
-#            'sort_fields': ('foo','bar'),
-#        },
-#        {
-#            'header':u'Группирующая Колонка 1',
-#            'columns': [
-#                {
-#                    'data_index':'school.name',
-#                    'width':200,
-#                    'header':u'Колонка 1',
-#                    'searchable':True,
-#                    'search_fields': ('school.fullname',),
-#                },
-#            ]
-#        },
-#        {
-#            'data_index':'school.parent.name',
-#            'width':200,
-#            'header':u'Родитель',
-#            'renderer':'parent_render'
-#        },
     ]
+    """
+    Список колонок для добавления в грид, data_index - поле или метод модели
+
+    .. important::
+        Для корректной работы полей выбора, необходима \
+        колонка с data_index = '__unicode__'
+
+    .. code::
+
+        columns = [
+            {
+                'data_index: '__unicode__',
+                'hidden': True,
+            },
+            {
+               'data_index':'',
+               'width':,
+               'header':u'',
+               'serchable':True,
+               'sortable':True,
+               'sort_fields': ('foo','bar'),
+            },
+            {
+               'header':u'Группирующая Колонка 1',
+               'columns': [
+                   {
+                       'data_index':'school.name',
+                       'width':200,
+                       'header':u'Колонка 1',
+                       'searchable':True,
+                       'search_fields': ('school.fullname',),
+                   },
+               ]
+            },
+            {
+               'data_index':'school.parent.name',
+               'width':200,
+               'header':u'Родитель',
+               'renderer':'parent_render'
+            },
+        ]
+    """
 
     filter_engine_clz = filters.MenuFilterEngine
+    """
+    Класс конструктора фильтра для грида
 
-    # название поля, идентифицирующего объект и название параметра,
-    # который будет передаваться в запросе на модификацию/удаление
+    .. note::
+
+        Подробнее смотри в objectpack.demo
+    """
+
     @property
     def id_param_name(self):
+        """
+        :return: Название поля, идентифицирующего объект и название параметра,
+                 который будет передаваться в запросе на модификацию/удаление
+        :rtype: str
+        """
         return '%s_id' % self.short_name
 
-    # data_index колонки, идентифицирующей объект
-    # этот параметр будет браться из модели и передаваться как ID
-    # в ExtDataStore, т.е в post запросе редактирования будет
-    # лежать { id_param_name:obj.id_field }
     id_field = 'id'
+    """
+    data_index колонки, идентифицирующей объект.
+    Этот параметр будет браться из модели и передаваться как ID
+    в ExtDataStore, т.е в post запросе редактирования будет
+    лежать :code:`{id_param_name: obj.id_field}`
+    """
 
-    # поле/метод, предоставляющее значение для отображения в DictSelectField
-    # ПОКА НЕ РАБОТАЕТ извлечение вложенных полей - конфликт с ExtJS
     column_name_on_select = '__unicode__'
+    """
+    Поле/метод, предоставляющее значение для отображения в DictSelectField
 
-    # Список дополнительных полей модели по которым будет идти поиск
-    # основной список береться из colums по признаку searchable
+    .. attention::
+
+        ПОКА НЕ РАБОТАЕТ извлечение вложенных полей - конфликт с ExtJS
+    """
+
     search_fields = None
+    """
+    Список дополнительных полей модели по которым будет идти поиск
+    основной список береться из colums по признаку searchable
+    """
+
     allow_paging = True
+    """
+    Включить пагинацию
+    """
 
-    # пак будет настраивать грид на возможность редактирования
     read_only = False
+    """
+    Пак будет настраивать грид на возможность редактирования
+    """
 
-    # Порядок сортировки элементов списка. Работает следующим образом:
-    # 1. Если в list_columns модели списка есть поле
-    # code, то устанавливается сортировка по
-    # возрастанию этого поля;
-    # 2. Если в list_columns модели списка нет поля
-    # code, но есть поле name, то устанавливается
-    # сортировка по возрастанию поля name;
-    # Пример list_sort_order = ['code', '-name']
     list_sort_order = None
+    """
+    Порядок сортировки элементов списка. Работает следующим образом:
 
-    # Окно для редактирования элемента справочника:
-    add_window = None  # Нового
-    edit_window = None  # Уже существующего
+    - Если в list_columns модели списка есть поле
+      code, то устанавливается сортировка по
+      возрастанию этого поля
+    - Если в list_columns модели списка нет поля
+      code, но есть поле name, то устанавливается
+      сортировка по возрастанию поля name
 
-    # Флаг разрешающий/запрещающий удаление,
-    # если None - то удаление возможно при наличии add_window/edit_window
+    .. code::
+
+        list_sort_order = ['code', '-name']
+    """
+
+    add_window = None
+    """
+    Окно для добавления элемента справочника
+    """
+
+    edit_window = None
+    """
+    Окно для редактирования элемента справочника
+    """
+
     can_delete = None
+    """
+    Флаг разрешающий/запрещающий удаление. Если None, то удаление возможно,
+    при наличии add_window/edit_window
+    """
 
-    # классы отвечающие за отображение форм:
-    list_window = ui.BaseListWindow  # Форма списка
+    list_window = ui.BaseListWindow
+    """
+    Класс отвечающий за отображение окна со списком объектов
+    """
+
     select_window = ui.BaseSelectWindow  # Форма выбора @UndefinedVariable
+    """
+    Класс отвечающий за отображение окна выбора из списка объектов
+    """
 
-    #размеры окна выбора по умолчанию
     width, height = 600, 400
+    """
+    Размеры окна по умолчанию
+    """
 
     MSG_DOESNOTEXISTS = (
         u'Запись не найдена в базе данных.<br/>'
-        u'Возможно, она была удалена. Пожалуйста, обновите таблицу.'
+        u'Возможно, она была удалена. Пожалуйста, обновите таблицу!'
     )
 
-    # плоский список полей фильтрации
-    _all_search_fields = None
+    _all_search_fields = None  #: Плоский список полей фильтрации
 
-    # словарь data_index:sort_order
-    _sort_fields = None
+    _sort_fields = None  #: Словарь data_index:sort_order
 
-    # признак того, что Pack является основным для модели
-    # (по основному паку строятся контролы DictSelectField
-    # при автогонерации окон редактирования)
     _is_primary_for_model = True
+    """
+    Признак того, что Pack является основным для модели
 
-    # функция, возвращающая экземпляр Pack, для укзанной по имени модели.
-    # Реализация функции инжектируется при регистрации в Observable контроллер.
+    .. note::
+
+        по основному паку строятся контролы ExtDictSelectField
+        при автогонерации окон редактирования
+    """
+
     @staticmethod
     def _get_model_pack(model_name):
+        """
+        функция, возвращающая экземпляр Pack, для укзанной по имени модели.
+
+        .. note::
+
+            Реализация функции инжектируется при регистрации
+            в Observable контроллер.
+
+        :param model_name: Имя модели
+        :type model_name: str
+        :return:
+        :rtype: objectpack.ObjectPack
+        """
         return None
 
     def __init__(self):
@@ -803,8 +980,11 @@ class ObjectPack(BasePack, ISelectablePack):
         # В отличие от обычных паков в этом экшены создаются самостоятельно,
         # а не контроллером
         # Чтобы было удобно обращаться к ним по имени
+        #: Экшен показа окна со списком объектов
         self.list_window_action = ObjectListWindowAction()
+        #: Экшен показа окна со списком для выбора объектов
         self.select_window_action = ObjectSelectWindowAction()
+        #: Экшен с получения данных объектов / редактирование строк
         self.rows_action = ObjectRowsAction()
         # Но привязать их все равно нужно
         self.actions.extend([
@@ -813,18 +993,21 @@ class ObjectPack(BasePack, ISelectablePack):
             self.rows_action
         ])
         if self.add_window and not self.read_only:
+            #: Экшен показа окна добавления объекта
             self.new_window_action = ObjectAddWindowAction()
             self.actions.append(self.new_window_action)
         else:
             self.new_window_action = None
 
         if self.edit_window and not self.read_only:
+            #: Экшен показа окна редактирования объекта
             self.edit_window_action = ObjectEditWindowAction()
             self.actions.append(self.edit_window_action)
         else:
             self.edit_window_action = None
 
         if (self.add_window or self.edit_window) and not self.read_only:
+            #: Экшен сохранения объекта
             self.save_action = ObjectSaveAction()
             self.actions.append(self.save_action)
         else:
@@ -834,6 +1017,7 @@ class ObjectPack(BasePack, ISelectablePack):
             self.can_delete = (
                 self.add_window or self.edit_window) and not self.read_only
         if self.can_delete:
+            #: Экшен удаления объектовы
             self.delete_action = ObjectDeleteAction()
             self.actions.append(self.delete_action)
         else:
@@ -879,7 +1063,14 @@ class ObjectPack(BasePack, ISelectablePack):
         ])
 
     def replace_action(self, action_attr_name, new_action):
-        """заменяет экшен в паке"""
+        """
+        Заменяет экшен в паке
+
+        :param action_attr_name: Имя атрибута пака для экшена
+        :type action_attr_name: str
+        :param new_action: Экземпляр экшена
+        :type new_action: objectpack.BaseAction
+        """
         if getattr(self, action_attr_name, None):
             self.actions.remove(getattr(self, action_attr_name))
         setattr(self, action_attr_name, new_action)
@@ -888,7 +1079,12 @@ class ObjectPack(BasePack, ISelectablePack):
 
     def declare_context(self, action):
         """
-        Возвращает декларацию контекста для экшна
+        Декларирует контекст для экшна
+
+        :param action: Экземпляр экшена
+        :type action: objectpack.BaseAction
+        :return: Правила для декларации контекста DeclarativeActionContext
+        :rtype: dict
         """
         result = super(ObjectPack, self).declare_context(action)
         if action in (
@@ -905,7 +1101,12 @@ class ObjectPack(BasePack, ISelectablePack):
         """
         Возвращает действие по умолчанию
         (действие для значка на раб.столе/пункта меню)
-        Используется пи упрощенном встраивании в UI (add_to_XXX=True)
+
+        .. note::
+            Используется пи упрощенном встраивании в UI (add_to_XXX=True)
+
+        :return: Экземпляр экшена
+        :rtype: objectpack.BaseAction
         """
         return self.list_window_action
 
@@ -913,6 +1114,13 @@ class ObjectPack(BasePack, ISelectablePack):
         """
         Возвращает отображаемое значение записи
         (или атрибута attr_name) по ключу key
+
+        :param key: ID объекта
+        :type key: basestring or int
+        :param attr_name: Имя атрибута модели
+        :type attr_name: str
+        :return: Отображаемое текстовое представление объекта
+        :rtype: basestring
         """
         row = self.get_row(key)
         if row is not None:
@@ -937,6 +1145,27 @@ class ObjectPack(BasePack, ISelectablePack):
         """
         Возвращает словарь параметров,
         которые будут переданы окну редактирования
+
+        .. code::
+
+            def get_edit_window_params(self, params, request, context):
+                params = super(RightThingsPack, self).get_edit_window_params(
+                    params, request, context)
+                params.update({
+                    'user': request.user,
+                    'height': 800,
+                    'width': 600,
+                })
+                return params
+
+        :param params: Словарь параметров
+        :type params: dict
+        :param request: Запрос
+        :type request: django.http.HttpRequest
+        :param context: Контекст
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return: Словарь параметров
+        :rtype: dict
         """
         return params
 
@@ -944,6 +1173,28 @@ class ObjectPack(BasePack, ISelectablePack):
         """
         Возвращает словарь параметров,
         которые будут переданы окну списка
+
+        .. code::
+
+            def get_list_window_params(self, params, request, context):
+                params = super(RightThingsPack, self).get_list_window_params(
+                    params, request, context)
+                params.update({
+                    'title': u'Right things done by user: %s'
+                    % request.user.username,
+                    'height': 800,
+                    'width': 600,
+                })
+                return params
+
+        :param params: Словарь параметров
+        :type params: dict
+        :param request: Запрос
+        :type request: django.http.HttpRequest
+        :param context: Контекст
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return: Словарь параметров
+        :rtype: dict
         """
         return params
 
@@ -951,7 +1202,13 @@ class ObjectPack(BasePack, ISelectablePack):
         """
         Возвращает отформатированный заголовка окна.
         Заголовок примет вид "Модель: Действие"
-        (например "Сотрудник: Добавление")
+
+        .. hint:: Например "Сотрудник: Добавление"
+
+        :param action: Действие характеризующее экшен
+        :type action: unicode
+        :return: Заголовок окна
+        :rtype: unicode
         """
         return "%s: %s" % (self.model._meta.verbose_name.capitalize(), action)
 
@@ -959,20 +1216,32 @@ class ObjectPack(BasePack, ISelectablePack):
     def get_list_url(self):
         """
         Возвращает адрес формы списка элементов справочника.
-        Используется для присвоения адресов в прикладном приложении
+
+        .. note::
+            Используется для присвоения адресов в прикладном приложении
+
+        :return: url экшена показа окна со списком объектов
+        :rtype: str
         """
         return self.list_window_action.get_absolute_url()
 
     def get_select_url(self):
         """
         Возвращает адрес формы выбора из списка элементов справочника.
-        Используется для присвоения адресов в прикладном приложении
+        .. note::
+            Используется для присвоения адресов в прикладном приложении
+
+        :return: url экшена показа окна выбора из списка объектов
+        :rtype: str
         """
         return self.select_window_action.get_absolute_url()
 
     def get_edit_url(self):
         """
         Возвращает адрес формы редактирования элемента справочника
+
+        :return: url экшена показа окна редактирования объекта
+        :rtype: str
         """
         if self.edit_window_action:
             return self.edit_window_action.get_absolute_url()
@@ -980,6 +1249,9 @@ class ObjectPack(BasePack, ISelectablePack):
     def get_rows_url(self):
         """
         Возвращает адрес, по которому запрашиваются элементы грида
+
+        :return: url экшена с данными для грида
+        :rtype: str
         """
         return self.rows_action.get_absolute_url()
 
@@ -987,12 +1259,18 @@ class ObjectPack(BasePack, ISelectablePack):
         """
         Возвращает адрес для запроса элементов,
         подходящих введенному в поле тексту
+
+        :return: url экшена
+        :rtype: str
         """
         return self.get_rows_url()
 
     def get_not_found_exception(self):
         """
         Возвращает класс исключения 'объект не найден'
+
+        :return: Класс исключения модели django
+        :rtype: django.core.exceptions.ObjectDoesntExist
         """
         return self.model.DoesNotExist
 
@@ -1000,6 +1278,37 @@ class ObjectPack(BasePack, ISelectablePack):
         """
         Конфигурирует grid для работы с этим паком,
         создает колонки и задает экшены
+
+        .. hint::
+            Удобно использовать в окнах в комбинированных справочниках
+            с несколькими гридами
+
+        .. code::
+
+            class RightThingsWindow(objectpack.BaseWindow):
+
+                def _init_components(self):
+                    super(RightThingsWindow, self)._init_components()
+                    ...
+                    self.right_things_todo_grid = ext.ExtObjectGrid(
+
+                    )
+                    self.right_things_done_grid = ext.ExtObjectGrid(
+
+                    )
+
+                def _do_layout(self):
+                    ...
+
+                def set_params(self, params):
+                    super(RightThingsWindow, self).set_params(params)
+                    ...
+                    pack = get_pack_instance('RightThingsPack')
+                    pack.configure_grid(self.right_things_todo_grid)
+                    pack.configure_grid(self.right_things_done_grid)
+
+        :param grid: Грид
+        :type grid: m3_ext.ui.panels.grids.ExtObjectGrid
         """
         get_url = lambda x: x.get_absolute_url() if x else None
         grid.url_data = get_url(self.rows_action)
@@ -1035,7 +1344,29 @@ class ObjectPack(BasePack, ISelectablePack):
 
     def create_edit_window(self, create_new, request, context):
         """
-        получить окно редактирования / создания объекта
+        Получить окно редактирования / создания объекта
+
+        :param create_new: Добавление или редактирование
+        :type create_new: bool
+        :param request: Запрос
+        :type request: django.http.HttpRequest
+        :param context: Контекст
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return: Окно добавления/редактирования
+        :rtype: objectpack.ui.BaseEditWindow
+
+        .. hint::
+            Удобно использовать для добавления/конфигурирования кастомных
+            контролов в окно
+
+        .. code::
+
+            def create_edit_window(self, create_new, request, context):
+                win = super(RightThingsPack, self).create_edit_window(
+                    create_new, request, context)
+                win.top_bar.btn_do_right_thing
+
+
         """
         if create_new:
             return self.add_window()
@@ -1044,8 +1375,16 @@ class ObjectPack(BasePack, ISelectablePack):
 
     def create_list_window(self, is_select_mode, request, context):
         """
-        получить окно списка / выбора объектов
-        is_select_mode - режим показа окна (True -выбор, False -список),
+        Получить окно списка / выбора объектов
+
+        :param is_select_mode: Режим показа окна (True - выбор, False - список)
+        :type is_select_mode: bool
+        :param request: Запрос
+        :type request: django.http.HttpRequest
+        :param context: Контекст
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return: Окно списка/выбора объектов
+        :rtype: objectpack.ui.BaseListWindow
         """
         if is_select_mode:
             return self.select_window()
@@ -1058,14 +1397,19 @@ class ObjectPack(BasePack, ISelectablePack):
         результат редактирования кортежем вида
         (удачно/неудачно, "сообщение"/None)
         """
-        return (False, None)
+        return False, None
 
     def get_rows_query(self, request, context):
         """
-        возвращает выборку из БД для получения списка данных
+        Возвращает выборку из БД для получения списка данных
+
+        :param request: Запрос
+        :type request: django.http.HttpRequest
+        :param context: Контекст
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return: Кварисет
+        :rtype: django.db.models.query.QuerySet
         """
-        #q = super(,self).get_rows_query(request, context)
-        #return q
         return self.model.objects.all().select_related()
 
     def get_search_fields(self, request=None, context=None):
@@ -1127,7 +1471,7 @@ class ObjectPack(BasePack, ISelectablePack):
 
     def get_row(self, row_id):
         """
-        функция возвращает объект по иди
+        Функция возвращает объект по @row_id
         используется в dictselectfield'ax
         Если id нет, значит нужно создать новый объект
         """

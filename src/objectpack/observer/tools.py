@@ -5,7 +5,10 @@ import inspect
 
 def _name_class(clazz):
     """
-    Генерация имени для класса
+    :param clazz: Класс
+    :type clazz: type
+    :return: Генерация имени для класса
+    :rtype: str
     """
     return '%s/%s' % (
         inspect.getmodule(clazz).__package__, clazz.__name__)
@@ -13,8 +16,12 @@ def _name_class(clazz):
 
 def name_action(action, pack_name=None):
     """
-    Генерация полного имени для @action
-    @pack_name - имя пака (если не указано - генерится)
+    :param action: Экшен
+    :type action: objectpack.BaseAction
+    :param pack_name: Имя пака (если не указано - генерится)
+    :type pack_name: str
+    :return: Генерация полного имени для :code:`action`
+    :rtype: str
     """
     pack_name = pack_name or _name_class(action.parent.__class__)
     # имя будет иметь вид "пакет/КлассПака/КлассAction"
