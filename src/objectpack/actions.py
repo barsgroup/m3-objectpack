@@ -199,6 +199,11 @@ class BaseWindowAction(BaseAction):
         """
         Тело Action, вызывается при обработке запроса к серверу.
 
+        :param request: Request
+        :type request: django.http.HttpRequest
+        :param context: Context
+        :type context: m3.actions.context.DeclarativeActionContext
+
         .. note::
 
            Обычно не требует перекрытия
@@ -231,9 +236,6 @@ class ObjectListWindowAction(BaseWindowAction):
     """Код доступа"""
 
     def set_window_params(self):
-        """
-        Смотри `
-        """
         params = self.win_params
         params['is_select_mode'] = self.is_select_mode
         params['pack'] = self.parent
@@ -322,10 +324,13 @@ class ObjectEditWindowAction(BaseWindowAction):
 class ObjectAddWindowAction(ObjectEditWindowAction):
     """
     Базовый Action показа окна добавления объекта.
+
+    .. note::
+        Отдельный action для уникальности short_name
     """
+
     perm_code = 'add'
 
-    # Отдельный action для уникальности short_name
     pass
 
 
@@ -334,8 +339,9 @@ class ObjectAddWindowAction(ObjectEditWindowAction):
 #==============================================================================
 class ObjectSaveAction(BaseAction):
     """
-    Базовый Action сохранения отредактированного объекта.
+    Базовый Action сохранения отредактированного объекта
     """
+
     class AlreadySaved(Exception):
         """
         Исключение, с помощью которого расширение,
@@ -346,12 +352,16 @@ class ObjectSaveAction(BaseAction):
         pass
 
     def create_window(self):
+        """
+        Создаёт окно для дальнейшего биндинга в форму из реквеста
+        """
         self.win = self.parent.create_edit_window(
             self.create_new, self.request, self.context)
 
     def create_obj(self):
         """
-        Метод загружает из БД / создаёт новый объект модели.
+        Метод делегирует паку загрузку объекта из БД / создание нового
+        объекта модели
         """
         try:
             self.obj, self.create_new = self.parent.get_obj(
@@ -362,19 +372,21 @@ class ObjectSaveAction(BaseAction):
 
     def bind_win(self):
         """
-        Заполнение полей окна по данным из request.
+        Заполнение полей окна по данным из request
         """
         self.win.form.bind_to_request(self.request)
 
     def bind_to_obj(self):
         """
-        Заполнение объекта данными из полей окна.
+        Заполнение объекта данными из полей окна
         """
         self.win.form.to_object(self.obj)
 
     def save_obj(self):
         """
         Сохранение объекта в БД
+
+        :raise: m3.ApplicationLogicException
         """
         # инжекция классов исключений в объект
         self.obj.AlreadySaved = self.AlreadySaved
@@ -392,8 +404,15 @@ class ObjectSaveAction(BaseAction):
 
     def run(self, request, context):
         """
-        Тело Action, вызывается при обработке запроса к серверу.
-        ( обычно не требует перекрытия )
+        Тело Action, вызывается при обработке запроса к серверу
+
+        :param request: Request
+        :type request: django.http.HttpRequest
+        :param context: Context
+        :type context: m3.actions.context.DeclarativeActionContext
+
+        .. note::
+            Обычно не требует перекрытия
         """
         new_self = copy.copy(self)
         new_self.request = request
@@ -411,12 +430,16 @@ class ObjectSaveAction(BaseAction):
 #==============================================================================
 class ObjectRowsAction(BaseAction):
     """
-    Базовый Action получения данных для отображения в окне списка объектов.
+    Базовый Action получения данных для отображения в окне списка объектов
     """
     def set_query(self):
         """
         Метод получает первоначальную выборку данных в виде QuerySet
         и помещает в атрибут self.query
+
+        .. note::
+            Регистрирует точку расширения `query` в Observer
+
         """
         self.query = self.handle(
             'query',
@@ -426,7 +449,11 @@ class ObjectRowsAction(BaseAction):
     def apply_search(self):
         """
         Метод применяет к выборке self.query фильтр по тексту
-        из поля "Поиск" окна списка.
+        из поля "Поиск" окна списка
+
+        .. note::
+            Регистрирует точку расширения `apply_search` в Observer
+
         """
         self.query = self.handle(
             'apply_search',
@@ -439,7 +466,11 @@ class ObjectRowsAction(BaseAction):
     def apply_filter(self):
         """
         Метод применяет к выборке self.query фильтр, как правило поступающий
-        от "колоночных фильтров"/фильтров в контекстных меню в окне списка.
+        от "колоночных фильтров"/фильтров в контекстных меню в окне списка
+
+        .. note::
+            Регистрирует точку расширения `apply_filter` в Observer
+
         """
         self.query = self.handle(
             'apply_filter',
@@ -452,7 +483,7 @@ class ObjectRowsAction(BaseAction):
     def apply_sort_order(self):
         """
         Метод применяет к выборке self.query сортировку
-        по выбранному в окне списка столбцу.
+        по выбранному в окне списка столбцу
         """
         self.query = self.handle(
             'apply_sort_order',
@@ -490,8 +521,17 @@ class ObjectRowsAction(BaseAction):
 
     def prepare_object(self, obj):
         """
-        Возвращает словарь, для составления результирующего списка.
-        @obj - объект, полученный из QuerySet'a
+        Возвращает словарь, для составления результирующего списка
+
+        :param obj: Объект, полученный из QuerySet'a
+        :type obj: django.db.models.Model
+        :return: Словарь для сериализации в json
+        :rtype: dict
+
+        .. note::
+
+            Регистрирует в Observer точку расширения `prepare_obj`
+
         """
         if hasattr(self.parent, 'prepare_row'):
             obj = self.parent.prepare_row(obj, self.request, self.context)
@@ -562,12 +602,16 @@ class ObjectRowsAction(BaseAction):
     def get_total_count(self):
         """
         Возвращает общее кол-во объектов
+
+        :return: Количество объектов в выборке
+        :rtype: int
         """
         return self.query.count()
 
     def get_column_data_indexes(self):
         """
-        Возвращает список data_index колонок, для формирования json
+        :return: Список data_index колонок, для формирования json
+        :rtype: list
         """
         res = ['__unicode__', ]
         for col in getattr(self.parent, '_columns_flat', []):
@@ -577,8 +621,16 @@ class ObjectRowsAction(BaseAction):
 
     def handle_row_editing(self, request, context, data):
         """
-        Обрабатывает inline-редактирования грида.
-        Метод должен вернуть пару вида (удачно/неудачно, "сообщение"/None)
+        Обрабатывает inline-редактирование грида
+        Метод должен вернуть кортеж (удачно/неудачно, "сообщение"/None)
+
+        :param request: Request
+        :type request: django.http.HttpRequest
+        :param context: Context
+        :type context: m3.actions.context.DeclarativeActionContext
+        :param data:
+        :type data:
+
         """
         return self.handle(
             'row_editing',
@@ -628,8 +680,8 @@ class ObjectDeleteAction(BaseAction):
         """
         Удаляет обекты и пытается перехватить исключения
 
-        :except RelatedError, IntegrityError:
-        :exception m3.ApplicationLogicException:
+        :except: m3.RelatedError, django.db.utils.IntegrityError:
+        :raise: m3.ApplicationLogicException
         """
         # TODO: разгрести этот УЖАС!
         try:
@@ -756,16 +808,80 @@ class BasePack(m3_actions.ActionPack):
 #==============================================================================
 class ObjectPack(BasePack, ISelectablePack):
     """
-    Пакет с действиями, специфичными для работы с редактирование модели
-    """
+    Пак с экшенам, реализующими специфичную для работы с моделью действиями по
+    добавлению, редактированию, удалению (CRUD actions)
 
-    get_object = lambda id: True
+    .. note::
+        Можно из пака включить добавление элементов в главное меню или на
+        десктоп extjs. По умолчанию эта опция выключена
+
+        .. code::
+
+            add_to_desktop = True
+            add_to_menu = True
+
+        Если методы extend_menu/extend_desktop не реализованы,
+        меню будет расширяться на основе title и get_default_action
+
+        Методы extend_X приоритетны
+
+        .. code::
+
+            def extend_menu(self, menu):
+                \"\"\"
+                Расширение главного меню.
+                \"\"\"
+                return (
+                    # добавление пунктов в меню "справочники"
+                    menu.dicts(
+                        menu.Item(u'Dict 1', self),
+                        menu.SubMenu(u'Dict SubMenu',
+                            menu.Item(u'Dict 2', self.some_action),
+                        ),
+                    ),
+                    # добавление пунктов в меню "реестры"
+                    menu.registries(
+                        menu.Item(u'Reg 1'),
+                        menu.SubMenu(u'Regs SubMenu',
+                            menu.Item(u'Reg 2'),
+                        ),
+                    ),
+                    # добавление пунктов в меню "администрирование"
+                    menu.administry(
+                        menu.Item(u'Admin item 1')
+                    ),
+
+                    # добавление пунктов в "корень" меню
+                    menu.Item(name=u'item 1', self.some_action),
+
+                    # добавление подменю в "корень" меню
+                    menu.SubMenu(u'SubMenu',
+                        menu.Item(u'Item 2', self.some_action),
+                        menu.SubMenu(u'SubSubMenu',
+                            menu.Item(u'Item 3', self.some_action),
+                        ),
+                    ),
+                )
+
+        Пустые подменю автоматически "схлопываются" (не видны в Главном Меню)
+
+        .. code::
+
+            def extend_desktop(self, desk):
+                \"\"\"
+                Расширение Рабочего Стола
+                \"\"\"
+
+                return (
+                   desk.Item(u'Ярлык 1', pack=self.list_action),
+                   ...
+                )
+
+        Любой из элементов можно отключить вернув вместо него None. Например::
+
+            desk.Item(u'Name', pack=self) if some_condition else None
+
     """
-    :TODO: ЧТО ЭТО? Уточнить у Пирогова А.
-    """
-    get_objects = lambda filter=None, sorting=None, limit=None, offset=0: True
-    put_objects = lambda list_of_dicts: True
-    delete_objects = lambda list_of_ids: True
 
     column_constructor_fabric = ui.ColumnsConstructor.from_config
     """
@@ -1228,6 +1344,7 @@ class ObjectPack(BasePack, ISelectablePack):
     def get_select_url(self):
         """
         Возвращает адрес формы выбора из списка элементов справочника.
+
         .. note::
             Используется для присвоения адресов в прикладном приложении
 
@@ -1290,12 +1407,8 @@ class ObjectPack(BasePack, ISelectablePack):
                 def _init_components(self):
                     super(RightThingsWindow, self)._init_components()
                     ...
-                    self.right_things_todo_grid = ext.ExtObjectGrid(
-
-                    )
-                    self.right_things_done_grid = ext.ExtObjectGrid(
-
-                    )
+                    self.right_things_todo_grid = ext.ExtObjectGrid()
+                    self.right_things_done_grid = ext.ExtObjectGrid()
 
                 def _do_layout(self):
                     ...
@@ -1303,9 +1416,10 @@ class ObjectPack(BasePack, ISelectablePack):
                 def set_params(self, params):
                     super(RightThingsWindow, self).set_params(params)
                     ...
-                    pack = get_pack_instance('RightThingsPack')
-                    pack.configure_grid(self.right_things_todo_grid)
-                    pack.configure_grid(self.right_things_done_grid)
+                    get_pack_instance('RightThingsTodoPack').configure_grid(
+                        self.right_things_todo_grid)
+                    get_pack_instance('RightThingsDonePack').configure_grid(
+                    self.right_things_done_grid)
 
         :param grid: Грид
         :type grid: m3_ext.ui.panels.grids.ExtObjectGrid
@@ -1346,7 +1460,7 @@ class ObjectPack(BasePack, ISelectablePack):
         """
         Получить окно редактирования / создания объекта
 
-        :param create_new: Добавление или редактирование
+        :param create_new: Признак добавления или редактирования
         :type create_new: bool
         :param request: Запрос
         :type request: django.http.HttpRequest
@@ -1365,7 +1479,6 @@ class ObjectPack(BasePack, ISelectablePack):
                 win = super(RightThingsPack, self).create_edit_window(
                     create_new, request, context)
                 win.top_bar.btn_do_right_thing
-
 
         """
         if create_new:
@@ -1396,6 +1509,12 @@ class ObjectPack(BasePack, ISelectablePack):
         Метод принимает данные из редактируемого грида и возвращает
         результат редактирования кортежем вида
         (удачно/неудачно, "сообщение"/None)
+        :param request:
+        :type request: django.http.HttpRequest
+        :param context:
+        :type context: m3.actions.context.DeclarativeActionContext
+        :param data:
+        :type data:
         """
         return False, None
 
@@ -1409,16 +1528,46 @@ class ObjectPack(BasePack, ISelectablePack):
         :type context: m3.actions.context.DeclarativeActionContext
         :return: Кварисет
         :rtype: django.db.models.query.QuerySet
+
+        .. code::
+
+            def get_rows_query(self, request, context):
+                query = super(RightThingsDonePack, self).get_rows_query(
+                    request, context)
+                return query.filter(done=True)
+
         """
         return self.model.objects.all().select_related()
 
     def get_search_fields(self, request=None, context=None):
-        """Возвращает список data_index колонок по которым будет
-        производиться поиск"""
+        """
+        :param request:
+        :type request: django.http.HttpRequest
+        :param context:
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return: Список значений 'data_index' из колонок self.columns,
+                 по которым будет производиться поиск
+        :rtype: list
+
+        .. note::
+            Обычно не требует перекрытия
+
+        """
         return self._all_search_fields[:]
 
     def get_sort_order(self, data_index, reverse=False):
-        """Возвращает ключи сортировки для указанного data_index"""
+        """
+        :param data_index
+        :type data_index: str
+        :param reverse: Обратный порядок
+        :type reverse: bool
+        :return: Ключи сортировки для указанного data_index
+        :rtype: list or tuple
+
+        .. note::
+            Обычно не требует перекрытия
+
+        """
         sort_order = self._sort_fields[data_index]
         if reverse:
             sort_order = ['-%s' % s for s in sort_order]
@@ -1426,14 +1575,38 @@ class ObjectPack(BasePack, ISelectablePack):
 
     def apply_filter(self, query, request, context):
         """
-        Применение фильтрации к выборке @query.
-        Фильтрация может опираться на параметры запроса (@request/@context)
+        Применяет фильтрацию к выборке query
+
+        :param query:
+        :type query: django.db.models.query.QuerySet
+        :param request:
+        :type request: django.http.HttpRequest
+        :param context:
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return: Отфильтрованная выборка query
+        :rtype: django.db.models.query.QuerySet
+
+        .. note::
+            Обычно не требует перекрытия
+
         """
         return self._filter_engine.apply_filter(query, request, context)
 
     def apply_search(self, query, request, context):
-        """Возвращает переданную выборку
-        отфильторованной по параметрам запроса"""
+        """
+        Возвращает переданную выборку отфильторованной по параметрам запроса
+
+        :param query:
+        :type query: django.db.models.query.QuerySet
+        :type request: django.http.HttpRequest
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return:
+        :rtype: django.db.models.query.QuerySet
+
+        .. note::
+            Обычно не требует перекрытия
+
+        """
         return m3_actions.utils.apply_search_filter(
             query,
             request.REQUEST.get('filter'),
@@ -1441,8 +1614,20 @@ class ObjectPack(BasePack, ISelectablePack):
         )
 
     def apply_sort_order(self, query, request, context):
-        """Возвращает переданную выборку
-        отсортированной по параметрам запроса"""
+        """
+        Возвращает переданную выборку отсортированной по параметрам запроса
+
+        :param query:
+        :type query:
+        :type request: django.http.HttpRequest
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return:
+        :rtype:
+
+        .. note::
+            Обычно не требует перекрытия
+
+        """
         sorting_key = request.REQUEST.get('sort')
         if sorting_key:
             reverse = request.REQUEST.get('dir') == 'DESC'
@@ -1455,25 +1640,77 @@ class ObjectPack(BasePack, ISelectablePack):
         return query
 
     def apply_default_sort_order(self, query):
-        """Возвращает выборку, отсортированную по-умолчанию"""
+        """
+        :param query:
+        :type query: django.db.models.query.QuerySet
+        :return: Выборка, отсортированная по-умолчанию
+        :rtype: django.db.models.query.QuerySet
+
+        .. note::
+            Обычно не требует перекрытия
+
+        """
         if self.list_sort_order:
             query = query.order_by(*self.list_sort_order)
         return query
 
     def prepare_row(self, obj, request, context):
         """
-        установка дополнительный атрибутов объекта
+        Установка дополнительных атрибутов объекта
         перед возвратом json'a строк грида
         или может вернуть proxy_object
-        obj из for obj in query из get_rows_query
+
+        :param obj: Объект из выборки, полученной в get_rows_query
+        :type obj: django.db.models.Model
+        :type request: django.http.HttpRequest
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return:
+        :rtype:
+
+        .. code::
+
+            columns = [
+                {
+                    'data_index': 'title',
+                    'header': 'Title',
+                },
+                {
+                    'data_index': 'date',
+                    'header': 'Date',
+                },
+                {
+                    'data_index': 'done_checkbox',
+                    'header': 'Done',
+                }
+            ]
+
+            def prepare_row(self, obj, request, context):
+                \"\"\"
+                Добавляет в объект атрибут, для отображения булевого
+                поля модели как чек-бокс
+                \"\"\"
+                obj = super(RightThingsPack, self).prepare_row(
+                    obj, request, context)
+                obj.done_checkbox = (
+                    '<div class="x-grid3-check-col-on%s"></div>'
+                     % '-on' if obj.done else ''
+                )
         """
         return obj
 
     def get_row(self, row_id):
         """
-        Функция возвращает объект по @row_id
-        используется в dictselectfield'ax
+        Функция возвращает объект по :row_id
         Если id нет, значит нужно создать новый объект
+
+        .. note::
+
+            Используется в ExtDictSelectField'ax
+
+        :param row_id: id объекта
+        :type row_id: int
+        :return: Объект модели self.model
+        :rtype: django.db.models.Model
         """
         if row_id == 0:
             record = self.model()
@@ -1483,8 +1720,14 @@ class ObjectPack(BasePack, ISelectablePack):
 
     def get_obj(self, request, context):
         """
-        Возвращает кортеж (объет, create_new)
-        для создания, редатирования записи
+        Получает id объекта из контекста и возвращает
+        кортеж (объект модели, create_new), где create_new признак
+        создания или редактирования
+
+        :type request: django.http.HttpRequest
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return: (Объект модели self.model, create_new)
+        :rtype: tuple
         """
         obj_id = getattr(context, self.id_param_name)
         create_new = (obj_id == 0)
@@ -1494,15 +1737,30 @@ class ObjectPack(BasePack, ISelectablePack):
     def save_row(self, obj, create_new, request, context):
         """
         Сохраняет объект.
-        При необходимости возбуждается ValidationError, или OverlapError
+        При необходимости возбуждается ValidationError, или OverlapError,
+        которые затем отлавливаются в ObjectSaveAction.save_obj
+
+        :param obj: Объект модели self.model
+        :type obj: django.db.models.Model
+        :param create_new:
+        :type create_new: bool
+        :type request: django.http.HttpRequest
+        :type context: m3.actions.context.DeclarativeActionContext
         """
         obj.save()
 
     def delete_row(self, obj_id, request, context):
         """
-        Удаляет объект по @obj_id.
+        Удаляет объект по :obj_id
         Возвращает удалённый объект - т.е. объект модели,
         который уже не представлен в БД
+
+        :param obj_id: pk объекта
+        :type obj_id: int
+        :type request: django.http.HttpRequest
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return: Удалённый объект
+        :rtype: django.db.models.Model
         """
         obj = self.model.objects.get(id=obj_id)
         result = True
@@ -1521,6 +1779,9 @@ class ObjectPack(BasePack, ISelectablePack):
     def get_filter_plugin(self):
         """
         Возвращает плагин фильтрации
+
+        :return: js-код с плагином фильтрации
+        :rtype: basestring
         """
         filter_items = []
         list_columns_filter = dict(
@@ -1550,77 +1811,6 @@ class ObjectPack(BasePack, ISelectablePack):
                  new Ext.ux.grid.GridFilters({filters:[%s]})
             """ % ','.join(filter_items)
 
-    #-----------------------------------------------------------------------
-    # По умолчанию ни меню ни десктоп не расширяется
-    # add_to_desktop = True
-    # add_to_menu = True
-    #
-    # Если методы extend_menu/extend_desktop не реализованы,
-    # меню будет расширяться на основе title и get_default_action
-    #
-    # Методы extend_X приоритетны
-#    def extend_menu(self, menu):
-#        """
-#        Расширение главного меню.
-#
-#        Возвращаемый результат должен иметь вид:
-#        return (
-#            # добавление пунктов в меню "справочники"
-#            menu.dicts(
-#                menu.Item(u'Dict 1', self),
-#                menu.SubMenu(u'Dict SubMenu',
-#                    menu.Item(u'Dict 2', self.some_action),
-#                ),
-#            ),
-#
-#            # добавление пунктов в меню "реестры"
-#            menu.registries(
-#                menu.Item(u'Reg 1'),
-#                menu.SubMenu(u'Regs SubMenu',
-#                    menu.Item(u'Reg 2'),
-#                ),
-#            ),
-#
-#            # добавление пунктов в меню "администрирование"
-#            menu.administry(
-#                menu.Item(u'Admin item 1')
-#            ),
-#
-#            # добавление пунктов в "корень" меню
-#            menu.Item(name=u'item 1', self.some_action),
-#
-#            # добавление подменю в "корень" меню
-#            menu.SubMenu(u'SubMenu',
-#                menu.Item(u'Item 2', self.some_action),
-#                menu.SubMenu(u'SubSubMenu',
-#                    menu.Item(u'Item 3', self.some_action),
-#                ),
-#            ),
-#        )
-#
-#        любой из элементов можно отключить вернув вместо него None.
-#        например:
-#            menu.Item(u'Name', url='/') if some_condition else None
-#
-#        Пустые подменю автоматически "схлопываются" (не видны в Главном Меню)
-#        """
-#        pass
-#
-#
-#    def extend_desktop(self, desk):
-#        """
-#        Расширение Рабочего Стола.
-#        Результат должен иметь вид:
-#        return (
-#            desk.Item(u'Ярлык 1', pack=self.list_action),
-#            ...
-#        )
-#        любой из элементов можно отключить вернув вместо него None.
-#        например:
-#            desk.Item(u'Name', pack=self) if some_condition else None
-#        """
-#        pass
-
 
 #==============================================================================
 # SelectorWindowAction
@@ -1632,19 +1822,42 @@ class SelectorWindowAction(BaseAction):
     последующего создания связок с ними.
     """
     url = r'/selector_window'
+    """
+    Жестко определяет url для экшена
 
-    # признак показа окна множественного выбора
+    TODO: выпылить, использовать проперти из BaseAction
+    """
+
     multi_select = True
+    """
+    Признак показа окна множественного выбора
+    """
 
-    # url экшна обработки результата выбора
     callback_url = None
+    """
+    url экшна обработки результата выбора
+    """
 
-    # пак, объекты модели которого выбираются
     data_pack = None
+    """
+    Пак, объекты модели которого выбираются
+    """
 
     def configure_action(self, request, context):
         """
         Настройка экшна. Здесь нужно назначать пак и callback
+
+        :type request: django.http.HttpRequest
+        :type context: m3.actions.context.DeclarativeActionContext
+
+        .. code::
+
+            def configure_action(self, request, context):
+                super(UserPack, self).configure_action(request, context)
+                self.data_pack = get_pack_instance('GroupPack')
+                self.callback_url = (
+                    self.parent.selector_save_action.get_absolute_url())
+
         """
         pass
 
@@ -1652,19 +1865,42 @@ class SelectorWindowAction(BaseAction):
         """
         В данном методе происходит конфигурирование контекста для окна выбора.
         Возвращаемый результат должен быть экземпляром ActionContext.
+
+        :param request: Request
+        :type request: django.http.HttpRequest
+        :param context: Context
+        :type context: m3.actions.context.DeclarativeActionContext
+        :rtype: m3.actions.context.ActionContext
         """
         return m3_actions.ActionContext()
 
     def configure_window(self, win, request, context):
         """
-        В данном методе происходит конфигурирование окна выбора.
+        В данном методе происходит конфигурирование окна выбора
+
+        :param win: Окно выбора из справочника
+        :type win: objectpack.ui.BaseSelectWindow
+        :param request: Request
+        :type request: django.http.HttpRequest
+        :param context: Context
+        :type context: m3.actions.context.DeclarativeActionContext
         """
         return win
 
     def run(self, request, context):
         """
-        Выполнение экшна.
-        Без крайней необходимости не перекрывать!
+        Выполнение экшна
+
+        :param request: Request
+        :type request: django.http.HttpRequest
+        :param context: Context
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return: Результат с окном ExtJS
+        :rtype: m3_ext.ui.results.ExtUIScriptResult
+        :raise: AssertionError, m3.ApplicationLogicException
+
+        .. note::
+            Без крайней необходимости не перекрывать
         """
         new_self = copy.copy(self)
 
@@ -1700,8 +1936,21 @@ def multiline_text_window_result(
         data, success=True, title=u'', width=600, height=500):
     """
     Формирование OpersionResult в виде многострочного окна,
-    с размерами @width x @height и заголовком @title,
-    отображающего текст @data :: string | iterable
+    с размерами :width x :height и заголовком :title,
+    отображающего текст :data
+
+    :param data: Текст или список со строками
+    :type data: basestring or Iterable
+    :param success: Результат выполнения операции в контексте ExtJS
+    :type success: bool
+    :param title: Заголовок окна
+    :type title: basestring
+    :param width: Ширина окна
+    :type width: int
+    :param height: Высота окна
+    :type height: int
+    :return: Результат операции в контексте ExtJS
+    :rtype: m3.actions.results.OperationResult
     """
     if not isinstance(data, types.StringTypes):
         data = u'\n'.join(data)

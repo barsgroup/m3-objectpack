@@ -16,6 +16,7 @@ class QuerySplitter(object):
     """
     Порционный загрузчик выборки в итеративном контексте
     TODO: придумать тест для покрытия Exception'ов
+
     >>> from django.test.client import RequestFactory
     >>> rf = RequestFactory()
     >>> request = rf.post('', {'start': 5, 'limit': 10})
@@ -275,15 +276,16 @@ def modifier(**kwargs):
     """
     Принимает атрибуты со значениями (в виде kwargs)
     Возвращает модификатор - функцию, модифицирующую передаваемый ей объект
-    указанными атрибутами.
-    Пример:
-        w10 = modifier(width=10)
-        controls = map(w10, controls)
-    >>> class Object(object): pass
-    >>> w10 = modifier(width=10)
-    >>> cls = w10(Object())
-    >>> cls.width
-    10
+    указанными атрибутами
+
+        >>> w10 = modifier(width=10)
+        >>> controls = map(w10, controls)
+        >>> class Object(object): pass
+        >>> w10 = modifier(width=10)
+        >>> cls = w10(Object())
+        >>> cls.width
+        10
+
     """
     return lambda obj: modify(obj, **kwargs)
 
