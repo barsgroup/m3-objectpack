@@ -1,9 +1,9 @@
 #coding: utf-8
-'''
+"""
 File: tests.py
 Author: Rinat F Sabitov
 Description:
-'''
+"""
 
 from django.test import TestCase
 import tools

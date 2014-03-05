@@ -714,9 +714,9 @@ class ObjectDeleteAction(BaseAction):
 
     def delete_obj(self, id_):
         """
-        Удаление объекта по идентификатору :id_
+        Удаление объекта по идентификатору @id_
 
-        :param id_:
+        :param id_: Идентификатор объекта
         """
         obj = self.parent.delete_row(id_, self.request, self.context)
         self.audit(obj)

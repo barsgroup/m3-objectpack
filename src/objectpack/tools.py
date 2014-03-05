@@ -226,9 +226,10 @@ def extract_int_list(request, key):
 
 def str_to_date(s):
     """
-    Извлечение даты из строки
-    >>> str_to_date('31.12.2012') == str_to_date('2012-12-31, Happy New Year')
-    True
+    Извлечение даты из строки::
+
+        str_to_date('31.12.2012') == str_to_date('2012-12-31, Happy New Year')
+        # True
     """
     if s:
         s = s[:10]
@@ -259,13 +260,14 @@ def extract_date(request, key, as_date=False):
 
 def modify(obj, **kwargs):
     """
-    Массовое дополнение атрибутов для объекта с его (объекта) возвратом
-    >>> class Object(object): pass
-    >>> cls = Object()
-    >>> cls.param1 = 0
-    >>> cls = modify(cls, **{'param1':1, })
-    >>> cls.param1
-    1
+    Массовое дополнение атрибутов для объекта с его (объекта) возвратом::
+
+        class Object(object): pass
+        cls = Object()
+        cls.param1 = 0
+        cls = modify(cls, **{'param1':1, })
+        print cls.param1
+        # 1
     """
     for attr, val in kwargs.iteritems():
         setattr(obj, attr, val)
