@@ -508,7 +508,10 @@ class ObjectRowsAction(BaseAction):
     def get_rows(self):
         """
         Метод производит преобразование QuerySet в список.
-        При этом объекты сериализуются в словари.
+        При этом объекты сериализуются в словари
+
+        :return: Список сериализованных объектов
+        :rtype: list
         """
         res = []
         for obj in self.query:
@@ -628,8 +631,10 @@ class ObjectRowsAction(BaseAction):
         :type request: django.http.HttpRequest
         :param context: Context
         :type context: m3.actions.context.DeclarativeActionContext
-        :param data:
-        :type data:
+        :param data: Данные редактирования
+        :type data: dict
+        :return: (True/False, message/None)
+        :rtype: tuple
 
         """
         return self.handle(

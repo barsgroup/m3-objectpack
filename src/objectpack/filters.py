@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 Меахнизмы фильтрации справочников/реестров на базе ObjectPack
-авторы:
-    Ахмадиев Т.
-    Пирогов А.
+
+.. moduleauthor:: Ахмадиев Т., Пирогов А.
 """
 
 import abc
@@ -29,26 +28,40 @@ class AbstractFilterEngine(object):
 
     def __init__(self, columns):
         u"""
-        @config - список вида:
-        [
-            (column_data_index, filter),
-        ]
-        где filter - экземпляр потомка AbstractFilter
+        :attr:`columns` - список вида::
+
+            [
+                (column_data_index, filter),
+            ]
+
+        где `filter` - экземпляр потомка
+        :mod:`objectpack.filters.AbstractFilter`
+        :param columns: Список колонок с фильтром
+        :type columns: list
         """
         self._columns = dict(columns)
 
     @abc.abstractmethod
     def configure_grid(self, grid):
         u"""
-        Метод настраивает переданный @grid на использование фильтров
+        Метод настраивает переданный :attr:`grid` на использование фильтров
+
+        :param grid: Грид
+        :type grid: m3_ext.ui.panels.grids.ExtObjectGrid
         """
         pass
 
     @abc.abstractmethod
     def apply_filter(self, query, request, context):
         u"""
-        Метод возвращает QuerySet @query,
-        отфильтрованный на основе параметров запроса
+        :param query: Кварисет
+        :type query: django.db.models.query.QuerySet
+        :param request: Реквест
+        :type request: django.http.HttpRequest
+        :param context: Контекст
+        :type context: m3.actions.context.DeclarativeActionContext
+        :return: Кварисет отфильтрованный на основе параметров запроса
+        :rtype: django.db.models.query.QuerySet
         """
         return query
 
@@ -74,7 +87,12 @@ class AbstractFilter(object):
     def get_q(self, params):
         """
         Метод возвращает Q-объект,
-        построенный на основе данных словаря @params
+        построенный на основе данных словаря :attr:`params`
+
+        :param params: Словарь с лукапами
+        :type params: dict
+        :return: Ку-объект
+        :rtype: django.db.models.Q
         """
         if None in (self._uid, self._lookup):
             raise ValueError('Filter is not configured!')
@@ -109,14 +127,21 @@ class FilterGroup(AbstractFilter):
     u"""
     Группа фильтров, являющихся частью булева выражения
     """
-
+    #: И
     AND = 1
+    #: Или
     OR = 2
 
     _items = None
     _operand = None
 
     def __init__(self, items, op=AND):
+        """
+        :param items: Фильтры
+        :type items: list
+        :param op: AND/OR
+        :type op: int
+        """
         self._items = items
         self._operand = op
 
@@ -153,12 +178,18 @@ class FilterGroup(AbstractFilter):
         return wrap([other])
 
     def get_script(self):
+        """
+        .. seealso:: :mod:`objectpack.filters.AbstractFilter.get_script`
+        """
         result = []
         for item in self._items:
             result.extend(item.get_script())
         return result
 
     def get_q(self, params):
+        """
+        .. seealso:: :mod:`objectpack.filters.AbstractFilter.get_q`
+        """
         if self._operand == self.OR:
             joint = or_
         else:
@@ -176,7 +207,7 @@ class FilterByField(AbstractFilter):
     u"""
     Фильтр на основе поля модели
     """
-    # Соответсвие парсеров и стандартных полей модели:
+    #: Соответсвие парсеров и стандартных полей модели
     parsers_map = [
         (models.DateField, 'date'),
         (models.TimeField, 'time'),
@@ -199,11 +230,11 @@ class FilterByField(AbstractFilter):
         **field_fabric_params
     ):
         """
-        @model - модель, на основе поля которой и будет строиться фильтр
-        @filed_name - имя поля модели
-        @lookup - строка-lookup для DjangoORM,
+        :param model: модель, на основе поля которой и будет строиться фильтр
+        :param filed_name: имя поля модели
+        :param lookup: строка-lookup для DjangoORM,
             либо функция вида (lookup_param -> Q-object)
-        @tooltip - текст всплывающей подсказки
+        :param tooltip: текст всплывающей подсказки
         """
         self._model = model
         self._field_name = field_name
@@ -219,6 +250,9 @@ class FilterByField(AbstractFilter):
             raise TypeError('Unsupported field type: %r' % fld)
 
     def get_script(self):
+        """
+        .. seealso:: :mod:`objectpack.filters.AbstractFilter.get_script`
+        """
         control = _create_control_for_field(
             self._model._meta.get_field(self._field_name),
             **self._field_fabric_params
@@ -243,11 +277,11 @@ class CustomFilter(AbstractFilter):
 
     def __init__(self, xtype, parser, lookup, tooltip=u''):
         """
-        @xtype - xtype контрола
-        @parser - функция вида (str -> lookup_param)
-        @lookup - строка-lookup для DjangoORM,
+        :param xtype: xtype контрола
+        :param parser: функция вида (str -> lookup_param)
+        :param lookup: строка-lookup для DjangoORM,
             либо функция вида (lookup_param -> Q-object)
-        @tooltip - текст всплывающей подсказки
+        :param tooltip: текст всплывающей подсказки
         """
         self._xtype = xtype
         if callable(parser):
@@ -258,6 +292,9 @@ class CustomFilter(AbstractFilter):
         self._tooltip = tooltip
 
     def get_script(self):
+        """
+        .. seealso:: :mod:`objectpack.filters.AbstractFilter.get_script`
+        """
         control = [
             u'filterName: "%s"' % self._uid,
             u'xtype: "%s"' % self._xtype,
@@ -352,6 +389,9 @@ class ColumnFilterEngine(AbstractFilterEngine):
     _filters = None
 
     def __init__(self, columns):
+        """
+        .. seealso:: :mod:`objectpack.filters.AbstractFilterEngine.__init__`
+        """
         super(ColumnFilterEngine, self).__init__(columns)
 
         # генератор id с автоинкрементом
@@ -363,6 +403,9 @@ class ColumnFilterEngine(AbstractFilterEngine):
             item[1]._set_uid(auto_id)
 
     def configure_grid(self, grid):
+        """
+        .. seealso:: :mod:`objectpack.filters.AbstractFilterEngine.configure_grid`
+        """
         grid.plugins.append('new Ext.ux.grid.GridHeaderFilters()')
 
         _new = {}
@@ -374,6 +417,9 @@ class ColumnFilterEngine(AbstractFilterEngine):
                 col.extra['filter'] = _new[col.data_index]
 
     def apply_filter(self, query, request, context):
+        """
+        .. seealso:: :mod:`objectpack.filters.AbstractFilterEngine.apply_filter`
+        """
         q = models.Q()
         for _filter in self._columns.itervalues():
             q &= _filter.get_q(request.REQUEST)

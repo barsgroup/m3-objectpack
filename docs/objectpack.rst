@@ -25,6 +25,15 @@ objectpack Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`filters` Module
+---------------------
+
+.. automodule:: objectpack.filters
+    :members:
+    :special-members: __init__
+    :undoc-members:
+    :show-inheritance:
+
 :mod:`exceptions` Module
 ------------------------
 

@@ -15,7 +15,6 @@ from django.db import transaction
 class QuerySplitter(object):
     """
     Порционный загрузчик выборки в итеративном контексте
-    TODO: придумать тест для покрытия Exception'ов
 
     >>> from django.test.client import RequestFactory
     >>> rf = RequestFactory()
@@ -83,10 +82,24 @@ class QuerySplitter(object):
             request=None, start=0, limit=25):
         """
         Формирует список элементов для грида из выборки.
-        Параметры листания берутся из request`а, или из параметров start/limit.
-        Элементы перед попаданием прогоняются через row_fabric.
+        Параметры листания берутся из :attr:`request`,
+        или из параметров :attr:`start`/:attr:`limit`.
+        Элементы перед попаданием прогоняются через :attr:`row_fabric`.
         В результирующий список попадают только те элементы,
-        вызов validator для которых возвращает True.
+        вызов :attr:`validator` для которых возвращает `True`
+
+        :param query: Кварисет
+        :type query: django.db.models.query.QuerySet
+        :param row_fabric:
+        :type row_fabric: types.FunctionType
+        :param validator: Функция валидатор
+        :type validator: types.FunctionType
+        :param request: Реквест
+        :type request: django.http.HttpRequest
+        :param start: С какой записи начинать
+        :type start: int
+        :param limit: Сколько записей взять
+        :type limit: int
         """
         if request:
             start = extract_int(request, 'start') or start
@@ -193,7 +206,8 @@ class TransactionCM(object):
 
 def extract_int(request, key):
     """
-    Нормальный извлекатель списка чисел
+    Нормальный извлекатель числа
+
     >>> from django.test.client import RequestFactory
     >>> rf = RequestFactory()
     >>> request = rf.post('', {})
@@ -212,11 +226,13 @@ def extract_int(request, key):
 def extract_int_list(request, key):
     """
     Нормальный извлекатель списка чисел
+
     >>> from django.test.client import RequestFactory
     >>> rf = RequestFactory()
     >>> request = rf.post('', {})
     >>> extract_int_list(request, 'list')
     []
+
     >>> request = rf.post('', {'list':'1,2,3,4'})
     >>> extract_int_list(request, 'list')
     [1, 2, 3, 4]
@@ -226,10 +242,10 @@ def extract_int_list(request, key):
 
 def str_to_date(s):
     """
-    Извлечение даты из строки::
+    Извлечение даты из строки
 
-        str_to_date('31.12.2012') == str_to_date('2012-12-31, Happy New Year')
-        # True
+    >>> str_to_date('31.12.2012') == str_to_date('2012-12-31, Happy New Year')
+    True
     """
     if s:
         s = s[:10]
@@ -260,14 +276,14 @@ def extract_date(request, key, as_date=False):
 
 def modify(obj, **kwargs):
     """
-    Массовое дополнение атрибутов для объекта с его (объекта) возвратом::
+    Массовое дополнение атрибутов для объекта с его (объекта) возвратом
 
-        class Object(object): pass
-        cls = Object()
-        cls.param1 = 0
-        cls = modify(cls, **{'param1':1, })
-        print cls.param1
-        # 1
+    >>> class Object(object): pass
+    >>> cls = Object()
+    >>> cls.param1 = 0
+    >>> cls = modify(cls, **{'param1':1, })
+    >>> cls.param1
+    1
     """
     for attr, val in kwargs.iteritems():
         setattr(obj, attr, val)
@@ -280,13 +296,13 @@ def modifier(**kwargs):
     Возвращает модификатор - функцию, модифицирующую передаваемый ей объект
     указанными атрибутами
 
-        >>> w10 = modifier(width=10)
-        >>> controls = map(w10, controls)
-        >>> class Object(object): pass
-        >>> w10 = modifier(width=10)
-        >>> cls = w10(Object())
-        >>> cls.width
-        10
+    >>> w10 = modifier(width=10)
+    >>> controls = map(w10, controls)
+    >>> class Object(object): pass
+    >>> w10 = modifier(width=10)
+    >>> cls = w10(Object())
+    >>> cls.width
+    10
 
     """
     return lambda obj: modify(obj, **kwargs)
@@ -294,7 +310,12 @@ def modifier(**kwargs):
 
 def find_element_by_type(container, cls):
     """
-    посик экземлпяров элементов во всех вложенных контейнерах
+    Поиск экземпляров элементов во всех вложенных контейнерах
+
+    :param container: Контейнер
+    :type container: m3_ext.ui.containers.containers.ExtContainer
+    :param cls: Класс
+    :type cls: types.ClassType
     """
     res = []
     for item in container.items:
@@ -313,6 +334,14 @@ def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
     """
     Возвращает список объектов из указанной выборки, которые пересекаются
     с указанным объектом по указанным полям начала и конца интервала
+
+    :param obj: Объект
+    :param queryset: Выборка
+    :type queryset: django.db.models.query.QuerySet
+    :param attr_begin: Атрибут модели с датой начала
+    :type attr_begin: str
+    :param attr_end: Атрибут модели с датой конца
+    :type attr_end: str
     """
     obj_bgn = getattr(obj, attr_begin, None)
     obj_end = getattr(obj, attr_end, None)
@@ -358,7 +387,7 @@ def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
 #==============================================================================
 def istraversable(x):
     """
-    возвращает True, если объект @x позволяет обход себя в цикле for
+    возвращает True, если объект :attr:`x` позволяет обход себя в цикле `for`
     """
     return (
         hasattr(x, '__iter__')
@@ -374,6 +403,9 @@ def cached_to(attr_name):
     """
     Оборачивает простые методы (без аргументов) и property getters,
     с целью закэшировать первый полученный результат
+
+    :param attr_name: Куда кэшировать
+    :type attr_name: str
     """
     def wrapper(fn):
         @wraps(fn)
@@ -392,7 +424,14 @@ def cached_to(attr_name):
 # парсеры для декларации контекста
 #==============================================================================
 def int_or_zero(s):
+    """
+    Парсер для декларации контекста
+    """
     return 0 if not s else int(s)
 
+
 def int_list(s):
+    """
+    Парсер для декларации контекста
+    """
     return [int(i.strip()) for i in s.split(',')]
