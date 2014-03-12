@@ -4,7 +4,7 @@
 
 :Author: pirogov
 
-Содержит главный класс библиотеки и набор actions для него.
+Этот модуль содержит главный класс библиотеки и набор actions для него
 """
 
 import copy
@@ -35,7 +35,10 @@ import filters
 #==============================================================================
 class BaseAction(m3_actions.Action):
     """
-    Прототип для actions ObjectPack`а
+    Базовый класс для всех actions.
+
+    Имеет автоматически-генерируемый url и
+    возможность подключений точек расширения в |Observer|.
     """
 
     perm_code = None
@@ -113,7 +116,7 @@ class BaseAction(m3_actions.Action):
         :type verb: str
         :param arg: Объект для передачи в точку расширения
         :type arg: any
-        :return arg:
+        :return arg: Тот же объект или любой другой
         """
         return arg
 

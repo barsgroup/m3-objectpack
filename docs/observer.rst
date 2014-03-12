@@ -1,5 +1,5 @@
-objectpack.observer Package
-===========================
+objectpack.observer
+===================
 
 :mod:`observer` Package
 --------------------------------
