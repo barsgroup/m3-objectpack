@@ -21,8 +21,8 @@ objectpack расширяет возможности m3-core и m3-ext и поз
 
         GENDERS = (
             (0, u''),
-            (1, u'Мужской)',
-            (2, u'Женский)',
+            (1, u'Мужской'),
+            (2, u'Женский'),
         )
 
         name = models.CharField(max_length=150, verbose_name=u'Имя')
@@ -39,8 +39,8 @@ objectpack расширяет возможности m3-core и m3-ext и поз
             return u"%s %s" % (self.surname, self.name)
 
         class Meta:
-            verbose_name = u'Физ. лицо'
-            verbose_name_plural = u'Физ. лица'
+            verbose_name = u'Физическое лицо'
+            verbose_name_plural = u'Физические лица'
 
 .. code::
 
