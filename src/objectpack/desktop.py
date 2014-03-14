@@ -110,20 +110,9 @@ class _UIFabric(object):
     pack_method = ''  # для метода для расширения UI
     pack_flag = ''  # флаг расширения UI простым путём (напр.для справочников)
     # метод расширения UI (_add_to_XXX, обернутый в staticmethod, если нужно)
-    ui_extend_method = None
+    ui_extend_method = lambda *args: None
 
     icons = None
-
-    class LauncherItem(object):
-        """
-        Элемент меню
-        """
-        def __init__(self, name, **kwargs):
-            self._args = kwargs
-            self._args['name'] = name
-
-        def _populate(self):
-            return app_ui.DesktopLauncher(**self._args)
 
     class Item(object):
         """
@@ -137,15 +126,21 @@ class _UIFabric(object):
         def _populate(self):
             return DesktopItem(**self._args)
 
-    def _populate(self, metarole, data):
-        #Делаем данные всегда итерируемыми
+    @staticmethod
+    def _wrap(data):
+        """
+        Делаем данные всегда итерируемыми
+        """
         try:
             data = list(data)
         except TypeError:
             data = [data]
+        return data
+
+    def _populate(self, metarole, data):
         return self.ui_extend_method(
             metarole,
-            *map(lambda o: o._populate(), filter(None, data))
+            *map(lambda o: o._populate(), filter(None, self._wrap(data)))
         )
 
     @classmethod
@@ -220,6 +215,7 @@ class BaseMenu(_UIFabric):
         return items
 
     def _populate(self, metarole, data):
+        data = self._wrap(data)
 
         def pack_to(sub_menu):
             def extend(*items):
@@ -229,8 +225,8 @@ class BaseMenu(_UIFabric):
 
         data = self._submenu_presets.get(
             self._menu_root,
-            pack_to(self._menu_root))(data)
-
+            pack_to(self._menu_root)
+        )(*data)
         return super(BaseMenu, self)._populate(metarole, data)
 
 
