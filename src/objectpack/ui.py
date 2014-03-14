@@ -58,7 +58,7 @@ class BaseWindow(ext_windows.ExtWindow):
         if params.get('read_only'):
             self.make_read_only()
 
-    def make_read_only(self, access_off=True, exclude_list=None):
+    def _make_read_only(self, access_off=True, exclude_list=None):
         """
         Метод управляет режимом "только для чтения" окна
 
@@ -70,7 +70,7 @@ class BaseWindow(ext_windows.ExtWindow):
         # блокироваться в режиме "только для чтения".
         # Т.о. метод обычно не требует перекрытья -
         # - достаточно списка исключений
-        super(BaseWindow, self).make_read_only(
+        super(BaseWindow, self)._make_read_only(
             access_off, self._mro_exclude_list + (exclude_list or []))
 
 
