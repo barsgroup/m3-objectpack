@@ -40,15 +40,17 @@ class BaseAction(m3_actions.Action):
     # свой код права независимо от пака
     perm_code = None
 
+    @property
+    def url(self):
+        u"""
+        автоматически генерируемый url
+        """
+        return r'/%s' % self.__class__.__name__.lower()
+
     @tools.cached_to('__cached_context_declaration')
     def context_declaration(self):
         # контекст экшну декларирует пак
         return self.parent.declare_context(self)
-
-    @property
-    def url(self):
-        # автоматически генерируемый url
-        return r'/%s' % self.__class__.__name__.lower()
 
     def get_perm_code(self, subpermission=None):
         if self.perm_code is None:
@@ -620,28 +622,28 @@ class BasePack(m3_actions.ActionPack):
         """
         return {}
 
-    @classmethod
-    def get_short_name(cls):
-        """
-        Имя пака для поиска в ControllerCache
-        """
-        name = cls.__dict__.get('_auto_short_name')
-        if not name:
-            name = '%s/%s' % (
-                inspect.getmodule(cls).__name__.replace(
-                    '.actions', ''
-                ).replace(
-                    '.', '/').lower(),
-                cls.__name__.lower())
-            cls._auto_short_name = name
-        return name
+    # @classmethod
+    # def get_short_name(cls):
+    #     """
+    #     Имя пака для поиска в ControllerCache
+    #     """
+    #     name = cls.__dict__.get('_auto_short_name')
+    #     if not name:
+    #         name = '%s/%s' % (
+    #             inspect.getmodule(cls).__name__.replace(
+    #                 '.actions', ''
+    #             ).replace(
+    #                 '.', '/').lower(),
+    #             cls.__name__.lower())
+    #         cls._auto_short_name = name
+    #     return name
 
-    @property
-    @tools.cached_to('__cached_short_name')
-    def short_name(self):
-        # имя пака для поиска в ControllerCache в виде атрибута
-        # для совместимости с m3
-        return self.get_short_name()
+    # @property
+    # @tools.cached_to('__cached_short_name')
+    # def short_name(self):
+    #     # имя пака для поиска в ControllerCache в виде атрибута
+    #     # для совместимости с m3
+    #     return self.get_short_name()
 
     @property
     def url(self):
@@ -885,7 +887,6 @@ class ObjectPack(BasePack, ISelectablePack):
         setattr(self, action_attr_name, new_action)
         if getattr(self, action_attr_name):
             self.actions.append(getattr(self, action_attr_name))
-
     def declare_context(self, action):
         """
         Возвращает декларацию контекста для экшна
