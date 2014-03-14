@@ -1,8 +1,13 @@
 #coding:utf-8
 """
-Created on July 23, 2012
+:Created: 23.07.2012
 
-@author: pirogov
+:Author: pirogov
+
+.. contents::
+
+objectpack - библиотека для экстремально-быстрой разработки простых \
+справочников, основанная на m3-core и m3-ext3.
 """
 
 from version import __version__

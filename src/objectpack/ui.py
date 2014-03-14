@@ -1,8 +1,8 @@
 #coding: utf-8
 """
-Created on 23.07.12
+:created: 23.07.12
 
-@author: pirogov
+:author: pirogov
 """
 import inspect
 
@@ -33,6 +33,11 @@ class BaseWindow(ext_windows.ExtWindow):
         Метод создаёт визуальные компоненты,
         отражающие ПОЛЯ модели, но НЕ ОПРЕДЕЛЯЕТ РАСПОЛОЖЕНИЕ
         компонентов в окне
+
+        Пример::
+
+            self.grid = ext.ExtObjectGrid()
+
         """
         pass
 
@@ -40,6 +45,12 @@ class BaseWindow(ext_windows.ExtWindow):
         """
         Метод располагает УЖЕ СОЗДАННЫЕ визуальные компоненты
         на окне, создавая по необходимости контейнеры (ТОЛЬКО контейнеры)
+
+        Пример::
+
+            self.layout = 'fit'
+            self.items.append(self.grid)
+
         """
         pass
 
@@ -47,14 +58,20 @@ class BaseWindow(ext_windows.ExtWindow):
         """
         Метод принимает словарь, содержащий параметры окна,
         передаваемые в окно слоем экшнов
+
+        .. note::
+
+            Параметры могут содержать общие настройки окна (title, width,
+            height, maximized) и флаг режима для чтения (read_only)
+
+        :param params: Словарь с параметрами
+        :type params: dict
         """
-        # Параметры могут содержать общие настройки окна
         self.title = params.get('title', self.title) or u''
         self.width = params.get('width', self.width)
         self.height = params.get('height', self.height)
         self.maximized = params.get('maximized', self.maximized)
 
-        # Параметры могут содержать флаг режима "только для чтения"
         if params.get('read_only'):
             self.make_read_only()
 
@@ -62,14 +79,20 @@ class BaseWindow(ext_windows.ExtWindow):
         """
         Метод управляет режимом "только для чтения" окна
 
-        @access_off=True/False - включение/выключение режима
-        @exclude_list - список компонентов, которые не будут блокироваться
+        .. note::
+
+            Потомки могут дополнять список self._mro_exclude_list -
+            список визуальных компонентов, которые не будут
+            блокироваться в режиме "только для чтения".
+            Т.о. метод обычно не требует перекрытья -
+            достаточно списка исключений
+
+        :param access_off: True/False - включение/выключение режима
+        :type access_off: bool
+        :param exclude_list: список компонентов, которые не будут блокироваться
+        :type exclude_list: list
         """
-        # Потомки могут дополнять список self._mro_exclude_list -
-        # список визуальных компонентов, которые не будут
-        # блокироваться в режиме "только для чтения".
-        # Т.о. метод обычно не требует перекрытья -
-        # - достаточно списка исключений
+
         super(BaseWindow, self)._make_read_only(
             access_off, self._mro_exclude_list + (exclude_list or []))
 
@@ -79,14 +102,22 @@ class BaseWindow(ext_windows.ExtWindow):
 #==============================================================================
 class BaseEditWindow(ext_windows.ExtEditWindow, BaseWindow):
     """
-    Базовое окно редактирования
+    Базовое окно редактирования (с формой и кнопкой сабмита)
     """
+
     @property
     def form(self):
+        """
+        Форма окна
+        """
         # Хак для совместимости с m3
         return self.__form
 
     def _init_components(self):
+        """
+        .. seealso::
+            :func:`objectpack.ui.BaseWindow._init_components`
+        """
         super(BaseEditWindow, self)._init_components()
         self.__form = ext.ExtForm()
         self.items.append(self.form)
@@ -100,6 +131,10 @@ class BaseEditWindow(ext_windows.ExtEditWindow, BaseWindow):
         self._mro_exclude_list.append(self.cancel_btn)
 
     def _do_layout(self):
+        """
+        .. seealso::
+            :func:`objectpack.ui.BaseWindow._do_layout`
+        """
         super(BaseEditWindow, self)._do_layout()
         self.modal = True
 
@@ -113,6 +148,10 @@ class BaseEditWindow(ext_windows.ExtEditWindow, BaseWindow):
         self.keys.append(f2key)
 
     def set_params(self, params):
+        """
+        .. seealso::
+            :func:`objectpack.ui.BaseWindow.set_params`
+        """
         # url, по которому находится action/view сохранения
         self.form.url = params['form_url']
         obj = params.get('object', None)
@@ -133,6 +172,10 @@ class BaseListWindow(BaseWindow):
         self.grid_filters = {}
 
     def _init_components(self):
+        """
+        .. seealso::
+            :func:`objectpack.ui.BaseWindow._init_components`
+        """
         self.grid = ext.ExtObjectGrid()
         self.close_btn = self.btn_close = ext.ExtButton(
             name='close_btn',
@@ -142,11 +185,21 @@ class BaseListWindow(BaseWindow):
         self._mro_exclude_list.append(self.close_btn)
 
     def _do_layout(self):
+        """
+        .. seealso::
+            :func:`objectpack.ui.BaseWindow._do_layout`
+        """
         self.layout = 'fit'
         self.items.append(self.grid)
         self.buttons.append(self.btn_close)
 
     def set_params(self, params):
+        """
+        Принимает в параметрах пак и делегирует ему конфигурирование грида
+
+        .. seealso::
+            :func:`objectpack.ui.BaseWindow.set_params`
+        """
         super(BaseListWindow, self).set_params(params)
         self.maximizable = self.minimizable = True
         assert 'pack' in params, (
@@ -159,7 +212,16 @@ class BaseListWindow(BaseWindow):
             self, column_name,
             filter_control=None, filter_name=None, tooltip=None):
         """
-        Метод добавляет колоночный фильтр
+        Метод добавляет колоночный фильтр в грид
+
+        :param column_name: Имя колонки
+        :type column_name: str
+        :param filter_control: Ext-компонент фильтра
+        :type filter_control:
+        :param filter_name: Имя фильтра
+        :type filter_name: str
+        :param tooltip: Всплывающая подсказка
+        :type tooltip: unicode
         """
         if not filter_name:
             filter_name = column_name
@@ -178,6 +240,11 @@ class BaseListWindow(BaseWindow):
     def del_grid_column_filter(self, column_name, filter_name=None):
         """
         Метод удаляет колоночный фильтр
+
+        :param column_name: Имя колонки
+        :type column_name: str
+        :param filter_name: Имя фильтра
+        :type filter_name: str
         """
         if not filter_name:
             filter_name = column_name
@@ -188,6 +255,12 @@ class BaseListWindow(BaseWindow):
                 del self.grid_filters[column_name]
 
     def _render_filter(self, filter_):
+        """
+        :param filter_: Колоночный фильтр
+        :type filter_: dict
+        :return: ExtJs-представление фильтра
+        :rtype: unicode
+        """
         lst = []
         if filter_['filter_control']:
             return filter_['filter_control']
@@ -199,6 +272,9 @@ class BaseListWindow(BaseWindow):
         return '{%s}' % ','.join(lst)
 
     def render(self):
+        """
+        Рендеринг окна
+        """
         if self.grid:
             # добавим характеристики фильтров в колонки и подключим плагин
             if len(self.grid_filters) > 0:
@@ -225,19 +301,34 @@ class BaseSelectWindow(BaseListWindow):
     Окно выбора из списка объектов
     """
     def _init_components(self):
+        """
+        .. seealso::
+            :func:`objectpack.ui.BaseWindow._init_components`
+        """
         super(BaseSelectWindow, self)._init_components()
         self.select_btn = ext.ExtButton(
             handler='selectValue', text=u'Выбрать')
         self._mro_exclude_list.append(self.select_btn)
 
     def _do_layout(self):
+        """
+        .. seealso::
+            :func:`objectpack.ui.BaseWindow._do_layout`
+        """
         super(BaseSelectWindow, self)._do_layout()
         self.buttons.insert(0, self.select_btn)
 
     def _enable_multi_select(self):
+        """
+        Включает множественный выбор в гриде
+        """
         self.grid.sm = ext.ExtGridCheckBoxSelModel()
 
     def set_params(self, params):
+        """
+        .. seealso::
+            :func:`objectpack.ui.BaseWindow.set_params`
+        """
         super(BaseSelectWindow, self).set_params(params)
         if params.get('multi_select', False):
             self._enable_multi_select()
@@ -257,7 +348,7 @@ class ColumnsConstructor(object):
     - Col - простая колонка
     - BandedCol - группирующая колонка.
 
-    Пример использования:
+    Пример использования::
 
         # создание колонок inline
 
@@ -296,6 +387,7 @@ class ColumnsConstructor(object):
             cc.add(grp)
 
         cc.configure_grid(grid)
+
     """
 
     class BandedCol(object):
@@ -305,8 +397,10 @@ class ColumnsConstructor(object):
 
         def __init__(self, items=None, **kwargs):
             """
-            items - подчинённые колонки
-            **kwargs - передаются в конструктор ExtGridColumn
+            :param items: Подчинённые колонки
+            :type items: Iterable
+            :param kwargs: Передаются в конструктор ExtGridColumn
+            :type kwargs: dict
             """
             params = {'header': ''}
             params.update(kwargs)
@@ -316,13 +410,16 @@ class ColumnsConstructor(object):
         def add(self, *args):
             """
             Добавление колонок
+
+            :param args: Колонки
+            :type args: list
             """
             self.items.extend(args)
 
         def _cleaned(self):
             """
-            Возвращает элемент очищенный от пустых подэлементов
-            или None, если непустых подэлементов нет
+            :return: Элемент очищенный от пустых подэлементов
+                     или None, если непустых подэлементов нет
             """
             self.items = filter(None, [i._cleaned() for i in self.items])
             return self if self.items else None
@@ -330,7 +427,9 @@ class ColumnsConstructor(object):
         def _normalized_depth(self):
             """
             Приведение всех подэлементов к одному уровню вложенности
-            Возвращается максимальная вложенность
+
+            :return: Возвращается максимальная вложенность
+            :rtype: int
             """
             depths = [i._normalized_depth() for i in self.items]
             max_depth = max(depths)
@@ -413,7 +512,12 @@ class ColumnsConstructor(object):
     @classmethod
     def from_config(cls, config, ignore_attrs=None):
         """
-        Создание экземпляра на основе конфигурации @config
+        Создание экземпляра на основе конфигурации :attr:`config`
+
+        :param config:
+        :type config: dict
+        :param ignore_attrs:
+        :type ignore_attrs:
         """
         cc = cls()
 
@@ -447,18 +551,31 @@ class ModelEditWindow(BaseEditWindow):
     """
     Простое окно редактирования модели
     """
-    # модель, для которой будет строится окно
-    model = None
 
-    # словарь kwargs для model_fields_to_controls ("field_list", и т.д.)
+    model = None
+    """
+    Модель, для которой будет строится окно
+    """
+
     field_fabric_params = None
+    """
+    Словарь kwargs для model_fields_to_controls ("field_list", и т.д.)
+    """
 
     def _init_components(self):
+        """
+        .. seealso::
+            :func:`objectpack.ui.BaseWindow._init_components`
+        """
         super(ModelEditWindow, self)._init_components()
         self._controls = model_fields_to_controls(
             self.model, self, **(self.field_fabric_params or {}))
 
     def _do_layout(self):
+        """
+        .. seealso::
+            :func:`objectpack.ui.BaseWindow._do_layout`
+        """
         super(ModelEditWindow, self)._do_layout()
 
         # автоматически вычисляемая высота окна
@@ -471,6 +588,10 @@ class ModelEditWindow(BaseEditWindow):
         self.form.items.extend(map(anchor100, self._controls))
 
     def set_params(self, params):
+        """
+        .. seealso::
+            :func:`objectpack.ui.BaseWindow.set_params`
+        """
         super(ModelEditWindow, self).set_params(params)
         # если сгенерировано хотя бы одно поле загрузки файлов,
         # окно получает флаг разрешения загрузки файлов
@@ -481,14 +602,22 @@ class ModelEditWindow(BaseEditWindow):
     @classmethod
     def fabricate(cls, model, **kwargs):
         """
-        Гененрирует класс-потомок для конкретной модели.
-        Использование:
-        class Pack(...):
-            add_window = ModelEditWindow.fabricate(
-                SomeModel,
-                field_list=['code', 'name'],
-                model_register=observer,
-            )
+        Гененрирует класс-потомок для конкретной модели
+
+        Использование::
+
+            class Pack(...):
+                add_window = ModelEditWindow.fabricate(
+                    SomeModel,
+                    field_list=['code', 'name'],
+                    model_register=observer,
+                )
+
+        :param model: Модель django
+        :type model: django.db.models.Model
+        :param kwargs: Параметры для передачи в field_fabric_params
+        :type kwargs: dict
+        :return: Субкласс objectpack.ui.ModelEditWindow
         """
         return type('%sEditWindow' % model.__name__, (cls,), {
             'model': model, 'field_fabric_params': kwargs})
@@ -500,18 +629,34 @@ def model_fields_to_controls(
         field_list=None, exclude_list=None,
         model_register=None, **kwargs):
     """
-    Добавление на окно полей по полям модели,
-    - входящим в список (строк) @field_list
-    - не входящим в список (строк) @exclude_list
-    exclude_list игнорируется при указанном field_list
-    @kwargs - передача доп параметров в конструктор элементов
+    Добавление на окно элементов формы по полям модели
 
-    Списки включения / исключения полей могут содержать
-    wildcards вида 'x*' или '*x', которые трактуются как префиксы и суффиксы.
+    .. note::
+        :attr:`exclude_list` игнорируется при указанном :attr:`field_list`
 
-    При создании полей для связанных моделей ActionPack для модели ищется
-    в реестре моделей @model_register по имени класса модели
-    (передачей имени в метод "get" реестра)
+    .. note::
+        Списки включения/исключения полей могут содержать
+        wildcards вида `x*` или `*x`,
+        которые трактуются как префиксы и суффиксы
+
+    .. note::
+        При создании полей для связанных моделей ActionPack для модели ищется
+        в реестре моделей :attr:`model_register` по имени класса модели
+        (передачей имени в метод "get" реестра)
+
+    :param model: Модель django
+    :type mode: django.db.models.Model
+    :param window: Окно
+    :type window: m3_ext.ui.windows.window.ExtWindow
+    :param field_list: Список полей
+    :type field_list: list
+    :param exclude_list: Список полей-исключений
+    :type exclude_list: list
+    :param model_register: Реестр моделей-паков
+    :param kwargs: Дополнительные параметры для передачи в конструктор элементов
+    :type kwargs: dict
+    :return: Список контролов для полей модели
+    :rtype: list
     """
     def make_checker(patterns):
         matchers = []
@@ -634,8 +779,14 @@ def _create_control_for_field(f, model_register=None, **kwargs):
 def _create_dict_select_field(f, model_register=None, **kwargs):
     """
     Создает ExtDictSelectField по заданному ForeignKey-полю модели
-    ActionPack предоставляется объектом @model_register через метод
-    "get", в качестве параметра принимающий имя связанной модели.
+    ActionPack предоставляется объектом :attr:`model_register` через метод
+    "get", в качестве параметра принимающий имя связанной модели
+
+    :param f: Поле модели
+    :type f: django.db.models.fields.Field
+    :param model_register: Реестр моделей
+    :param kwargs: Параметры для передачи в конструктор ExtDictSelectField
+    :type kwargs: dict
     """
     related_model = f.rel.to.__name__
 
@@ -670,7 +821,7 @@ def _create_dict_select_field(f, model_register=None, **kwargs):
 #==============================================================================
 class WindowTab(object):
     """
-    Прототип конструктора таба для карточки сотрудника
+    Прототип конструктора таба
     """
     # заголовок таба
     title = u''
@@ -688,20 +839,28 @@ class WindowTab(object):
     def init_components(self, win):
         """
         Здесь создаются компоненты, но не задаётся расположение
-        Компоненты создаются, как атрибуты окна win
+        Компоненты создаются, как атрибуты окна :attr:`win`
+
+        :param win: Окно
         """
         pass
 
     def do_layout(self, win, tab):
         """
         Здесь задаётся расположение компонентов. Компоненты должны
-        быть расположены на табе tab окна win
+        быть расположены на табе :attr:`tab` окна :attr:`win`
+
+        :param win: Окно
+        :param tab: Вкладка
         """
         pass
 
     def set_params(self, win, params):
         """
         Установка параметров
+
+        :param win: Окно
+        :param params: Параметры
         """
         pass
 
@@ -808,6 +967,9 @@ class ObjectGridTab(WindowTab):
 
     @property
     def title(self):
+        """
+        Заголовок вкладки
+        """
         return self._pack.title
 
     @property
@@ -828,7 +990,11 @@ class ObjectGridTab(WindowTab):
         return tab
 
     def init_components(self, win):
-        # создание грида
+        """
+        Создание грида
+
+        :param win: Окно
+        """
         self.grid = ext.ExtObjectGrid()
         setattr(win, '%s_grid' % self.__class__.__name__, self.grid)
 
@@ -845,12 +1011,15 @@ class ObjectGridTab(WindowTab):
             cls, pack_name, pack_register, tab_class_name=None):
         """
         Возвращает класс вкладки, построенной на основе
-        пака с именем @pack_name. В процессе настройки вкладки
+        пака с именем :attr:`pack_name`. В процессе настройки вкладки
         экземпляр пака получается посредством
-        вызова @pack_getter.get_pack_instance для @pack_name.
+        вызова :attr:`pack_register`.get_pack_instance для :attr:`pack_name`
 
-        @tab_class_name - имя класса вкладки (если не указано,
-            то генерируется на основе имени класса модели пака)
+        :param pack_name: Имя пака
+        :param pack_register: Реестр паков
+        :param tab_class_name: Имя класса вкладки (если не указано,
+                               то генерируется на основе имени
+                               класса модели пака)
         """
         tab_class_name = tab_class_name or (
             '%sTab' % pack_name.replace('/', '_'))
@@ -865,12 +1034,17 @@ class ObjectGridTab(WindowTab):
     def fabricate(cls, model, model_register, tab_class_name=None):
         """
         Возвращает класс вкладки, построенной на основе основного
-        пака для модели @model. В процессе настройки вкладки
+        пака для модели :attr:`model`. В процессе настройки вкладки
         экземпляр пака получается посредством
-        вызова @model_register.get для @model_name.
+        вызова :attr:`model_register`.get для :attr:`model_name`
 
-        @tab_class_name - имя класса вкладки (если не указано,
-            то генерируется на основе имени класса модели пака)
+        :param model: Модель django
+        :type model: django.db.models.Model
+        :param model_register: Реестр моделей
+        :param tab_class_name: Имя класса вкладки (если не указано,
+                               то генерируется на основе имени
+                               класса модели пака)
+        :type tab_class_name: str
         """
         tab_class_name = tab_class_name or ('%sTab' % model.__name__)
         return type(
@@ -883,14 +1057,21 @@ class ObjectTab(WindowTab):
     """
     Вкладка редактирования полей объекта
     """
-    # модель, для которой будет строится окно
     model = None
+    """
+    Модель, для которой будет строится окно
+    """
 
-    # словарь kwargs для model_fields_to_controls ("field_list", и т.д.)
     field_fabric_params = None
+    """
+    Словарь kwargs для model_fields_to_controls ("field_list", и т.д.)
+    """
 
     @property
     def title(self):
+        """
+        Заголовок вкладки
+        """
         return unicode(
             self.model._meta.verbose_name or
             repr(self.model)
@@ -923,14 +1104,17 @@ class ObjectTab(WindowTab):
     @classmethod
     def fabricate(cls, model, **kwargs):
         """
-        Гененрирует класс-потомок для конкретной модели.
-        Использование:
-        class Pack(...):
-            add_window = ObjectTab.fabricate(
-                SomeModel,
-                field_list=['code', 'name'],
-                model_register=observer,
-            )
+        Гененрирует класс-потомок для конкретной модели
+
+        Использование::
+
+            class Pack(...):
+                add_window = ObjectTab.fabricate(
+                    SomeModel,
+                    field_list=['code', 'name'],
+                    model_register=observer,
+                )
+
         """
         return type('%sTab' % model.__name__, (cls,), {
             'model': model, 'field_fabric_params': kwargs})
@@ -942,13 +1126,21 @@ class ObjectTab(WindowTab):
 class ComboBoxWithStore(ext.ExtDictSelectField):
     """
     Потомок m3-комбобокса со втроенным стором
-    Контрол имеет два свойства:
-        data - фиксированный стор вида ((id, name),....)
-        url - url для динамической загрузки
-    Установка любого из этих свойств конфигурирует стор контрола
+
+    .. note::
+        Установка артибутов data или url конфигурирует стор контрола
+
     """
 
     def __init__(self, data=None, url=None, **kwargs):
+        """
+        :param data: Фиксированный стор
+        :type data: Iterable
+        :param url: URL для загрузки
+        :type url: basestring
+        :param kwargs: Параметры для передачи в конструктор ExtDictSelectField
+        :type kwargs: dict
+        """
         super(ComboBoxWithStore, self).__init__(**kwargs)
         self.hide_trigger = False
         self.hide_clear_trigger = True
@@ -964,6 +1156,9 @@ class ComboBoxWithStore(ext.ExtDictSelectField):
 
     @property
     def data(self):
+        """
+        Фиксированный стор вида ((id, name),....)
+        """
         return self.store.data
 
     @data.setter
@@ -972,6 +1167,9 @@ class ComboBoxWithStore(ext.ExtDictSelectField):
 
     @property
     def url(self):
+        """
+        URL для динамической загрузки
+        """
         return self.store.url
 
     @url.setter
@@ -982,6 +1180,9 @@ class ComboBoxWithStore(ext.ExtDictSelectField):
 def make_combo_box(**kwargs):
     """
     Создает и возвращает ExtComboBox
+
+    :param kwargs: Передаются в конструктор комбобокса
+    :type kwargs: dict
     """
     params = dict(
         display_field='name',
@@ -997,8 +1198,11 @@ def make_combo_box(**kwargs):
 def anchor100(ctl):
     """
     Устанавливает anchor в 100% у контрола и восвращает его (контрол)
-    Пример использования:
+
+    Пример использования::
+
         controls = map(anchor100, controls)
+
     """
     if not isinstance(ctl, django_models.DateField):
         tools.modify(ctl, anchor='100%')
@@ -1007,14 +1211,20 @@ def anchor100(ctl):
 
 allow_blank = lambda ctl: tools.modify(ctl, allow_blank=True)
 allow_blank.__doc__ = """
-    Устанавливает allow_blank=True у контрола и восвращает его (контрол)
-    Пример использования:
+    Устанавливает allow_blank=True у контрола и возвращает его (контрол)
+
+    Пример использования::
+
         controls = map(allow_blank, controls)
+
     """
 
 deny_blank = lambda ctl: tools.modify(ctl, allow_blank=False)
 deny_blank.__doc__ = """
-    Устанавливает allow_blank=False у контрола и восвращает его (контрол)
-    Пример использования:
+    Устанавливает allow_blank=False у контрола и возвращает его (контрол)
+
+    Пример использования::
+
         controls = map(allow_blank, controls)
+
     """

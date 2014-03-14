@@ -18,3 +18,4 @@ glob:tests/objectpack_demo/*.sqlt
 *.orig
 .DS_Store
 dist/*
+glob:.idea/

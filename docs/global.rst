@@ -1,0 +1,11 @@
+.. |ObjectPack| replace:: :mod:`ObjectPack <objectpack.actions.ObjectPack>`
+.. |ObjectRowsAction| replace:: :mod:`ObjectRowsAction <objectpack.actions.ObjectRowsAction>`
+.. |ObjectSaveAction| replace:: :mod:`ObjectSaveAction <objectpack.actions.ObjectSaveAction>`
+.. |ObjectDeleteAction| replace:: :mod:`ObjectDeleteAction <objectpack.actions.ObjectDeleteAction>`
+.. |ObjectAddWindowAction| replace:: :mod:`ObjectAddWindowAction <objectpack.actions.ObjectAddWindowAction>`
+.. |ObjectEditWindowAction| replace:: :mod:`ObjectEditWindowAction <objectpack.actions.ObjectEditWindowAction>`
+.. |ObjectListWindowAction| replace:: :mod:`ObjectListWindowAction <objectpack.actions.ObjectListWindowAction>`
+.. |Observer| replace:: :mod:`Observer <objectpack.observer.base.Observer>`
+.. |ObservableController| replace:: :mod:`ObservableController <objectpack.observer.base.ObservableController>`
+.. |AlreadySaved| replace:: :mod:`AlreadySaved <objectpack.actions.ObjectSaveAction.AlreadySaved>`
+.. |BaseWindow| replace:: :mod:`BaseWindow <objectpack.ui.BaseWindow>`

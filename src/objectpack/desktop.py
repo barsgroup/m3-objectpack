@@ -1,7 +1,7 @@
 #coding:utf-8
 """
-Created on 23.07.2012
-@author: pirogov
+:Created: 23.07.2012
+:Author: pirogov
 """
 from m3 import actions
 from m3_ext.ui import app_ui
@@ -15,6 +15,17 @@ def uificate_the_controller(
         menu_root=None, top_menu_root=None):
     """
     Интеграция в интерфейс рабочего стола паков контроллера
+
+    :param controller: Контроллер
+    :type controller: m3.actions.ActionController
+    :param metarole: Метароль
+    :type metarole: str
+    :param icon_collection:
+    :type icon_collection:
+    :param menu_root:
+    :type menu_root:
+    :param top_menu_root:
+    :type top_menu_root:
     """
     for pack in controller.top_level_packs:
         Desktop.from_pack(
@@ -65,7 +76,7 @@ def _add_to_top_menu(metarole, *items):
 #==============================================================================
 # DesktopItem
 #==============================================================================
-class DesktopItem(app_ui.DesktopShortcut):
+class _DesktopItem(app_ui.DesktopShortcut):
     """
     Элемент UI с запоминанием кода права
     """
@@ -97,7 +108,7 @@ class DesktopItem(app_ui.DesktopShortcut):
                     u' returning action instance!'
                 )
         self.permission_code = code
-        return super(DesktopItem, self).__init__(pack, *args, **kwargs)
+        super(_DesktopItem, self).__init__(pack, *args, **kwargs)
 
 
 #==============================================================================
@@ -124,7 +135,7 @@ class _UIFabric(object):
             self._args['pack'] = pack
 
         def _populate(self):
-            return DesktopItem(**self._args)
+            return _DesktopItem(**self._args)
 
     @staticmethod
     def _wrap(data):
@@ -175,7 +186,7 @@ class _UIFabric(object):
 #==============================================================================
 # BaseMenu
 #==============================================================================
-class BaseMenu(_UIFabric):
+class _BaseMenu(_UIFabric):
     """
     Класс для работы с главным меню
     """
@@ -227,13 +238,13 @@ class BaseMenu(_UIFabric):
             self._menu_root,
             pack_to(self._menu_root)
         )(*data)
-        return super(BaseMenu, self)._populate(metarole, data)
+        return super(_BaseMenu, self)._populate(metarole, data)
 
 
 #==============================================================================
 # MainMenu
 #==============================================================================
-class MainMenu(BaseMenu):
+class MainMenu(_BaseMenu):
     """
     Класс для работы с главным меню
     """
