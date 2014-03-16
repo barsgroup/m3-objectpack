@@ -1195,6 +1195,7 @@ class ObjectPack(BasePack, ISelectablePack):
         setattr(self, action_attr_name, new_action)
         if getattr(self, action_attr_name):
             self.actions.append(getattr(self, action_attr_name))
+
     def declare_context(self, action):
         """
         Декларирует контекст для экшна
@@ -1744,7 +1745,7 @@ class ObjectPack(BasePack, ISelectablePack):
 
         :param obj: Объект модели self.model
         :type obj: django.db.models.Model
-        :param create_new:
+        :param create_new: Признак создания нового объекта
         :type create_new: bool
         :type request: django.http.HttpRequest
         :type context: m3.actions.context.DeclarativeActionContext

@@ -165,7 +165,103 @@ JSON::
 Колоночные фильтры
 ++++++++++++++++++
 
-TODO
+Иногда общей строки поиска по гриду бывает недостаточно и нужны отдельные фильтры
+по колонкам. В objectpack есть два вида колоночных фильтров: встроенные в контекстное
+меню заголовка колонки и контролы расположенные непросредтвенно в заголовке. По умолчанию
+включен первый тип. Рассмотрим на примере::
+
+    class PersonPack(ObjectPack):
+
+        model = Person
+
+        columns = [
+            {
+                'data_index': '__unicode__',
+                'header': u'Фамилия Имя',
+                'width': 2,
+                'filter': {
+                    'type': 'string',
+                    'custom_fields': ('name', 'surname')
+                }
+            },
+            {
+                'data_index': 'gender',
+                'header': u'Пол',
+                'width': 1,
+                'filter': {
+                    'type': 'list',
+                    'options': model.GENDERS
+                }
+            },
+            {
+                'data_index': 'birthday',
+                'header': u'Дата рождения',
+                'width': 1,
+                'filter': {
+                    'type': 'date',
+                }
+            }
+        ]
+
+.. figure:: static/images/tutor9.png
+    :align: center
+
+    Фильтр встроенный в контекстное меню
+
+.. code::
+
+    from functools import partial
+    from objectpack.filters import ColumnFilterEngine, FilterByField
+
+
+    class PersonPack(objectpack.ObjectPack):
+
+        model = models.Person
+
+        filter_engine_clz = ColumnFilterEngine
+
+        f = partial(FilterByField, model)
+
+        columns = [
+            {
+                'data_index': '__unicode__',
+                'header': u'Фамилия Имя',
+                'width': 2,
+                'filter': (
+                    f('name', 'name__icontains')
+                    & f('surname', 'surname__icontains')
+                )
+            },
+            {
+                'data_index': 'gender',
+                'header': u'Пол',
+                'width': 1,
+                'filter': f('gender')
+            },
+            {
+                'data_index': 'birthday',
+                'header': u'Дата рождения',
+                'width': 2,
+                'filter': (
+                    f('birthday', 'birthday__gte', tooltip=u'С')
+                    & f('birtday', 'birthday__lte', tooltip=u'По')
+                )
+            }
+        ]
+
+.. figure:: static/images/tutor10.png
+    :align: center
+
+    Колоночный фильтр
+
+Окно со списком объектов
+++++++++++++++++++++++++
+
+По умолчанию в качестве окна со списком объектов используется
+:class:`BaseListWindow <objectpack.ui.BaseListWindow>`. Отнаследовавшись от него
+можно конфигурировать свои окна со списками или можно перегрузить методы пака
+:func:`create_list_window <objectpack.actions.ObjectPack.create_list_window>`
+и :func:`get_list_window_params <objectpack.actions.ObjectPack.get_list_window_params>`.
 
 Создание объекта
 ----------------
@@ -260,13 +356,15 @@ TODO
 Генерация окон
 ++++++++++++++
 
-Описыние компонент окна занятие утомительно и скушной. К счастью в objectpack
+Описыние компонент окна занятие утомительное и скушное. К счастью в objectpack
 есть убер-фича - генерация окон редактирования для модели. Так окно из
 предыдущего примера полностью идентично слудующему::
 
     from objectpack import ModelEditWindow
 
     add_window = ModelEditWindow.fabricate(model=Person)
+
+.. _create_edit_window:
 
 Тонкая настройка окон
 +++++++++++++++++++++
@@ -279,17 +377,74 @@ TODO
 Редактирование
 --------------
 
-TODO
+Теперь добавим возможность редактировать объекты. Для этого нужно паку задать
+атрибут :attr:`edit_window`. В нашем случае окно редактирования идентично окну
+создания, поэтому мы пишем::
+
+    add_window = edit_window = ModelEditWindow.fabricate(model=Person)
+
+Окно редактирирование может быть сложным, например, когда у модели есть зависимые
+модели. В таких случаях можно использовать окно с вкладками
+:class:`TabbedWindow <objectpack.ui.TabbedWindow>`.
+
+Конфигурирование окна осуществляется `так же <create_edit_window_>`_ как
+и для окна создания.
 
 Сохранение
 ----------
 
-TODO
+|ObjectSaveAction| будет доступен в паке после задания либо окна создания,
+либо окна редактирования объекта.
+
+При сохранении значения из формы окна добавления/редактирования сопоставляются
+с полями модели по атрибутам :attr:`name` элементов формы.
+
+Непосредственное сохранение объекта модели происходит в методе
+:func:`save_row <objectpack.actions.ObjectPack.save_row>`. Перегрузив этот метод
+можно дополнительно управлять сохранением объекта::
+
+    def save_row(self, obj, create_new, request, context):
+        if not (obj.name.isalpha() and obj.surname.isalpha()):
+            raise ApplicationLogicException(
+                u'Имя и Фамилимя могут содержать только буквы алфавита!')
+        super(PersonPack, self).save_row(obj, create_new, request, context)
 
 Удаление
 --------
 
-TODO
+За удаление объекта отвечает атрибут :attr:`can_delete`, который может принимать
+три значения: ``True``, ``False`` или ``None``. По умолчанию ``None``.
+
+Если установлено значение ``None``, то |ObjectDeleteAction| будет добавлен в пак
+если задоно либо окно добавления, либо окно редактирования. ``True`` удаление
+возможно и ``False`` - не возможно::
+
+    class PersonPack(ObjectPack):
+
+        model = Person
+
+        can_delete = True
+
+.. figure:: static/images/tutor8.png
+    :align: center
+
+    Простой список с можностью удаления
+
+Само удаление объекта модели происходит в методе
+:func:`delete_row <objectpack.actions.ObjectPack.delete_row>`. По умолчанию тут
+вызывается метод :attr:`safe_delete` модели и, если он не определен, вызывается
+функция :func:`m3.db.safe_delete`. Перегрузив его можно управлять удалением
+объекта::
+
+    def delete_row(self, obj_id, request, context):
+        if date.today().weekday() in (5, 6):
+            raise ApplicationLogicException(
+                u'Нельзя удалять записи в выходные дни!')
+
+        # не хотим использовать m3.db.safe_delete
+        obj = self.model.objects.get(id=obj_id)
+        obj.delete()
+        return obj
 
 Контроллер, наблюдатель и точки расширения
 ==========================================

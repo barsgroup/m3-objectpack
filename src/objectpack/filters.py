@@ -230,11 +230,16 @@ class FilterByField(AbstractFilter):
         **field_fabric_params
     ):
         """
-        :param model: модель, на основе поля которой и будет строиться фильтр
+        :param model: Модель, на основе поля которой и будет строиться фильтр
+        :type model: django.db.models.Model
         :param filed_name: имя поля модели
+        :type field_name: str
         :param lookup: строка-lookup для DjangoORM,
             либо функция вида (lookup_param -> Q-object)
         :param tooltip: текст всплывающей подсказки
+        :type tooltip: str
+        :param field_fabric_params: Параметры для инициализации контрола фильтра
+        :type field_fabric_params: dict
         """
         self._model = model
         self._field_name = field_name
