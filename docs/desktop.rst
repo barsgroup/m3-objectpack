@@ -1,5 +1,5 @@
-Desktop
--------
+:mod:`desktop` Module
+---------------------
 
 .. automodule:: objectpack.desktop
     :members:

@@ -1,5 +1,5 @@
-Фильтры
--------
+filters.module
+--------------
 
 .. automodule:: objectpack.filters
     :members:

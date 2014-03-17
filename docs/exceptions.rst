@@ -1,5 +1,5 @@
-Исключения
-----------
+:mod:`exceptions` Module
+------------------------
 
 .. automodule:: objectpack.exceptions
     :members:

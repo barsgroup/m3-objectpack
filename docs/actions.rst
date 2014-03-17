@@ -1,7 +1,7 @@
 .. include:: global.rst
 
-objectpack.actions
-------------------
+:mod:`actions` Module
+---------------------
 
 .. automodule:: objectpack.actions
     :members:

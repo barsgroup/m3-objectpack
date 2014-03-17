@@ -1,5 +1,5 @@
 :mod:`models` Module
-------------------------
+--------------------
 
 .. automodule:: objectpack.models
     :members:

@@ -1,5 +1,5 @@
-objectpack.dictionary_object_pack Package
-=========================================
+dictionary_object_pack Package
+==============================
 
 :mod:`dictionary_object_package` Package
 ----------------------------------------

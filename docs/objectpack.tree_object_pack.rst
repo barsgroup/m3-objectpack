@@ -1,5 +1,5 @@
-objectpack.tree_object_pack Package
-===================================
+tree_object_pack Package
+========================
 
 :mod:`tree_object_pack` Package
 --------------------------------
