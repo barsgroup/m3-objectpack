@@ -237,3 +237,23 @@ class SaveStaffAction(objectpack.BaseAction):
             obj = models.GarageStaff(person_id=i)
             self.parent.save_row(obj, True, request, context)
         return m3_actions.OperationResult()
+
+
+class NodesPack(objectpack.BasePack):
+
+    add_to_desktop = True
+
+    title = u'Nodes'
+
+    def __init__(self):
+        super(NodesPack, self).__init__()
+        self.win_action = NodesAction()
+        self.actions.append(self.win_action)
+
+    def get_default_action(self):
+        return self.win_action
+
+
+class NodesAction(objectpack.BaseWindowAction):
+    def create_window(self):
+        self.win = ui.NodesWindow()

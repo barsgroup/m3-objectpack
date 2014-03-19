@@ -53,9 +53,9 @@ class ObservableMixin(object):
         """
         Добавление ActionPack`а с регистрацией его action`ов в ObserVer`е
         """
-        if self._observer._is_pack_populated(pack):
-            # регистрация Pack`а в контроллере
+        self._observer._populate_pack(
             super(ObservableMixin, self).append_pack(pack)
+        )
 
     @property
     def urlpattern(self):
@@ -264,22 +264,19 @@ class Observer(object):
                         '\n\tListener\t %r' % (name, listener))
             self._action_listeners[name] = action_listeners
 
-    def _is_pack_populated(self, pack):
+    def _populate_pack(self, pack):
         """
-        Подписка зарегистрированных слушателей на @pack.actions
-        Возвращает True, если обработка Pack`а прошла нормально
+        Подписка зарегистрированных слушателей на pack.actions
         """
         # каждый отдельный Pack должен регистрироваться ровно один раз
         # уникльность Pack определяется следующим ключом
-        pack_name = tools._name_class(pack.__class__)
+        pack_name = pack.get_short_name()
         if pack_name in self._pack_instances_by_name:
             # попытка перерегистрации отмечается предупреждением
-            self._log(
-                self.LOG_WARNINGS,
+            raise RuntimeError(
                 'WARNING! Pack reregistration blocked!:\n\tPack: %s'
-                % pack_name)
-            return False
-
+                % pack_name
+            )
         else:
             # ActionPack запоминается, как уже зарегистрированный
             self._pack_instances_by_name[pack_name] = pack
@@ -289,23 +286,18 @@ class Observer(object):
                 % pack_name)
 
         # регистрация ActionPack, как основного для модели
-        try:
-            model = getattr(pack, 'model', getattr(pack, 'tree_model', None))
-            if model and getattr(pack, '_is_primary_for_model', True):
-                model_name = model.__name__
-                try:
-                    # если для модели уже зарегистрирован ActionPack
-                    # возбуждается исключение
-                    raise AssertionError(
-                        "For model %s already registered primary pack: %r"
-                        % (model_name, self._model_register[model_name]))
-                except KeyError:
-                    # модель ещё не регистрировалась - регистрируется
-                    self._model_register[model_name] = pack
-
-        except AttributeError:
-            # Если Pack не основной, или не имеет модели - игнорируется
-            pass
+        model = getattr(pack, 'model', getattr(pack, 'tree_model', None))
+        if model and getattr(pack, '_is_primary_for_model', True):
+            model_name = model.__name__
+            try:
+                # если для модели уже зарегистрирован ActionPack
+                # возбуждается исключение
+                raise AssertionError(
+                    "For model %s already registered primary pack: %r"
+                    % (model_name, self._model_register[model_name]))
+            except KeyError:
+                # модель ещё не регистрировалась - регистрируется
+                self._model_register[model_name] = pack
 
         # в Pack инжектируется функция получения Pack`а
         # для указанной по имени модели
@@ -315,14 +307,12 @@ class Observer(object):
             name = self._name_action(action, pack_name)
             # возбуждение исключения при коллизии short_names
             if name in self._actions:
-                raise AssertionError(
+                raise RuntimeError(
                     'Name="%s" can not be registered for action %r,\n'
                     'because this name registered for %r!'
                     % (name, action, self._actions[name]))
             self._actions[name] = action
         self._reconfigure()
-
-        return True
 
     def subscribe(self, listener):
         """
