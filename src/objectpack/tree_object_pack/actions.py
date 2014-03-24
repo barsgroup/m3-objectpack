@@ -59,7 +59,8 @@ class TreeObjectPack(objectpack.ObjectPack):
         return win
 
     def save_row(self, obj, create_new, request, context):
-        setattr(obj, '%s_id' % self.parent_field, context.parent_id or None)
+        parent_id = getattr(context, 'parent_id', None)
+        setattr(obj, '%s_id' % self.parent_field, parent_id)
         obj.save()
 
     def declare_context(self, action):
