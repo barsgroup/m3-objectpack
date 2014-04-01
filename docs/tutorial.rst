@@ -5,7 +5,7 @@
 
 1. Установить зависимости::
 
-   pip install m3-core m3-ext3 objectpack django==1.4
+    pip install m3-core m3-ext3 objectpack django==1.4
 
 2. Если django-проект ещe не создан, то создаем и в ``INSTALLED_APS``
    добавляем приложения::
