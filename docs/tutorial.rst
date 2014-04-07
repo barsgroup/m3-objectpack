@@ -1,5 +1,38 @@
 .. include:: global.rst
 
+Установка и настройка окружения
+===============================
+
+1. Установить зависимости::
+
+    pip install m3-core m3-ext3 objectpack django==1.4
+
+2. Если django-проект ещe не создан, то создаем и в ``INSTALLED_APS``
+   добавляем приложения::
+
+    INSTALLED_APPS = (
+        
+        ...
+        'm3_ext',
+        'm3_ext.ui',
+        'objectpack',
+    )	
+
+3. #TODO: Подключить desktop view (м.б. сделать ссылку на m3-ext3)
+
+4. Инициализировать контроллер::
+
+    # controller.py
+    from objectpack.observer import ObservableController, Observer
+
+    observer = Observer()
+    controller = ObservableController(url="actions", observer=observer)
+
+5. #TODO: Расширить urlpatterns
+
+6. PROFIT!
+
+
 Подробно про ObjectPack
 =======================
 
