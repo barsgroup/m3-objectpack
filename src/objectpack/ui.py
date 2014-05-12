@@ -67,10 +67,10 @@ class BaseWindow(ext_windows.ExtWindow):
         :param params: Словарь с параметрами
         :type params: dict
         """
-        self.title = params.get('title', self.title) or u''
+        self.title = params.get('title', getattr(self, 'title', None)) or u''
         self.width = params.get('width', self.width)
         self.height = params.get('height', self.height)
-        self.maximized = params.get('maximized', self.maximized)
+        self.maximized = params.get('maximized', getattr(self, 'title', None))
 
         if params.get('read_only'):
             self.make_read_only()
@@ -180,7 +180,7 @@ class BaseListWindow(BaseWindow):
         self.close_btn = self.btn_close = ext.ExtButton(
             name='close_btn',
             text=u'Закрыть',
-            handler='function(){Ext.getCmp("%s").close();}' % self.client_id
+#            handler='function(){Ext.getCmp("%s").close();}' % self.client_id
         )
         self._mro_exclude_list.append(self.close_btn)
 
@@ -881,13 +881,13 @@ class TabbedWindow(BaseWindow):
 
         # инстанцирование вкладок
         instantiate = lambda x: x() if inspect.isclass(x) else x
-        self.tabs = map(instantiate, self.tabs or [])
+        self._tabs = map(instantiate, self.tabs or [])
 
         # опредение вкладок не должно быть пустым
         # (проверка производится после инстанцирования,
         # т.к. описание колонок может быть итератором
         # и иметь истинное значение в булевом контексте)
-        assert self.tabs, '"tabs" can not be empty!'
+        assert self._tabs, '"tabs" can not be empty!'
 
         super(TabbedWindow, self)._init_components()
 
@@ -895,7 +895,7 @@ class TabbedWindow(BaseWindow):
         self._tab_container = ext.ExtTabPanel(deferred_render=False)
 
         # создание компонентов для вкладок
-        for con in self.tabs:
+        for con in self._tabs:
             con.init_components(win=self)
 
     def _do_layout(self):
@@ -909,7 +909,7 @@ class TabbedWindow(BaseWindow):
         self.maximizable = self.minimizable = True
 
         # размещение контролов во вкладках
-        for con in self.tabs:
+        for con in self._tabs:
             tab = con._create_tab()
             con.do_layout(win=self, tab=tab)
             self._tab_container.items.append(tab)
@@ -926,7 +926,7 @@ class TabbedWindow(BaseWindow):
 
         # установка параметров вкладок, формирование списка шаблонов вкладок
         self.tabs_templates = []
-        for con in self.tabs:
+        for con in self._tabs:
             if con.template:
                 self.tabs_templates.append(con.template)
             con.set_params(win=self, params=params)
@@ -1093,13 +1093,14 @@ class ObjectTab(WindowTab):
         # все поля добавляются на форму растянутыми по ширине
         tab.items.extend(map(anchor100, self._controls))
 
-    def set_params(self, win, params):
-        super(ObjectTab, self).set_params(win, params)
-        # если сгенерировано хотя бы одно поле загрузки файлов,
-        # окно получает флаг разрешения загрузки файлов
-        win.form.file_upload = win.form.file_upload or any(
-            isinstance(x, ext.ExtFileUploadField)
-            for x in self._controls)
+    # TODO: хз, м.б. теперь file_upload и не нужен
+    # def set_params(self, win, params):
+    #     super(ObjectTab, self).set_params(win, params)
+    #     # если сгенерировано хотя бы одно поле загрузки файлов,
+    #     # окно получает флаг разрешения загрузки файлов
+    #     win.form.file_upload = win.form.file_upload or any(
+    #         isinstance(x, ext.ExtFileUploadField)
+    #         for x in self._controls)
 
     @classmethod
     def fabricate(cls, model, **kwargs):

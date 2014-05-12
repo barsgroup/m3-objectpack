@@ -16,6 +16,7 @@ import warnings
 
 from django.db.models import fields as dj_fields
 from django.utils.encoding import force_unicode
+from django.forms.models import model_to_dict
 
 from m3 import actions as m3_actions
 from m3.actions.interfaces import ISelectablePack
@@ -126,6 +127,11 @@ class BaseWindowAction(BaseAction):
     """
     Базовый Action показа окна
     """
+    def context_declaration(self):
+        return {
+            'ui': {'type': 'boolean', 'default': False}
+        }
+
     def create_window(self):
         """
         Метод инстанцирует окно и помещает экземпляр в атрибут self.win
@@ -196,6 +202,22 @@ class BaseWindowAction(BaseAction):
         """
         pass
 
+    @property
+    def ui(self):
+        return self.get_absolute_url()
+
+    def get_model(self, request, context):
+        """
+        Возвращает сериализованную viewmodel,
+        которая должна отображаться в окне
+
+        :param request: Request
+        :type request: django.http.HttpRequest
+        :param context: Context
+        :type context: m3.actions.context.DeclarativeActionContext
+        """
+        return {}
+
     def run(self, request, context):
         """
         Тело Action, вызывается при обработке запроса к серверу.
@@ -209,19 +231,25 @@ class BaseWindowAction(BaseAction):
 
            Обычно не требует перекрытия
         """
-        new_self = copy.copy(self)
-        new_self.win_params = (
-            getattr(self.__class__, 'win_params', None) or {}
-        ).copy()
-        new_self.request = request
-        new_self.context = context
-        new_self.set_window_params()
-        new_self.create_window()
-        new_self._apply_window_params()
-        new_self.configure_window()
-        return ui_results.ExtUIScriptResult(
-            new_self.win, context=new_self.context)
-
+        if context.ui:
+            new_self = copy.copy(self)
+            new_self.win_params = (
+                getattr(self.__class__, 'win_params', None) or {}
+            ).copy()
+            new_self.request = request
+            new_self.context = context
+            new_self.set_window_params()
+            new_self.create_window()
+            new_self._apply_window_params()
+            new_self.configure_window()
+            result = ui_results.UIResult(new_self.win)
+        else:
+            result = ui_results.DataResult(
+                model=self.get_model(request, context),
+                ui=self.ui,
+                context=context
+            )
+        return result
 
 #==============================================================================
 # ObjectListWindowAction
@@ -285,14 +313,7 @@ class ObjectEditWindowAction(BaseWindowAction):
     perm_code = 'edit'
 
     def set_window_params(self):
-        try:
-            obj, create_new = self.parent.get_obj(self.request, self.context)
-        except self.parent.get_not_found_exception():
-            raise ApplicationLogicException(self.parent.MSG_DOESNOTEXISTS)
-
         params = self.win_params.copy()
-        params['object'] = obj
-        params['create_new'] = create_new
         params['form_url'] = self.parent.save_action.get_absolute_url()
 
         read_only = getattr(self.parent, 'read_only', None) or (
@@ -301,7 +322,7 @@ class ObjectEditWindowAction(BaseWindowAction):
         params['read_only'] = read_only
         params['title'] = self.parent.format_window_title(
             u'Просмотр' if read_only else
-            u'Добавление' if create_new else
+            #u'Добавление' if create_new else
             u'Редактирование'
         )
 
@@ -311,13 +332,20 @@ class ObjectEditWindowAction(BaseWindowAction):
                 params, self.request, self.context))
 
     def create_window(self):
-        assert 'create_new' in self.win_params, (
-            u'You must call "set_window_params" method of superclass!')
+        # assert 'create_new' in self.win_params, (
+        #     u'You must call "set_window_params" method of superclass!')
+        create_new = False
         self.win = self.handle(
             'create_window',
             self.parent.create_edit_window(
-                self.win_params['create_new'], self.request, self.context))
+                create_new, self.request, self.context))
 
+    def get_model(self, request, context):
+        # модель редактирования предоставляет пак
+        return self.handle(
+            'get_editing_model',
+            self.parent.get_editing_model(request, context)
+        )
 
 #==============================================================================
 # ObjectAddWindowAction
@@ -329,10 +357,7 @@ class ObjectAddWindowAction(ObjectEditWindowAction):
     .. note::
         Отдельный action для уникальности short_name
     """
-
     perm_code = 'add'
-
-    pass
 
 
 #==============================================================================
@@ -1488,6 +1513,18 @@ class ObjectPack(BasePack, ISelectablePack):
             return self.add_window()
         else:
             return self.edit_window()
+
+    def get_editing_model(self, request, context):
+        try:
+            obj, create_new = self.get_obj(request, context)
+        except self.get_not_found_exception():
+            raise ApplicationLogicException(self.parent.MSG_DOESNOTEXISTS)
+        model = self.serialize(obj)
+        model['_new'] = create_new
+        return model
+
+    def serialize(self, obj):
+        return model_to_dict(obj)
 
     def create_list_window(self, is_select_mode, request, context):
         """

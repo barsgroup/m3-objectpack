@@ -14,12 +14,12 @@ class GarageEditWindow(objectpack.TabbedEditWindow):
         objectpack.ObjectTab.fabricate(
             model=models.Garage, field_list=('name',)
         ),
-        objectpack.ObjectGridTab.fabricate_from_pack(
-            pack_name='objectpack.demo/StaffPack',
-            pack_register=controller.obs,
-        ),
-        objectpack.ObjectGridTab.fabricate_from_pack(
-            pack_name='objectpack.demo/ToolPack',
-            pack_register=controller.obs
-        ),
+        # objectpack.ObjectGridTab.fabricate_from_pack(
+        #     pack_name='objectpack.demo.actions.StaffPack',
+        #     pack_register=controller.obs,
+        # ),
+        # objectpack.ObjectGridTab.fabricate_from_pack(
+        #     pack_name='objectpack.demo.actions.ToolPack',
+        #     pack_register=controller.obs
+        # ),
     ]
