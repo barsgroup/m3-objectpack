@@ -306,158 +306,158 @@ class VirtualModel(object):
 #==============================================================================
 # model_proxy_metaclass
 #==============================================================================
-def model_proxy_metaclass(name, bases, dic):
-    """
-    Метакласс для ModelProxy
-    """
-    model = dic.get('model')
-    relations = dic.get('relations') or []
-
-    if not model:
-        return type(name, bases, dic)
-
-    class LazyMetaData(object):
+class ModelProxyMeta(type):
+    def __new__(cls, name, bases, dic):
         """
-        Дескриптор, реализующий ленивое построение данных,
-        необходимых для работы meta-данных прокси-модели
+        Метакласс для ModelProxy
         """
-        FIELDS, FIELD_DICT = 0, 1
+        model = dic.get('model')
+        relations = dic.get('relations') or []
 
-        _CACHING_ATTR = '_lazy_metadata'
+        if not model:
+            return type(name, bases, dic)
 
-        def __init__(self, attr):
-            self._attr = attr
+        class LazyMetaData(object):
+            """
+            Дескриптор, реализующий ленивое построение данных,
+            необходимых для работы meta-данных прокси-модели
+            """
+            FIELDS, FIELD_DICT = 0, 1
 
-        def __get__(self, inst, clazz):
-            assert inst is None  # дескриптор должен работать только для класса
-            cache = getattr(clazz, self._CACHING_ATTR, None)
-            if not cache:
-                cache = self._collect_metadata()
-                setattr(clazz, self._CACHING_ATTR, cache)
-            return cache[self._attr]
+            _CACHING_ATTR = '_lazy_metadata'
 
-        def _collect_metadata(self):
-            # сбор полей основной модели и указанных моделей, связанных с ней
-            def add_prefix(field, prefix):
-                field = copy.copy(field)
-                field.attname = '%s.%s' % (prefix, field.attname)
-                return field
+            def __init__(self, attr):
+                self._attr = attr
 
-            def submeta(meta, path):
-                for field in path.split('.'):
-                    meta = meta.get_field(field).related.parent_model._meta
-                return meta
+            def __get__(self, inst, clazz):
+                assert inst is None  # дескриптор должен работать только для класса
+                cache = getattr(clazz, self._CACHING_ATTR, None)
+                if not cache:
+                    cache = self._collect_metadata()
+                    setattr(clazz, self._CACHING_ATTR, cache)
+                return cache[self._attr]
 
-            meta = model._meta
-            fields_ = []
-            fields_dict = {}
-            for prefix, meta in [(model.__name__.lower(), meta)] + [
-                    (rel, submeta(meta, rel)) for rel in relations]:
-                for f in meta.fields:
-                    f = add_prefix(f, prefix)
-                    fields_.append(f)
-                    fields_dict[f.attname] = f
+            def _collect_metadata(self):
+                # сбор полей основной модели и указанных моделей, связанных с ней
+                def add_prefix(field, prefix):
+                    field = copy.copy(field)
+                    field.attname = '%s.%s' % (prefix, field.attname)
+                    return field
 
-            return fields_, fields_dict
+                def submeta(meta, path):
+                    for field in path.split('.'):
+                        meta = meta.get_field(field).related.parent_model._meta
+                    return meta
 
-    # django-подобный класс метаинформации о модели
-    class BaseMeta(object):
-        fields = LazyMetaData(LazyMetaData.FIELDS)
-        field_dict = LazyMetaData(LazyMetaData.FIELD_DICT)
+                meta = model._meta
+                fields_ = []
+                fields_dict = {}
+                for prefix, meta in [(model.__name__.lower(), meta)] + [
+                        (rel, submeta(meta, rel)) for rel in relations]:
+                    for f in meta.fields:
+                        f = add_prefix(f, prefix)
+                        fields_.append(f)
+                        fields_dict[f.attname] = f
 
-        verbose_name = model._meta.verbose_name
-        verbose_name_plural = model._meta.verbose_name_plural
+                return fields_, fields_dict
 
-        @classmethod
-        def get_field(cls, field_name):
-            return cls.field_dict[field_name]
+        # django-подобный класс метаинформации о модели
+        class BaseMeta(object):
+            fields = LazyMetaData(LazyMetaData.FIELDS)
+            field_dict = LazyMetaData(LazyMetaData.FIELD_DICT)
 
-    meta_mixin = dic.pop('Meta', None)
-    if meta_mixin:
-        dic['_meta'] = type('_meta', (meta_mixin, BaseMeta), {})
-    else:
-        dic['_meta'] = BaseMeta
+            verbose_name = model._meta.verbose_name
+            verbose_name_plural = model._meta.verbose_name_plural
 
-    relations_for_select = [r.replace('.', '__') for r in relations]
+            @classmethod
+            def get_field(cls, field_name):
+                return cls.field_dict[field_name]
 
-    # обёртка над QueryManager
-    class WrappingManager(object):
+        meta_mixin = dic.pop('Meta', None)
+        if meta_mixin:
+            dic['_meta'] = type('_meta', (meta_mixin, BaseMeta), {})
+        else:
+            dic['_meta'] = BaseMeta
 
-        def __init__(self, manager, proxy=None):
-            self._manager = manager
-            self._proxy_cls = proxy
-            self._query = None
+        relations_for_select = [r.replace('.', '__') for r in relations]
 
-        def _get_query(self):
-            if not self._query:
-                try:
-                    self._query = self._manager._clone()
-                except AttributeError:
-                    self._query = self._manager
-            return self._query.select_related(*relations_for_select)
+        # обёртка над QueryManager
+        class WrappingManager(object):
 
-        def __get__(self, inst, clz):
-            if inst:
-                raise TypeError(
-                    "Manager can not be accessed from model instance!")
-            return self.__class__(self._manager, clz)
+            def __init__(self, manager, proxy=None):
+                self._manager = manager
+                self._proxy_cls = proxy
+                self._query = None
 
-        def __iter__(self):
-            # при итерации по объектам выборки основной модели,
-            # каждый объект оборачивается в Proxy
-            for item in self._get_query():
-                yield self._proxy_cls(item)
+            def _get_query(self):
+                if not self._query:
+                    try:
+                        self._query = self._manager._clone()
+                    except AttributeError:
+                        self._query = self._manager
+                return self._query.select_related(*relations_for_select)
 
-        def get(self, *args, **kwargs):
-            return self._proxy_cls(self._get_query().get(*args, **kwargs))
+            def __get__(self, inst, clz):
+                if inst:
+                    raise TypeError(
+                        "Manager can not be accessed from model instance!")
+                return self.__class__(self._manager, clz)
 
-        def iterator(self):
-            return iter(self)
+            def __iter__(self):
+                # при итерации по объектам выборки основной модели,
+                # каждый объект оборачивается в Proxy
+                for item in self._get_query():
+                    yield self._proxy_cls(item)
 
-        def __getitem__(self, *args):
-            def wrap(obj):
-                if isinstance(obj, (list, dict)):
-                    return obj
-                return self._proxy_cls(obj)
+            def get(self, *args, **kwargs):
+                return self._proxy_cls(self._get_query().get(*args, **kwargs))
 
-            result = self._get_query().__getitem__(*args)
+            def iterator(self):
+                return iter(self)
 
-            if isinstance(result, Iterable):
-                return map(wrap, result)
-            else:
-                return wrap(result)
+            def __getitem__(self, *args):
+                def wrap(obj):
+                    if isinstance(obj, (list, dict)):
+                        return obj
+                    return self._proxy_cls(obj)
 
-        def __getattr__(self, attr):
-            # все атрибуты, которые не перекрыты,
-            # берутся в Manager`е базовой модели
-            if attr in self.__dict__:
-                return self.__dict__[attr]
-            else:
-                result = getattr(self._manager, attr)
+                result = self._get_query().__getitem__(*args)
 
-                def wrapped(fn):
-                    def inner(*args, **kwargs):
-                        result = fn(*args, **kwargs)
-                        if isinstance(
-                                result,
-                                (manager.Manager, query.QuerySet)):
-                            return self.__class__(result, self._proxy_cls)
-                        return result
-                    return inner
-                if callable(result):
-                    return wrapped(result)
-                return result
+                if isinstance(result, Iterable):
+                    return map(wrap, result)
+                else:
+                    return wrap(result)
 
-    dic['objects'] = WrappingManager(model.objects)
+            def __getattr__(self, attr):
+                # все атрибуты, которые не перекрыты,
+                # берутся в Manager`е базовой модели
+                if attr in self.__dict__:
+                    return self.__dict__[attr]
+                else:
+                    result = getattr(self._manager, attr)
 
-    dic['DoesNotExist'] = model.DoesNotExist
-    dic['MultipleObjectsReturned'] = model.MultipleObjectsReturned
+                    def wrapped(fn):
+                        def inner(*args, **kwargs):
+                            result = fn(*args, **kwargs)
+                            if isinstance(
+                                    result,
+                                    (manager.Manager, query.QuerySet)):
+                                return self.__class__(result, self._proxy_cls)
+                            return result
+                        return inner
+                    if callable(result):
+                        return wrapped(result)
+                    return result
 
-    # создание класса Proxy
-    proxy_class = type(name, bases, dic)
+        dic['objects'] = WrappingManager(model.objects)
 
-    return proxy_class
+        dic['DoesNotExist'] = model.DoesNotExist
+        dic['MultipleObjectsReturned'] = model.MultipleObjectsReturned
 
+        # создание класса Proxy
+        return super(ModelProxyMeta, cls).__new__(cls, name, bases, dic)
+
+model_proxy_metaclass = ModelProxyMeta
 
 #==============================================================================
 # ModelProxy
