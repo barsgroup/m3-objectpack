@@ -307,10 +307,11 @@ class VirtualModel(object):
 # model_proxy_metaclass
 #==============================================================================
 class ModelProxyMeta(type):
+    """
+    Метакласс для ModelProxy
+    """
+
     def __new__(cls, name, bases, dic):
-        """
-        Метакласс для ModelProxy
-        """
         model = dic.get('model')
         relations = dic.get('relations') or []
 
