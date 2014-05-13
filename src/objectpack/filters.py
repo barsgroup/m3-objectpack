@@ -321,26 +321,21 @@ class MenuFilterEngine(AbstractFilterEngine):
         for k, v in self._columns.iteritems():
             params = {
                 'type': v.get('type', 'string'),
-                'data_index': k
+                'dataIndex': k
             }
             f_options = v.get('options', [])
             if callable(f_options):
                 f_options = f_options()
-            params['options'] = "[%s]" % ','.join(
-                (("'%s'" % item)
-                 if isinstance(item, basestring) else
-                 ((item is None and '[]') or ("['%s','%s']" % item)))
-                for item in f_options)
-            filter_items.append("""{
-                type:'%(type)s',
-                dataIndex:'%(data_index)s',
-                options:%(options)s
-            }""" % params)
+
+            params['options'] = f_options
+
+            filter_items.append(params)
+
         if filter_items:
-            plugin = (
-                "new Ext.ux.grid.GridFilters({filters:[%s]})" %
-                ','.join(filter_items)
-            )
+            plugin = {
+                'ptype': 'gridfilters',
+                'filters': filter_items
+            }
             grid.plugins.append(plugin)
 
     def apply_filter(self, query, request, context):

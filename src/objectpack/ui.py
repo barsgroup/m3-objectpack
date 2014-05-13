@@ -547,7 +547,7 @@ class ModelEditWindow(BaseEditWindow):
 
     model = None
     """
-    Модель, для которой будет строится окно
+    Модель, для которой будет строиться окно
     """
 
     field_fabric_params = None
@@ -573,7 +573,7 @@ class ModelEditWindow(BaseEditWindow):
 
         # автоматически вычисляемая высота окна
         self.height = None
-        self.layout = 'form'
+        self.layout = self.FORM
         self.layout_config = {'autoHeight': True}
         self.form.layout_config = {'autoHeight': True}
 
