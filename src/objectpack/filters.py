@@ -181,10 +181,7 @@ class FilterGroup(AbstractFilter):
         """
         .. seealso:: :mod:`objectpack.filters.AbstractFilter.get_script`
         """
-        result = []
-        for item in self._items:
-            result.extend(item.get_script())
-        return result
+        return [x.get_script() for x in self._items]
 
     def get_q(self, params):
         """
@@ -262,13 +259,16 @@ class FilterByField(AbstractFilter):
             self._model._meta.get_field(self._field_name),
             **self._field_fabric_params
         )
-        control._put_config_value('filterName', self._uid)
-        control._put_config_value('tooltip', self._tooltip or control.label)
+        setattr(control, 'filterName', self._uid)
+        setattr(control, 'tooltip', self._tooltip or control.label)
+
         control.name = self._uid
         control.allow_blank = True
         control.hide_clear_trigger = False
-        control.value = None
-        return [control.render()]
+
+        control._config.pop('value', None)  # value не должно попадать, иначе контролы подсветяться
+        control._config.pop('defaultValue', None)  # для ComboBoxWithStore
+        return control
 
 
 class CustomFilter(AbstractFilter):
@@ -300,14 +300,15 @@ class CustomFilter(AbstractFilter):
         """
         .. seealso:: :mod:`objectpack.filters.AbstractFilter.get_script`
         """
-        control = [
-            u'filterName: "%s"' % self._uid,
-            u'xtype: "%s"' % self._xtype,
-        ]
+        control = {
+            'filterName': self._uid,
+            'xtype': self._xtype
+        }
+
         if self._tooltip:
-            control.append(u'tooltip: "%s"' % self._tooltip)
-        control = u'{%s}' % u','.join(control)
-        return [control]
+            control['tooltip'] = self._tooltip
+
+        return control
 
 
 class MenuFilterEngine(AbstractFilterEngine):
@@ -411,11 +412,11 @@ class ColumnFilterEngine(AbstractFilterEngine):
         """
         .. seealso:: :mod:`objectpack.filters.AbstractFilterEngine.configure_grid`
         """
-        grid.plugins.append('new Ext.ux.grid.GridHeaderFilters()')
+        grid.plugins.append({'ptype': 'ux-grid-header-filter'})
 
         _new = {}
         for data_index, filter_obj in self._columns.iteritems():
-            _new[data_index] = u'[%s]' % (u','.join(filter_obj.get_script()))
+            _new[data_index] = filter_obj.get_script()
 
         for col in grid.columns:
             if col.data_index in _new:

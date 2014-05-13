@@ -70,7 +70,7 @@ class BaseWindow(ext_windows.ExtWindow):
         self.title = params.get('title', getattr(self, 'title', None)) or u''
         self.width = params.get('width', self.width)
         self.height = params.get('height', self.height)
-        self.maximized = params.get('maximized', getattr(self, 'title', None))
+        self.maximized = params.get('maximized', getattr(self, 'maximized', None))
 
         if params.get('read_only'):
             self.make_read_only()
@@ -105,22 +105,14 @@ class BaseEditWindow(ext_windows.ExtEditWindow, BaseWindow):
     Базовое окно редактирования (с формой и кнопкой сабмита)
     """
 
-    @property
-    def form(self):
-        """
-        Форма окна
-        """
-        # Хак для совместимости с m3
-        return self.__form
-
     def _init_components(self):
         """
         .. seealso::
             :func:`objectpack.ui.BaseWindow._init_components`
         """
         super(BaseEditWindow, self)._init_components()
-        self.__form = ext.ExtForm()
-        self.items.append(self.form)
+
+        self.form = ext.ExtForm()
 
         self.save_btn = ext.ExtButton(
             text=u'Сохранить', handler="submitForm")
@@ -189,7 +181,7 @@ class BaseListWindow(BaseWindow):
         .. seealso::
             :func:`objectpack.ui.BaseWindow._do_layout`
         """
-        self.layout = 'fit'
+        self.layout = self.FIT
         self.items.append(self.grid)
         self.buttons.append(self.btn_close)
 
@@ -202,6 +194,7 @@ class BaseListWindow(BaseWindow):
         """
         super(BaseListWindow, self).set_params(params)
         self.maximizable = self.minimizable = True
+
         assert 'pack' in params, (
             u'Параметры окна должны содержать экземпляр ActionPack'
             u' настраивающего grid!'
@@ -1057,15 +1050,11 @@ class ObjectTab(WindowTab):
     """
     Вкладка редактирования полей объекта
     """
+    # Модель, для которой будет строится окно
     model = None
-    """
-    Модель, для которой будет строится окно
-    """
 
+    # Словарь kwargs для model_fields_to_controls ("field_list", и т.д.)
     field_fabric_params = None
-    """
-    Словарь kwargs для model_fields_to_controls ("field_list", и т.д.)
-    """
 
     @property
     def title(self):
@@ -1154,6 +1143,7 @@ class ComboBoxWithStore(ext.ExtDictSelectField):
             self.store.root = 'rows'
         else:
             self.store = ext_store.ExtDataStore(data or ((0, ''),))
+            self.mode = self.store.LOCAL
 
     @property
     def data(self):
