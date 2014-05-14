@@ -76,7 +76,7 @@ class TreeObjectPack(objectpack.ObjectPack):
         ):
             # id может и не прийти,
             # если добавление производится в корень
-            decl['parent_id'] = {'type': tools.int_or_zero, 'default': 0}
+            decl['parent_id'] = {'type': tools.int_or_none, 'default': None}
         return decl
 
 

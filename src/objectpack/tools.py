@@ -425,13 +425,25 @@ def cached_to(attr_name):
 #==============================================================================
 def int_or_zero(s):
     """
-    Парсер для декларации контекста
+    >>> int_or_zero('')
+    0
+    >>> int_or_zero('10')
+    10
     """
     return 0 if not s else int(s)
 
+def int_or_none(s):
+    """
+    >>> int_or_none('')
+    None
+    >>> int_or_none('10')
+    10
+    """
+    return None if not s else int(s)
 
 def int_list(s):
     """
-    Парсер для декларации контекста
+    >>> int_list('10,20, 30')
+    [10, 20, 30]
     """
     return [int(i.strip()) for i in s.split(',')]
