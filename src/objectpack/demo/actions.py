@@ -34,6 +34,7 @@ class PersonObjectPack(objectpack.ObjectPack):
             'header': u'ФИО',
             'sortable': True,
             'sort_fields': ('name', 'surname'),
+
             'filter': {
                 'type': 'string',
                 'custom_field': ('name', 'surname')
@@ -41,6 +42,7 @@ class PersonObjectPack(objectpack.ObjectPack):
         },
         {
             'data_index': 'date_of_birth',
+            "searchable": True,
             'header': u'Дата рождения',
             'filter': {
                 'type': 'date'
@@ -220,6 +222,7 @@ class SelectPersonAction(objectpack.SelectorWindowAction):
     """
     Экшн отображения списка физ.лиц
     """
+
     def configure_action(self, request, context):
         self.callback_url = self.parent.save_staff_action.get_absolute_url()
         self.data_pack = self.parent._get_model_pack('Person')

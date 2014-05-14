@@ -222,6 +222,7 @@ class BaseListWindow(BaseWindow):
             fltr = self.grid_filters[column_name]
         else:
             fltr = {}
+
         fltr[filter_name] = {
             'column_name': column_name,
             'filter_control': filter_control,
