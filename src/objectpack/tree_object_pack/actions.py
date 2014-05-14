@@ -6,6 +6,8 @@ Author: Rinat F Sabitov
 
 import objectpack
 
+from objectpack import tools
+
 from m3 import actions as m3_actions
 
 import ui
@@ -66,15 +68,15 @@ class TreeObjectPack(objectpack.ObjectPack):
     def declare_context(self, action):
         decl = super(TreeObjectPack, self).declare_context(action)
         if action is self.new_window_action:
-            # id может и не прийти,
-            # если добавление производится в корень
             decl[self.id_param_name]['default'] = 0
         if action in (
             self.edit_window_action,
             self.new_window_action,
             self.save_action
         ):
-            decl['parent_id'] = {'type': 'int', 'default': 0}
+            # id может и не прийти,
+            # если добавление производится в корень
+            decl['parent_id'] = {'type': tools.int_or_zero, 'default': 0}
         return decl
 
 
