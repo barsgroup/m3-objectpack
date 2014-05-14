@@ -443,14 +443,15 @@ class ColumnsConstructor(object):
             if is_top_level:
                 if not self._cleaned():
                     return 0  # чистка
-                level = self._normalized_depth()  # нормализация уровней
+                self._normalized_depth()  # нормализация уровней
+                level = 1
             else:
                 grid.add_banded_column(self._column, level, 0)
 
             if not self.items:
                 return 0
 
-            cnt = sum([i._populate(grid, level - 1) for i in self.items])
+            cnt = sum([i._populate(grid, level + 1) for i in self.items])
             self._column.colspan = cnt
 
             return cnt
