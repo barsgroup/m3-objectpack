@@ -128,12 +128,12 @@ class BaseWindowAction(BaseAction):
     Базовый Action показа окна
     """
     def context_declaration(self):
-        decl = super(BaseWindowAction, self).context_declaration()
-        # TODO: контекст неьзя декларировать условно, посему пока зазгушка
-        # ибо не приходит id объекта, при вызове экшна с ui=true
-        decl[self.parent.id_param_name]['default'] = None
-        decl['ui'] = {'type': 'boolean', 'default': False}
-        return decl
+        ui_flag_decl = {'ui': {'type': 'boolean', 'default': False}}
+        inherited = super(BaseWindowAction, self).context_declaration()
+        return ('ui', {
+            'true': ui_flag_decl,
+            None: inherited.update(ui_flag_decl) or inherited
+        })
 
     def create_window(self):
         """

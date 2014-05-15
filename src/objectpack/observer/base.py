@@ -101,16 +101,17 @@ class ObservableController(ObservableMixin, m3_actions.ActionController):
                         ))
                 return default
 
-    def build_context(self, request, rules):
-        """
-        Выполняет построение контекста вызова операции ActionContext
-        на основе переданного request
-        """
-        if isinstance(rules, dict):
-            from django.conf import settings
-            return self.VerboseDeclarativeContext(debug=settings.DEBUG)
-        else:
-            return m3_actions.ActionContext()
+    # INFO: Всё! Кончилось время боли! Кто не успел, тот опоздал
+    # def build_context(self, request, rules):
+    #     """
+    #     Выполняет построение контекста вызова операции ActionContext
+    #     на основе переданного request
+    #     """
+    #     if isinstance(rules, dict):
+    #         from django.conf import settings
+    #         return self.VerboseDeclarativeContext(debug=settings.DEBUG)
+    #     else:
+    #         return m3_actions.ActionContext()
 
 
 #==============================================================================
