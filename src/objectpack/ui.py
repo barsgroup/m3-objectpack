@@ -68,8 +68,10 @@ class BaseWindow(ext_windows.ExtWindow):
         :type params: dict
         """
         self.title = params.get('title', getattr(self, 'title', None)) or u''
-        self.width = params.get('width', self.width)
-        self.height = params.get('height', self.height)
+        if 'width' in params:
+            self.width = params['width']
+        if 'height' in params:
+            self.height = params['height']
         self.maximized = params.get('maximized', getattr(self, 'maximized', None))
 
         if params.get('read_only'):
@@ -574,7 +576,7 @@ class ModelEditWindow(BaseEditWindow):
         super(ModelEditWindow, self)._do_layout()
 
         # автоматически вычисляемая высота окна
-        self.height = None
+        #self.height = None
         self.layout = self.FORM
         self.layout_config = {'autoHeight': True}
         self.form.layout_config = {'autoHeight': True}
