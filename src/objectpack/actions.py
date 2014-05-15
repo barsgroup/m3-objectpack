@@ -128,9 +128,12 @@ class BaseWindowAction(BaseAction):
     Базовый Action показа окна
     """
     def context_declaration(self):
-        return {
-            'ui': {'type': 'boolean', 'default': False}
-        }
+        decl = super(BaseWindowAction, self).context_declaration()
+        # TODO: контекст неьзя декларировать условно, посему пока зазгушка
+        # ибо не приходит id объекта, при вызове экшна с ui=true
+        decl[self.parent.id_param_name]['default'] = None
+        decl['ui'] = {'type': 'boolean', 'default': False}
+        return decl
 
     def create_window(self):
         """
@@ -1236,7 +1239,7 @@ class ObjectPack(BasePack, ISelectablePack):
             self.new_window_action,
             self.save_action
         ):
-            result = {self.id_param_name: {'type': tools.int_or_zero}}
+            result = {self.id_param_name: {'type': tools.int_or_none}}
         elif action is self.delete_action:
             result = {self.id_param_name: {'type': tools.int_list}}
         return result
@@ -1753,7 +1756,7 @@ class ObjectPack(BasePack, ISelectablePack):
         :return: Объект модели self.model
         :rtype: django.db.models.Model
         """
-        if row_id == 0:
+        if row_id is None:
             record = self.model()
         else:
             record = self.model.objects.get(id=row_id)
