@@ -56,8 +56,9 @@ class TreeObjectPack(objectpack.ObjectPack):
     def create_edit_window(self, create_new, request, context):
         win = super(TreeObjectPack, self).create_edit_window(
             create_new, request, context)
-        if hasattr(context, 'parent_id'):
-            win.form.from_object({'parent_id': int(context.parent_id)})
+        parent_id = getattr(context, 'parent_id', None)
+        if context.parent_id is not None:
+            win.form.from_object({'parent_id': parent_id})
         return win
 
     def save_row(self, obj, create_new, request, context):
