@@ -119,7 +119,7 @@ class BaseEditWindow(ext_windows.ExtEditWindow, BaseWindow):
         self.save_btn = ext.ExtButton(
             text=u'Сохранить', handler="submitForm")
         self.cancel_btn = ext.ExtButton(
-            text=u'Отмена', handler="cancelForm")
+            text=u'Отмена', handler="close")
 
         # Кнопка "Отмена" не блокируется в режиме "только для чтения"
         self._mro_exclude_list.append(self.cancel_btn)
@@ -130,7 +130,7 @@ class BaseEditWindow(ext_windows.ExtEditWindow, BaseWindow):
             :func:`objectpack.ui.BaseWindow._do_layout`
         """
         super(BaseEditWindow, self)._do_layout()
-        self.modal = True
+        # self.modal = True
 
         self.buttons.extend([
             self.save_btn,
@@ -174,7 +174,7 @@ class BaseListWindow(BaseWindow):
         self.close_btn = self.btn_close = ext.ExtButton(
             name='close_btn',
             text=u'Закрыть',
-#            handler='function(){Ext.getCmp("%s").close();}' % self.client_id
+            handler='close'
         )
         self._mro_exclude_list.append(self.close_btn)
 
@@ -899,7 +899,7 @@ class TabbedWindow(BaseWindow):
         super(TabbedWindow, self)._do_layout()
 
         # настройка отображения окна
-        self.layout = 'fit'
+        self.layout = self.FIT
         self.width, self.height = 600, 450
         self.min_width, self.min_height = self.width, self.height
 
@@ -914,7 +914,7 @@ class TabbedWindow(BaseWindow):
         # размещение контейнера вкладок на форму
         tc = self._tab_container
         tc.anchor = '100%'
-        tc.layout = 'fit'
+        tc.layout = self.FIT
         tc.auto_scroll = True
         self.items.append(tc)
 
