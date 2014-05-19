@@ -35,8 +35,16 @@ class Person(models.Model):
         default=GENDERS[1][0]
     )
 
-    father = models.ForeignKey('self', verbose_name=u'Отец', related_name='father_set')
-    mother = models.ForeignKey('self', verbose_name=u'Мать', related_name='mother_set')
+    father = models.ForeignKey(
+        'self', verbose_name=u'Отец',
+        related_name='father_set',
+        null=True
+    )
+    mother = models.ForeignKey(
+        'self', verbose_name=u'Мать',
+        related_name='mother_set',
+        null=True
+    )
 
     @property
     def fullname(self):

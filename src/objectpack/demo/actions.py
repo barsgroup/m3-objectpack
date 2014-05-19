@@ -6,6 +6,7 @@ from m3 import actions as m3_actions
 import objectpack
 from objectpack import tree_object_pack
 from objectpack.filters import FilterByField, ColumnFilterEngine
+from objectpack.demo.controller import obs
 
 import models
 import ui
@@ -26,7 +27,9 @@ class PersonObjectPack(objectpack.ObjectPack):
     add_to_desktop = True
     add_to_menu = True
 
-    edit_window = add_window = objectpack.ui.ModelEditWindow.fabricate(model)
+    edit_window = add_window = objectpack.ui.ModelEditWindow.fabricate(
+        model, model_register=obs
+    )
 
     columns = [
         {
