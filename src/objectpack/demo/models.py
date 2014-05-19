@@ -9,9 +9,6 @@ from django.db import models
 import objectpack
 
 
-#==============================================================================
-# Person
-#==============================================================================
 class Person(models.Model):
     """
     Физическое лицо
@@ -37,6 +34,9 @@ class Person(models.Model):
         choices=GENDERS,
         default=GENDERS[1][0]
     )
+
+    father = models.ForeignKey('self', verbose_name=u'Отец', related_name='father_set')
+    mother = models.ForeignKey('self', verbose_name=u'Мать', related_name='mother_set')
 
     @property
     def fullname(self):
