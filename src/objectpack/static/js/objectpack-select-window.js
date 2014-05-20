@@ -2,7 +2,7 @@
  * Окно выбора из справочника
  */
 Ext.define('Ext.objectpack.SelectWindow', {
-    extend: 'Ext.Window',
+    extend: 'Ext.m3.Window',
     xtype: 'objectpack-select-window',
 
     multiSelect: false,
