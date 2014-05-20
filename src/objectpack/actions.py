@@ -1531,7 +1531,10 @@ class ObjectPack(BasePack, ISelectablePack):
         return model
 
     def serialize(self, obj):
-        return model_to_dict(obj)
+        if hasattr(obj, 'serialize'):
+            return obj.serialize()
+        else:
+            return model_to_dict(obj)
 
     def create_list_window(self, is_select_mode, request, context):
         """
