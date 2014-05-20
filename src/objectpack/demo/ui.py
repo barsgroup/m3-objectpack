@@ -23,3 +23,16 @@ class GarageEditWindow(objectpack.TabbedEditWindow):
         #     pack_register=controller.obs
         # ),
     ]
+
+
+class PersonCardEditWindow(objectpack.ModelEditWindow):
+    """
+    Окно редактирования карточки физ-лица
+    """
+    model = models.PersonCard
+
+    field_fabric_params = {
+        'exclude_list': [
+            '*_id'
+        ]
+    }

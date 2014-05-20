@@ -58,6 +58,25 @@ class Person(models.Model):
         verbose_name_plural = u'Физические лица'
 
 
+class PersonCard(objectpack.ModelProxy):
+    __metaclass__ = objectpack.models.ModelProxyMeta
+
+    model = Person
+    relations = ['father', 'mother']
+
+    def save(self):
+        self.father.save()
+        self.mother.save()
+        self.person.save()
+
+    def safe_delete(self):
+        self.person.delete()
+
+    class Meta:
+        verbose_name = u'Карточка физ.лица'
+        verbose_name_plural = u'Карточки физ.лиц'
+
+
 #==============================================================================
 # FakeModel
 #==============================================================================

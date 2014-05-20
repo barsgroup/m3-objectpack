@@ -66,6 +66,23 @@ class PersonObjectPack(objectpack.ObjectPack):
     ]
 
 
+class PersonCardObjectPack(PersonObjectPack):
+
+    add_to_desktop = True
+    add_to_menu = True
+
+    model = models.PersonCard
+
+    edit_window = add_window = ui.PersonCardEditWindow
+
+    columns = [
+        {
+            'data_index': 'person.__unicode__',
+            'header': u'ФИО',
+        },
+    ]
+
+
 #==============================================================================
 # CFPersonObjectPack
 #==============================================================================
