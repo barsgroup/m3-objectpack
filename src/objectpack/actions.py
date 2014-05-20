@@ -130,9 +130,11 @@ class BaseWindowAction(BaseAction):
     def context_declaration(self):
         ui_flag_decl = {'ui': {'type': 'boolean', 'default': False}}
         inherited = super(BaseWindowAction, self).context_declaration()
+        inherited.update(ui_flag_decl)
         return ('ui', {
             'true': ui_flag_decl,
-            None: inherited.update(ui_flag_decl) or inherited
+            'false': inherited,
+            None: inherited,
         })
 
     def create_window(self):
