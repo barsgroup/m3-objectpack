@@ -4,6 +4,7 @@
 """
 import copy
 from collections import Iterable
+from operator import attrgetter
 
 from itertools import ifilter, ifilterfalse, islice, imap
 
@@ -535,3 +536,12 @@ class ModelProxy(object):
 
     def safe_delete(self):
         raise NotImplementedError()
+
+    def serialize(self):
+        res = {}
+        for f in self._meta.fields:
+            try:
+                res[f.attname] = attrgetter(f.attname)(self)
+            except AttributeError:
+                pass
+        return res
