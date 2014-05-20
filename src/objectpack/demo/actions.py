@@ -33,6 +33,10 @@ class PersonObjectPack(objectpack.ObjectPack):
 
     columns = [
         {
+            'data_index': '__unicode__',
+            'hidden': True
+        },
+        {
             'data_index': 'fullname',
             'header': u'ФИО',
             'sortable': True,
@@ -170,6 +174,7 @@ class TreePack(tree_object_pack.TreeObjectPack):
             "header": u"Кличка"
         }
     ]
+
 
 #==============================================================================
 # Паки гаражей с инструментом и сотрудницами

@@ -72,6 +72,7 @@ class BaseWindow(ext_windows.ExtWindow):
             self.width = params['width']
         if 'height' in params:
             self.height = params['height']
+
         self.maximized = params.get('maximized', getattr(self, 'maximized', None))
 
         if params.get('read_only'):
@@ -170,7 +171,7 @@ class BaseListWindow(BaseWindow):
         .. seealso::
             :func:`objectpack.ui.BaseWindow._init_components`
         """
-        self.grid = ext.ExtObjectGrid()
+        self.grid = ext.ExtObjectGrid(item_id='grid')
         self.close_btn = self.btn_close = ext.ExtButton(
             name='close_btn',
             text=u'Закрыть',
@@ -296,6 +297,15 @@ class BaseSelectWindow(BaseListWindow):
     """
     Окно выбора из списка объектов
     """
+
+    _xtype = 'objectpack-select-window'
+
+    js_attrs = BaseListWindow.js_attrs.extend(
+        grid_item_id='gridItemId',
+        column_name_on_select='columnNameOnSelect',
+        multi_select='multiSelect',
+    )
+
     def _init_components(self):
         """
         .. seealso::
@@ -303,8 +313,10 @@ class BaseSelectWindow(BaseListWindow):
         """
         super(BaseSelectWindow, self)._init_components()
         self.select_btn = ext.ExtButton(
-            handler='selectValue', text=u'Выбрать')
+            handler='selectValue',
+            text=u'Выбрать')
         self._mro_exclude_list.append(self.select_btn)
+        self.grid_item_id = self.grid.item_id
 
     def _do_layout(self):
         """
@@ -318,6 +330,7 @@ class BaseSelectWindow(BaseListWindow):
         """
         Включает множественный выбор в гриде
         """
+        self.multi_select = True
         self.grid.sm = ext.ExtGridCheckBoxSelModel()
 
     def set_params(self, params):
@@ -328,9 +341,8 @@ class BaseSelectWindow(BaseListWindow):
         super(BaseSelectWindow, self).set_params(params)
         if params.get('multi_select', False):
             self._enable_multi_select()
-        self.template_globals = 'select-window.js'
+
         self.column_name_on_select = params['column_name_on_select']
-        self.grid.handler_dblclick = 'selectValue'
 
 
 #==============================================================================
