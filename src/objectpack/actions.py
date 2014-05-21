@@ -338,13 +338,12 @@ class ObjectEditWindowAction(BaseWindowAction):
                 params, self.request, self.context))
 
     def create_window(self):
-        # assert 'create_new' in self.win_params, (
-        #     u'You must call "set_window_params" method of superclass!')
-        create_new = False
         self.win = self.handle(
             'create_window',
             self.parent.create_edit_window(
-                create_new, self.request, self.context))
+                create_new=False,
+                request=self.request,
+                context=self.context))
 
     def get_model(self, request, context):
         # модель редактирования предоставляет пак
@@ -365,6 +364,13 @@ class ObjectAddWindowAction(ObjectEditWindowAction):
     """
     perm_code = 'add'
 
+    def create_window(self):
+        self.win = self.handle(
+            'create_window',
+            self.parent.create_edit_window(
+                create_new=True,
+                request=self.request,
+                context=self.context))
 
 #==============================================================================
 # ObjectSaveAction
