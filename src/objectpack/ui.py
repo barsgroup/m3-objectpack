@@ -926,7 +926,7 @@ class TabbedWindow(BaseWindow):
         # размещение контейнера вкладок на форму
         tc = self._tab_container
         tc.anchor = '100%'
-        tc.layout = self.FIT
+        # tc.layout = self.FIT
         tc.auto_scroll = True
         self.items.append(tc)
 
