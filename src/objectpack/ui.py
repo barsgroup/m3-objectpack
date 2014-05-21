@@ -962,7 +962,10 @@ class TabbedEditWindow(TabbedWindow, BaseEditWindow):
         super(TabbedEditWindow, self)._do_layout()
         self.items.remove(self._tab_container)
         self.form.items.append(self._tab_container)
-        self.form.layout = 'fit'
+        self.form.layout = self.form.FIT
+
+        self.form.padding = None
+        self._tab_container.border = False
 
 
 #==============================================================================
