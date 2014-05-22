@@ -529,7 +529,7 @@ def model_to_dict(obj, include=None, exclude=None):
             if is_fk and val is not None:
                 val = {
                     'id': getattr(val, 'id', None),
-                    'name': unicode(val)
+                    '__unicode__': unicode(val)
                 }
             res[fld.attname] = val
     return res
