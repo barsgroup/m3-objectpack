@@ -128,12 +128,9 @@ class BaseWindowAction(BaseAction):
     Базовый Action показа окна
     """
     def context_declaration(self):
-        ui_flag_decl = {'ui': {'type': 'boolean', 'default': False}}
         inherited = super(BaseWindowAction, self).context_declaration()
-        inherited.update(ui_flag_decl)
-        return ('ui', {
-            'true': ui_flag_decl,
-            'false': inherited,
+        return ('mode', {
+            'ui': {},
             None: inherited,
         })
 
@@ -236,7 +233,7 @@ class BaseWindowAction(BaseAction):
 
            Обычно не требует перекрытия
         """
-        if context.ui:
+        if context._mode == 'ui':
             new_self = copy.copy(self)
             new_self.win_params = (
                 getattr(self.__class__, 'win_params', None) or {}
