@@ -5,8 +5,10 @@ Created on 23.07.2012
 """
 import datetime
 from functools import wraps
+from operator import attrgetter as _attrgetter
 
-from django.db import transaction
+from django.db import transaction as _transaction
+from django.db.models.fields.related import RelatedField as _RelatedField
 
 
 #==============================================================================
@@ -185,19 +187,19 @@ class TransactionCM(object):
         self._catcher = catcher or self._default_catcher
 
     def __enter__(self):
-        transaction.enter_transaction_management(True, self._using)
-        return transaction
+        _transaction.enter_transaction_management(True, self._using)
+        return _transaction
 
     def __exit__(self, *args):
         result = self._catcher(*args)
         if result:
-            transaction.commit(self._using)
+            _transaction.commit(self._using)
         else:
-            transaction.rollback(self._using)
+            _transaction.rollback(self._using)
         return result
 
     @staticmethod
-    def _default_catcher(ex_type, ex_inst, traceback):
+    def _default_catcher(ex_type, *args):
         """
         Обработчик исключений, используемый по-умолчанию
         """
@@ -240,26 +242,26 @@ def extract_int_list(request, key):
     return map(int, filter(None, request.REQUEST.get(key, '').split(',')))
 
 
-def str_to_date(s):
+def str_to_date(raw_str):
     """
     Извлечение даты из строки
 
     >>> str_to_date('31.12.2012') == str_to_date('2012-12-31, Happy New Year')
     True
     """
-    if s:
-        s = s[:10]
-        s = s.replace('-', '.')
+    if raw_str:
+        raw_str = raw_str[:10]
+        raw_str = raw_str.replace('-', '.')
         try:
-            s = datetime.datetime.strptime(s, '%d.%m.%Y')
+            raw_str = datetime.datetime.strptime(raw_str, '%d.%m.%Y')
         except ValueError:
             try:
-                s = datetime.datetime.strptime(s, '%Y.%m.%d')
+                raw_str = datetime.datetime.strptime(raw_str, '%Y.%m.%d')
             except ValueError:
-                s = None
+                raw_str = None
     else:
-        s = None
-    return s
+        raw_str = None
+    return raw_str
 
 
 def extract_date(request, key, as_date=False):
@@ -355,9 +357,9 @@ def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
         queryset = queryset.exclude(id=obj.id)
 
     result = []
-    for o in queryset.iterator():
-        bgn = getattr(o, attr_begin, None)
-        end = getattr(o, attr_end, None)
+    for item in queryset.iterator():
+        bgn = getattr(item, attr_begin, None)
+        end = getattr(item, attr_end, None)
         if bgn is None or end is None:
             raise ValueError(
                 u'Среди объектов выборки присутствуют некорректные!')
@@ -369,7 +371,7 @@ def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
                 obj_bgn <= bgn <= obj_end,
                 obj_bgn <= end <= obj_end,
             )):
-                result.append(o)
+                result.append(item)
 
         try:
             add()
@@ -385,14 +387,14 @@ def collect_overlaps(obj, queryset, attr_begin='begin', attr_end='end'):
 #==============================================================================
 # istraversable - проверка на "обходимость"
 #==============================================================================
-def istraversable(x):
+def istraversable(obj):
     """
-    возвращает True, если объект :attr:`x` позволяет обход себя в цикле `for`
+    возвращает True, если объект :attr:`obj` позволяет обход себя в цикле `for`
     """
     return (
-        hasattr(x, '__iter__')
-        or hasattr(x, '__next__')
-        or hasattr(x, '__getitem__')
+        hasattr(obj, '__iter__')
+        or hasattr(obj, '__next__')
+        or hasattr(obj, '__getitem__')
     )
 
 
@@ -407,43 +409,123 @@ def cached_to(attr_name):
     :param attr_name: Куда кэшировать
     :type attr_name: str
     """
-    def wrapper(fn):
-        @wraps(fn)
+    def wrapper(func):
+        @wraps(func)
         def inner(self):
             if hasattr(self, attr_name):
                 result = getattr(self, attr_name)
             else:
-                result = fn(self)
+                result = func(self)
                 setattr(self, attr_name, result)
             return result
         return inner
     return wrapper
 
+#==============================================================================
+def matcher(include=None, exclude=None):
+    """
+    Возвращет предикат, возвращающий True для строк,
+    подходящих под образцы из include и
+    не подходящих под образцы из exclude
+    Образцы имеют вид
+    - 'xyz'  -> строка должна полностью совпасть с образцом
+    - '*xyz' -> строка должна оканчиваться образцом
+    - 'xyz*' -> строка должна начинаться с образца
+
+    >>> filter(matcher(['a*', 'b*', '*s', 'cat', 'dog'], ['*ee', 'dog']),
+    ...        'cat ape apple duck see bee bean knee dog'.split())
+    ['cat', 'ape', 'apple', 'bean']
+
+    >>> filter(mather(include=['*s']), ['hour', 'hours', 'day', 'days'])
+    ['hours', 'days']
+
+    >>> filter(mather(exclude=['*s']), ['hour', 'hours', 'day', 'days'])
+    ['hour', 'day']
+    """
+    def make_checker(patterns, default=True):
+        matchers = []
+        for pattern in list(patterns or ()):
+            if pattern.endswith('*'):
+                func = (lambda p: lambda s: s.startswith(p))(pattern[:-1])
+            elif pattern.startswith('*'):
+                func = (lambda p: lambda s: s.endswith(p))(pattern[1:])
+            else:
+                func = (lambda p: lambda s: s == p)(pattern)
+            matchers.append(func)
+        if matchers:
+            return lambda s: any(func(s) for func in matchers)
+        else:
+            return lambda s: default
+
+    must_be_keeped = make_checker(include)
+    must_be_droped = make_checker(exclude, default=False)
+    return lambda x: must_be_keeped(x) and not must_be_droped(x)
 
 #==============================================================================
 # парсеры для декларации контекста
 #==============================================================================
-def int_or_zero(s):
+def int_or_zero(raw_str):
     """
     >>> int_or_zero('')
     0
     >>> int_or_zero('10')
     10
     """
-    return 0 if not s else int(s)
+    return 0 if not raw_str else int(raw_str)
 
-def int_or_none(s):
+def int_or_none(raw_str):
     """
     >>> int_or_none('')
     None
     >>> int_or_none('10')
     10
     """
-    return None if not s else int(s)
+    return None if not raw_str else int(raw_str)
 
-def int_list(s):
+def int_list(raw_str):
     """
     >>> int_list('10,20, 30')
     [10, 20, 30]
     """
-    return [int(i.strip()) for i in s.split(',')]
+    return [int(i.strip()) for i in raw_str.split(',')]
+
+#==============================================================================
+# model to dict
+#==============================================================================
+def model_to_dict(obj, include=None, exclude=None):
+    """
+    Сериализует объект модели в словарь полностью или частично
+    в зависимости от допусков и исключений
+
+    Исключения и допуски имеют вид:
+    - 'person'
+    - '*_id'
+    - 'user*'
+
+    :type include: list
+    :return: словарь - результат сериализации модели
+    :param exclude: список исключений
+    :type exclude: list
+    :param include: список допусков
+    :rtype: dict
+    """
+    permitted = matcher(include, exclude)
+    res = {}
+    for fld in obj.__class__._meta.fields:
+        attr = fld.attname
+        if permitted(attr):
+            is_fk = isinstance(fld, _RelatedField)
+            if is_fk:
+                assert fld.attname.endswith('_id')
+                attr = attr[:-3]
+            try:
+                val = _attrgetter(attr)(obj)
+            except AttributeError:
+                continue
+            if is_fk:
+                val = {
+                    'id': getattr(val, 'id', None),
+                    'name': unicode(val)
+                }
+            res[fld.attname] = val
+    return res

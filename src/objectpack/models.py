@@ -10,6 +10,8 @@ from itertools import ifilter, ifilterfalse, islice, imap
 
 from django.db.models import query, manager
 
+from tools import model_to_dict as _model_to_dict
+
 
 def kwargs_only(*keys):
     keys = set(keys)
@@ -537,11 +539,13 @@ class ModelProxy(object):
     def safe_delete(self):
         raise NotImplementedError()
 
-    def serialize(self):
-        res = {}
-        for f in self._meta.fields:
-            try:
-                res[f.attname] = attrgetter(f.attname)(self)
-            except AttributeError:
-                pass
-        return res
+    def serialize(self, include=None, exclude=None):
+        if not (include or exclude):
+            # если правила не заданы,
+            # исключаются relations как поля
+            self_name = self.model.__name__.lower()
+            exclude = [
+                ('%s.%s_id' % (self_name, rel))
+                for rel in self.relations
+            ]
+        return _model_to_dict(self, include, exclude)

@@ -82,6 +82,8 @@ class PersonCardObjectPack(PersonObjectPack):
         },
     ]
 
+    serialization_rules = ([], ['*mother_id', '*father_id'])
+
 
 #==============================================================================
 # CFPersonObjectPack

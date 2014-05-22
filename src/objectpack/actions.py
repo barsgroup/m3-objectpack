@@ -16,7 +16,6 @@ import warnings
 
 from django.db.models import fields as dj_fields
 from django.utils.encoding import force_unicode
-from django.forms.models import model_to_dict
 
 from m3 import actions as m3_actions
 from m3.actions.interfaces import ISelectablePack
@@ -945,6 +944,15 @@ class ObjectPack(BasePack, ISelectablePack):
     Класс django-модели, для которой будет формироваться справочник
     """
 
+    serialization_rules = ([], [])
+    """
+    Правила (де)сериализации объектов модели для окон редактирования
+
+    .. note::
+
+        См. параметры include и exclude в (tools.matcher)
+    """
+
     columns = [
         {
             'header': u'Наименование',
@@ -1535,9 +1543,10 @@ class ObjectPack(BasePack, ISelectablePack):
 
     def serialize(self, obj):
         if hasattr(obj, 'serialize'):
-            return obj.serialize()
+            # модель может захотеть сериализоваться сама
+            return obj.serialize(*self.serialization_rules)
         else:
-            return model_to_dict(obj)
+            return tools.model_to_dict(obj, *self.serialization_rules)
 
     def create_list_window(self, is_select_mode, request, context):
         """
