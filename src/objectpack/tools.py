@@ -522,7 +522,11 @@ def model_to_dict(obj, include=None, exclude=None):
                 val = _attrgetter(attr)(obj)
             except AttributeError:
                 continue
-            if is_fk:
+            except Exception as e:
+                if is_fk and isinstance(e, fld.rel.to.DoesNotExist):
+                    continue
+                raise
+            if is_fk and val is not None:
                 val = {
                     'id': getattr(val, 'id', None),
                     'name': unicode(val)
