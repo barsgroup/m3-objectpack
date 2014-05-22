@@ -998,7 +998,8 @@ class ObjectGridTab(WindowTab):
 
     def _create_tab(self):
         tab = super(ObjectGridTab, self)._create_tab()
-        tab.layout = 'fit'
+        tab.padding = None
+        tab.layout = tab.FIT
         return tab
 
     def init_components(self, win):
