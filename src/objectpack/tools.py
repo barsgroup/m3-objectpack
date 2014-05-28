@@ -502,11 +502,13 @@ def model_to_dict(obj, include=None, exclude=None):
     - '*_id'
     - 'user*'
 
+    :param obj: экземпляр модели
+    :type obj: object
+    :param include: список допусков
     :type include: list
-    :return: словарь - результат сериализации модели
     :param exclude: список исключений
     :type exclude: list
-    :param include: список допусков
+    :return: словарь - результат сериализации модели
     :rtype: dict
     """
     permitted = matcher(include, exclude)
@@ -533,3 +535,41 @@ def model_to_dict(obj, include=None, exclude=None):
                 }
             res[fld.attname] = val
     return res
+
+
+def _setattr_deep(obj, attr, value):
+    path = attr.split('.')
+    path, last = path[:-1], path[-1]
+    target = reduce(getattr, path, obj)
+    setattr(target, last, value)
+    return obj
+
+
+def update_model(obj, data, include=None, exclude=None):
+    """
+    Заполняет поля экземпляра модели данными полностью или частично
+    в зависимости от допусков и исключений
+
+    Исключения и допуски имеют вид:
+    - 'person'
+    - '*_id'
+    - 'user*'
+
+    :param obj: экземпляр модели
+    :type obj: object
+    :param data: dict-подобный объект с данными (например, requets.REQUEST)
+    :type data: dict
+    :param include: список допусков
+    :type include: list
+    :param exclude: список исключений
+    :type exclude: list
+    """
+    permitted = matcher(include, exclude)
+    for fld in obj.__class__._meta.fields:
+        attr = fld.attname
+        if permitted(attr) and attr in data:
+            try:
+                _setattr_deep(obj, attr, data[attr])
+            except AttributeError:
+                pass
+    return obj
