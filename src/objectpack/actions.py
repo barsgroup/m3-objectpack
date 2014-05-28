@@ -385,6 +385,13 @@ class ObjectSaveAction(BaseAction):
         """
         pass
 
+    def create_window(self):
+        """
+        Создаёт окно для дальнейшего биндинга в форму из реквеста
+        """
+        self.win = self.parent.create_edit_window(
+            self.create_new, self.request, self.context)
+
     def create_obj(self):
         """
         Метод делегирует паку загрузку объекта из БД / создание нового
@@ -397,12 +404,17 @@ class ObjectSaveAction(BaseAction):
             raise ApplicationLogicException(
                 self.parent.MSG_DOESNOTEXISTS)
 
-    def bind_data(self):
+    def bind_win(self):
         """
         Заполнение полей окна по данным из request
         """
-        self.obj = self.parent.deserialize(
-            self.obj, self.request, self.context)
+        self.win.form.bind_to_request(self.request)
+
+    def bind_to_obj(self):
+        """
+        Заполнение объекта данными из полей окна
+        """
+        self.win.form.to_object(self.obj)
 
     def save_obj(self):
         """
@@ -440,7 +452,9 @@ class ObjectSaveAction(BaseAction):
         new_self.request = request
         new_self.context = context
         new_self.create_obj()
-        new_self.bind_data()
+        new_self.create_window()
+        new_self.bind_win()
+        new_self.bind_to_obj()
         new_self.save_obj()
         return m3_actions.OperationResult()
 
@@ -1533,15 +1547,6 @@ class ObjectPack(BasePack, ISelectablePack):
             return obj.serialize(*self.serialization_rules)
         else:
             return tools.model_to_dict(obj, *self.serialization_rules)
-
-    def deserialize(self, obj, request, context):
-        if hasattr(obj, 'deserialize'):
-            # модель может захотеть сериализоваться сама
-            return obj.deserialize(
-                request.REQUEST, *self.serialization_rules)
-        else:
-            return tools.update_model(
-                obj, request.REQUEST, *self.serialization_rules)
 
     def create_list_window(self, is_select_mode, request, context):
         """
