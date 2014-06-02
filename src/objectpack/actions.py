@@ -20,7 +20,7 @@ from django.utils.encoding import force_unicode
 from m3 import actions as m3_actions
 from m3.actions.interfaces import ISelectablePack
 from m3 import RelatedError, ApplicationLogicException
-from m3.db import safe_delete
+from m3.db import safe_delete, tools as dbtools
 from m3_ext.ui.fields.complex import ExtSearchField
 from m3_ext.ui import results as ui_results
 
@@ -950,7 +950,7 @@ class ObjectPack(BasePack, ISelectablePack):
 
     .. note::
 
-        См. параметры include и exclude в (tools.matcher)
+        См. параметры include и exclude в (m3.db.tools.matcher)
     """
 
     columns = [
@@ -1546,7 +1546,7 @@ class ObjectPack(BasePack, ISelectablePack):
             # модель может захотеть сериализоваться сама
             return obj.serialize(*self.serialization_rules)
         else:
-            return tools.model_to_dict(obj, *self.serialization_rules)
+            return dbtools.model_to_dict(obj, *self.serialization_rules)
 
     def create_list_window(self, is_select_mode, request, context):
         """

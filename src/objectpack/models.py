@@ -10,7 +10,7 @@ from itertools import ifilter, ifilterfalse, islice, imap
 
 from django.db.models import query, manager
 
-from tools import model_to_dict as _model_to_dict
+from m3.db.tools import model_to_dict as _model_to_dict
 
 
 def kwargs_only(*keys):
