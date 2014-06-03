@@ -19,6 +19,7 @@ from django.utils.encoding import force_unicode
 
 from m3 import actions as m3_actions
 from m3.actions.interfaces import ISelectablePack
+from m3.actions import DeclarativeActionContext as _DAC
 from m3 import RelatedError, ApplicationLogicException
 from m3.db import safe_delete, tools as dbtools
 from m3_ext.ui.fields.complex import ExtSearchField
@@ -129,12 +130,11 @@ class BaseWindowAction(BaseAction):
 
     suffixes = ('ui',)
 
-    def context_declaration(self):
-        inherited = super(BaseWindowAction, self).context_declaration()
-        return ('mode', {
-            'ui': {},
-            None: inherited,
-        })
+    def build_context(self, request, suffix):
+        if suffix == 'ui':
+            return _DAC()
+        else:
+            return super(BaseWindowAction, self).build_context(request, suffix)
 
     def create_window(self):
         """
@@ -235,7 +235,6 @@ class BaseWindowAction(BaseAction):
 
            Обычно не требует перекрытия
         """
-        print suffix
         if suffix == 'ui':
             new_self = copy.copy(self)
             new_self.win_params = (
