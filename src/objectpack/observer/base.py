@@ -37,7 +37,7 @@ class ObservableMixin(object):
         self._observer = observer
         self._already_registered = set()
 
-    def _invoke(self, request, action, stack):
+    def _invoke(self, request, action, stack, suffix=None):
         """
         Вызов action под наблюдением
         """
@@ -46,7 +46,8 @@ class ObservableMixin(object):
 
         # обработка контроллером
         with action._catcher as catcher:
-            return super(ObservableMixin, self)._invoke(request, action, stack)
+            return super(ObservableMixin, self)._invoke(
+                request, action, stack, suffix)
         return catcher.result
 
     def append_pack(self, pack):

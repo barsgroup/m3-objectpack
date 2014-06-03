@@ -126,6 +126,9 @@ class BaseWindowAction(BaseAction):
     """
     Базовый Action показа окна
     """
+
+    suffixes = ('ui',)
+
     def context_declaration(self):
         inherited = super(BaseWindowAction, self).context_declaration()
         return ('mode', {
@@ -205,7 +208,7 @@ class BaseWindowAction(BaseAction):
 
     @property
     def ui(self):
-        return self.get_absolute_url()
+        return self.get_absolute_url() + ":ui"
 
     def get_model(self, request, context):
         """
@@ -219,7 +222,7 @@ class BaseWindowAction(BaseAction):
         """
         return {}
 
-    def run(self, request, context):
+    def run(self, request, context, suffix=None):
         """
         Тело Action, вызывается при обработке запроса к серверу.
 
@@ -232,7 +235,8 @@ class BaseWindowAction(BaseAction):
 
            Обычно не требует перекрытия
         """
-        if context._mode == 'ui':
+        print suffix
+        if suffix == 'ui':
             new_self = copy.copy(self)
             new_self.win_params = (
                 getattr(self.__class__, 'win_params', None) or {}
