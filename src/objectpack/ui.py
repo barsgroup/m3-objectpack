@@ -1239,3 +1239,35 @@ deny_blank.__doc__ = """
         controls = map(allow_blank, controls)
 
     """
+
+#==============================================================================
+# BaseMasterDetailWindow
+#==============================================================================
+class MasterDetailWindow(BaseWindow):
+    """
+    Основа для окна master-detail
+    """
+    _xtype = 'objectpack-master-detail-window'
+
+    master_grid_clz = ext.ExtObjectGrid
+    detail_grid_clz = ext.ExtObjectGrid
+
+    def _init_components(self):
+        self.master_grid = self.master_grid_clz()
+        self.detail_grid = self.detail_grid_clz()
+
+    def _do_layout(self):
+        self.layout = 'border'
+        self.master_grid.region = 'west'
+        self.master_grid.width = 300
+        self.detail_grid.region = 'center'
+        self.items.extend([
+            self.master_grid,
+            self.detail_grid
+        ])
+
+    def set_params(self, params):
+        super(MasterDetailWindow, self).set_params(params)
+        params['master_pack'].configure_grid(self.master_grid)
+        params['detail_pack'].configure_grid(self.detail_grid)
+        self.master_param_name = params['master_pack'].id_param_name

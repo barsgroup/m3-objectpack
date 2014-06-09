@@ -198,6 +198,21 @@ class TreePack(tree_object_pack.TreeObjectPack):
 #==============================================================================
 # Паки гаражей с инструментом и сотрудницами
 #==============================================================================
+class GarageMDWindowAction(objectpack.actions.MasterDetailWindowAction):
+
+    @property
+    def detail_pack(self):
+        return self.parent._get_model_pack('GarageTool')
+
+    def set_window_params(self):
+        super(GarageMDWindowAction, self).set_window_params()
+        self.win_params.update({
+            'title': self.parent.title,
+            'width': 600,
+            'height': 400,
+        })
+
+
 class GaragePack(objectpack.ObjectPack):
     """
     Гаражи
@@ -210,12 +225,25 @@ class GaragePack(objectpack.ObjectPack):
     add_window = objectpack.ModelEditWindow.fabricate(model)
     edit_window = ui.GarageEditWindow
 
+    def __init__(self):
+        super(GaragePack, self).__init__()
+        self.md_window_action = GarageMDWindowAction()
+        self.actions.append(self.md_window_action)
+
+    def extend_desktop(self, desk):
+        return [
+            desk.Item(self.title, pack=self.list_window_action),
+            desk.Item(self.title + '(MD)', pack=self.md_window_action),
+        ]
+
 
 class ToolPack(objectpack.SlavePack):
     """
     Инвентарь гаража
     """
     model = models.GarageTool
+
+    _is_primary_for_model = True
 
     parents = ['garage']
 

@@ -24,6 +24,7 @@ from m3 import RelatedError, ApplicationLogicException
 from m3.db import safe_delete, tools as dbtools
 from m3_ext.ui.fields.complex import ExtSearchField
 from m3_ext.ui import results as ui_results
+from m3_ext import UIAction as _UIAction
 
 import ui
 import tools
@@ -2046,3 +2047,27 @@ def multiline_text_window_result(
             data.replace("\n", r"\n").replace(r"'", r'"'))
         )
     )
+
+#-----------------------------------------------------------------------------
+class MasterDetailWindowAction(BaseWindowAction):
+    """
+    Окно, предоставляющее интерфейс "master-detail"
+    """
+    window_clz = ui.MasterDetailWindow
+
+    @property
+    def master_pack(self):
+        return self.parent
+
+    @property
+    def detail_pack(self):
+        return None
+
+    def create_window(self):
+        self.win = self.window_clz()
+
+    def set_window_params(self):
+        self.win_params.update({
+            'master_pack': self.master_pack,
+            'detail_pack': self.detail_pack,
+        })
