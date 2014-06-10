@@ -30,6 +30,8 @@ from actions import (
     SelectorWindowAction,
 
     multiline_text_window_result,
+
+    MasterDetailWindowAction,
 )
 
 from slave_object_pack import SlavePack
@@ -59,6 +61,8 @@ from ui import (
 
     ColumnsConstructor,
     model_fields_to_controls,
+
+    MasterDetailWindow,
 )
 
 from tools import (
