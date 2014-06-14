@@ -357,11 +357,19 @@ class ModelProxyMeta(type):
                 fields_ = []
                 fields_dict = {}
                 for prefix, meta in [(model.__name__.lower(), meta)] + [
-                        (rel, submeta(meta, rel)) for rel in relations]:
+                    (rel, submeta(meta, rel)) for rel in relations
+                ]:
                     for f in meta.fields:
                         f = add_prefix(f, prefix)
                         fields_.append(f)
                         fields_dict[f.attname] = f
+
+                # сами relations должны быть представлены в виде полей
+                # на верхнем уровне
+                for rel in relations:
+                    f = model._meta.get_field(rel)
+                    fields_.append(copy.copy(f))
+                    fields_dict[rel] = f
 
                 return fields_, fields_dict
 
