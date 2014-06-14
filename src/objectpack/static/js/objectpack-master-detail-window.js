@@ -19,7 +19,13 @@ Ext.define('Ext.objectpack.MasterDetailWindow', {
             win.detailGrid.getStore().reload();
         });
         win.detailGrid.getStore().on('beforeload', function(st) {
-            var rec = win.masterGrid.getSelectionModel().getSelected();
+            var rec = (
+                win.masterGrid.getSelectionModel().getSelected
+                && win.masterGrid.getSelectionModel().getSelected()
+            ) || (
+                win.masterGrid.getSelectionModel().getSelectedNode
+                && win.masterGrid.getSelectionModel().getSelectedNode()
+            );
             if (rec !== undefined) {
                 st.setBaseParam(win.masterParamName, rec.id);
             } else {
