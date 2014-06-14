@@ -10,25 +10,23 @@ Ext.define('Ext.objectpack.MasterDetailWindow', {
 
     masterParamName: null,
 
+    getMaster: function() {
+        var sm = this.masterGrid.getSelectionModel();
+        return (sm.getSelected && sm.getSelected()) || (
+            sm.getSelectedNode && sm.getSelectedNode());
+    },
+
     initComponent: function(){
         var win = this;
         win.callParent();
         win.masterGrid = win.find('itemId', 'master_grid')[0];
         win.detailGrid = win.find('itemId', 'detail_grid')[0];
         win.masterGrid.getSelectionModel().on('selectionchange', function(){
+            win.getContext()[win.masterParamName] = win.getMaster().id;
             win.detailGrid.getStore().reload();
         });
         win.detailGrid.getStore().on('beforeload', function(st) {
-            var rec = (
-                win.masterGrid.getSelectionModel().getSelected
-                && win.masterGrid.getSelectionModel().getSelected()
-            ) || (
-                win.masterGrid.getSelectionModel().getSelectedNode
-                && win.masterGrid.getSelectionModel().getSelectedNode()
-            );
-            if (rec !== undefined) {
-                st.setBaseParam(win.masterParamName, rec.id);
-            } else {
+            if (win.getMaster() == undefined) {
                 return false;
             };
         });
