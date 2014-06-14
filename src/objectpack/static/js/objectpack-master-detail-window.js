@@ -22,8 +22,12 @@ Ext.define('Ext.objectpack.MasterDetailWindow', {
         win.masterGrid = win.find('itemId', 'master_grid')[0];
         win.detailGrid = win.find('itemId', 'detail_grid')[0];
         win.masterGrid.getSelectionModel().on('selectionchange', function(){
-            win.getContext()[win.masterParamName] = win.getMaster().id;
-            win.detailGrid.getStore().reload();
+            var master = win.getMaster();
+            // выделение снимается при некоторых действиях в окне
+            if (master) {
+                win.getContext()[win.masterParamName] = master.id;
+                win.detailGrid.getStore().reload();
+            }
         });
         win.detailGrid.getStore().on('beforeload', function(st) {
             if (win.getMaster() == undefined) {
