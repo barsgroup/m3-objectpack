@@ -28,7 +28,6 @@ Ext.define('Ext.objectpack.MasterDetailWindow', {
         });
         win.detailGrid.getStore().on('beforeload', function(st) {
             var m = win.getMaster();
-            console.log(m && m.id || 0);
             st.setBaseParam(
                 win.masterParamName,
                 (m && m.id) || 0
