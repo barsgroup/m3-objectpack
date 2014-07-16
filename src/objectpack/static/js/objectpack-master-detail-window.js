@@ -22,6 +22,8 @@ Ext.define('Ext.objectpack.MasterDetailWindow', {
         win.masterGrid = win.find('itemId', 'master_grid')[0];
         win.detailGrid = win.find('itemId', 'detail_grid')[0];
         win.masterGrid.getSelectionModel().on('selectionchange', function(){
+            var m = win.getMaster();
+            win.getContext()[this.masterParamName] = m && m.id || 0;
             win.detailGrid.getStore().reload();
         });
         win.detailGrid.getStore().on('beforeload', function(st) {
