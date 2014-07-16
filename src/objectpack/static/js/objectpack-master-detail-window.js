@@ -26,12 +26,12 @@ Ext.define('Ext.objectpack.MasterDetailWindow', {
             win.getContext()[win.masterParamName] = m && m.id || 0;
             win.detailGrid.getStore().reload();
         });
-        win.detailGrid.getStore().on('beforeload', function(st) {
-            var m = win.getMaster();
-            st.setBaseParam(
-                win.masterParamName,
-                (m && m.id) || 0
-            );
+        win.detailGrid.getStore().on('beforeload', function(st, options) {
+            var m = win.getMaster(),
+                newOptions = {};
+
+            newOptions[win.masterParamName] = (m && m.id) || 0;
+            options.params = Ext.applyIf(newOptions, options.params);
         });
     },
 

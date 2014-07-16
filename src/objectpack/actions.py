@@ -9,7 +9,6 @@
 
 import copy
 import datetime
-import inspect
 import types
 import json
 import warnings
@@ -24,7 +23,7 @@ from m3 import RelatedError, ApplicationLogicException
 from m3.db import safe_delete, tools as dbtools
 from m3_ext.ui.fields.complex import ExtSearchField
 from m3_ext.ui import results as ui_results
-from m3_ext import UIAction as _UIAction
+
 
 import ui
 import tools
