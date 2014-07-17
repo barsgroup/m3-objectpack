@@ -31,8 +31,7 @@ class TreeObjectPack(objectpack.ObjectPack):
     def get_rows_query(self, request, context):
         result = super(TreeObjectPack, self).get_rows_query(request, context)
         # данные грузятся поуровнево только есть не указан фильтр
-        filter_in_params = bool(request.REQUEST.get('filter'))
-        if not filter_in_params:
+        if not context.filter:
             # данные подгружаются "поуровнево", для чего
             # запрос содержит id узла, из которого поддерево "растет"
             current_node_id = objectpack.extract_int(
@@ -78,6 +77,8 @@ class TreeObjectPack(objectpack.ObjectPack):
             # id может и не прийти,
             # если добавление производится в корень
             decl['parent_id'] = {'type': tools.int_or_none, 'default': None}
+        elif action is self.rows_action:
+            decl['filter'] = {'type': 'unicode', 'default': ''}
         return decl
 
 
@@ -112,7 +113,7 @@ class TreeObjectRowsAction(objectpack.ObjectRowsAction):
         Сериализация объекта
         """
         data = super(TreeObjectRowsAction, self).prepare_object(obj)
-        data['leaf'] = self.is_leaf(obj)
+        data['leaf'] = self.is_leaf(obj) or bool(self.context.filter)
         return data
 
     def run(self, *args, **kwargs):
