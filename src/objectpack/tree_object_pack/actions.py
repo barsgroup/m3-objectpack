@@ -1,7 +1,6 @@
 #coding: utf-8
 """
 Действия для работы с древовидными справочниками
-Author: Rinat F Sabitov
 """
 
 import objectpack
@@ -113,6 +112,8 @@ class TreeObjectRowsAction(objectpack.ObjectRowsAction):
         Сериализация объекта
         """
         data = super(TreeObjectRowsAction, self).prepare_object(obj)
+        # при указанном фильтре данные выводятся плоским списком
+        # т.е. все записи - листья
         data['leaf'] = self.is_leaf(obj) or bool(self.context.filter)
         return data
 
