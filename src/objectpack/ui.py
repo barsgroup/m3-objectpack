@@ -62,18 +62,23 @@ class BaseWindow(ext_windows.ExtWindow):
         .. note::
 
             Параметры могут содержать общие настройки окна (title, width,
-            height, maximized) и флаг режима для чтения (read_only)
+            height, maximized...) и флаг режима для чтения (read_only)
 
         :param params: Словарь с параметрами
         :type params: dict
         """
-        self.title = params.get('title', getattr(self, 'title', None)) or u''
-        if 'width' in params:
-            self.width = params['width']
-        if 'height' in params:
-            self.height = params['height']
 
-        self.maximized = params.get('maximized', getattr(self, 'maximized', None))
+        def apply(attr):
+            if attr in params:
+                setattr(self, attr, params[attr])
+
+        apply('width')
+        apply('height')
+        apply('maximized')
+        apply('maximizable')
+        apply('minimizable')
+        apply('title')
+        self.title = self.title or u''
 
         if params.get('read_only'):
             self.make_read_only()
