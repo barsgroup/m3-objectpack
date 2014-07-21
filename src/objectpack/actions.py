@@ -1502,7 +1502,8 @@ class ObjectPack(BasePack, ISelectablePack):
         grid.row_id_name = self.id_param_name
         grid.allow_paging = self.allow_paging
         # NR: нынче стора нету у нас, а пагинацию надо бы пробросить
-        #grid.store.remote_sort = self.allow_paging
+        if hasattr(grid, 'store'):
+            grid.store.remote_sort = self.allow_paging
 
         self._filter_engine.configure_grid(grid)
 
