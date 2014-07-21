@@ -55,7 +55,7 @@ class TreeObjectPack(objectpack.ObjectPack):
         win = super(TreeObjectPack, self).create_edit_window(
             create_new, request, context)
         parent_id = getattr(context, 'parent_id', None)
-        if context.parent_id is not None:
+        if parent_id is not None:
             win.form.from_object({'parent_id': parent_id})
         return win
 
@@ -66,8 +66,6 @@ class TreeObjectPack(objectpack.ObjectPack):
 
     def declare_context(self, action):
         decl = super(TreeObjectPack, self).declare_context(action)
-        if action is self.new_window_action:
-            decl[self.id_param_name]['default'] = 0
         if action in (
             self.edit_window_action,
             self.new_window_action,

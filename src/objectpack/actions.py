@@ -357,11 +357,19 @@ class ObjectEditWindowAction(BaseWindowAction):
 class ObjectAddWindowAction(ObjectEditWindowAction):
     """
     Базовый Action показа окна добавления объекта.
-
-    .. note::
-        Отдельный action для уникальности short_name
     """
     perm_code = 'add'
+
+    def build_context(self, *args, **kwargs):
+        ctx = super(ObjectAddWindowAction, self).build_context(*args, **kwargs)
+        id_param = self.parent.id_param_name
+        assert not hasattr(ctx, id_param), (
+            'Экшн создания нового объекта не должен получать id param '
+            'своего пака!'
+        )
+        # т.к. создается новый объект, id param должен быть "пустым"
+        setattr(ctx, id_param, None)
+        return ctx
 
     def create_window(self):
         self.win = self.handle(
@@ -1253,7 +1261,6 @@ class ObjectPack(BasePack, ISelectablePack):
         result = super(ObjectPack, self).declare_context(action)
         if action in (
             self.edit_window_action,
-            self.new_window_action,
             self.save_action
         ):
             result = {self.id_param_name: {'type': tools.int_or_none}}
@@ -1541,7 +1548,8 @@ class ObjectPack(BasePack, ISelectablePack):
         try:
             obj, create_new = self.get_obj(request, context)
         except self.get_not_found_exception():
-            raise ApplicationLogicException(self.parent.MSG_DOESNOTEXISTS)
+            raise ApplicationLogicException(
+                self.MSG_DOESNOTEXISTS)
         model = self.serialize(obj)
         model['_new'] = create_new
         return model
@@ -1779,7 +1787,7 @@ class ObjectPack(BasePack, ISelectablePack):
         :return: Объект модели self.model
         :rtype: django.db.models.Model
         """
-        if row_id is None:
+        if not row_id:
             record = self.model()
         else:
             record = self.model.objects.get(id=row_id)
@@ -1797,7 +1805,7 @@ class ObjectPack(BasePack, ISelectablePack):
         :rtype: tuple
         """
         obj_id = getattr(context, self.id_param_name)
-        create_new = (obj_id == 0)
+        create_new = not obj_id
         record = self.get_row(obj_id)
         return record, create_new
 
