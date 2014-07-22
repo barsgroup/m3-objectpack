@@ -1,9 +1,9 @@
 /**
  * Окно выбора из справочника
  */
-Ext.define('Ext.objectpack.SelectWindow', {
+Ext.define('Ext.objectpack.BaseTreeSelectWindow', {
     extend: 'Ext.m3.Window',
-    xtype: 'objectpack-select-window',
+    xtype: 'tree-select-window',
 
     multiSelect: false,
     columnNameOnSelect: null,
@@ -12,19 +12,19 @@ Ext.define('Ext.objectpack.SelectWindow', {
 
     grid: null,
 
-    initComponent: function(){
+    initComponent: function () {
         this.callParent();
         this.grid = this.find(this.gridItemId)[0];
 
         this.grid.un('dblclick', this.grid.onEditRecord);
-        this.grid.on('rowdblclick', function(cmp, rowIndex, e){
+        this.grid.on('dblclick', function (cmp, rowIndex, e) {
             this.selectValue();
         }, this);
     },
 
     isGridSelected: function (grid, title, message) {
-        var res = true;
-        if (!grid.getSelectionModel().hasSelection()) {
+        res = true;
+        if (!grid.getSelectionModel().getSelectedNode()) {
             Ext.Msg.show({
                 title: title,
                 msg: message,
@@ -33,10 +33,11 @@ Ext.define('Ext.objectpack.SelectWindow', {
             });
             res = false;
         }
+        ;
         return res;
     },
 
-    selectValue: function () {
+    selectValue: function() {
         var id, displayText;
 
         var grid = this.grid;
@@ -45,11 +46,10 @@ Ext.define('Ext.objectpack.SelectWindow', {
         }
 
         if (this.multiSelect) {
-            var selections = grid.selModel.getSelections(),
+            var selections = [grid.selModel.getSelectedNode(), ],
                 len = selections.length,
                 ids = [],
                 displayTexts = [];
-
             for (var i = 0; i < len; i += 1) {
                 ids.push(selections[i].id);
                 displayTexts.push(selections[i].get(this.columnNameOnSelect));
@@ -57,8 +57,8 @@ Ext.define('Ext.objectpack.SelectWindow', {
             id = ids.join(',');
             displayText = displayTexts.join(', ');
         } else {
-            id = grid.getSelectionModel().getSelected().id;
-            displayText = grid.getSelectionModel().getSelected().get(this.columnNameOnSelect);
+            id = grid.getSelectionModel().getSelectedNode().id;
+            displayText = grid.getSelectionModel().getSelectedNode().attributes[this.columnNameOnSelect];
         }
 
         if (this.callbackUrl) {
@@ -81,9 +81,9 @@ Ext.define('Ext.objectpack.SelectWindow', {
         } else {
             if (id && displayText) {
                 this.fireEvent('select', this, id, displayText);
+                this.fireEvent('closed_ok', id, displayText);
             }
             this.close();
         }
     }
 });
-

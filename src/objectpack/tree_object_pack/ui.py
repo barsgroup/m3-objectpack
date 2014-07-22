@@ -35,6 +35,7 @@ class BaseTreeSelectWindow(BaseSelectWindow):
     """
     Окно выбора объекта из древовидного списка
     """
+    _xtype = 'tree-select-window'
 
     def _init_components(self):
         """
@@ -43,10 +44,3 @@ class BaseTreeSelectWindow(BaseSelectWindow):
         super(BaseTreeSelectWindow, self)._init_components()
         self.grid = BaseObjectTree()
         self.grid.dblclick_handler = 'selectValue'
-
-    def set_params(self, params):
-        """
-        установка параметров окна
-        """
-        super(BaseTreeSelectWindow, self).set_params(params)
-        self.template_globals = 'tree-select-window.js'

@@ -22,6 +22,7 @@ class TreeObjectPack(objectpack.ObjectPack):
 
     list_window = ui.BaseTreeListWindow
     select_window = ui.BaseTreeSelectWindow
+    enable_sort = True
 
     def __init__(self, *args, **kwargs):
         super(TreeObjectPack, self).__init__(*args, **kwargs)
@@ -45,6 +46,7 @@ class TreeObjectPack(objectpack.ObjectPack):
 
     def configure_grid(self, grid):
         super(TreeObjectPack, self).configure_grid(grid)
+        grid.enable_sort = self.enable_sort
         grid.action_data = self.rows_action
         if not self.read_only:
             grid.action_new = self.new_window_action
