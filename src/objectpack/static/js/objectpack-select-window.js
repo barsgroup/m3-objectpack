@@ -14,12 +14,31 @@ Ext.define('Ext.objectpack.SelectWindow', {
 
     initComponent: function(){
         this.callParent();
-        this.grid = this.find(this.gridItemId)[0];
+        this.grid = this.findByItemId(this.gridItemId);
 
         this.grid.un('dblclick', this.grid.onEditRecord);
         this.grid.on('rowdblclick', function(cmp, rowIndex, e){
             this.selectValue();
         }, this);
+
+        this.on('loadselected', this.onLoad, this);
+        this.grid.getStore().on('datachanged', function(){
+            this.fireEvent('loadselected');
+        }, this);
+    },
+
+    onLoad: function(item){
+
+        var recordIds = [],
+            store = this.grid.getStore();
+
+        Ext.each(store.data.items, function(value, index){
+            if (value.json['selected']){
+                recordIds.push(index);
+            }
+        }, this);
+
+        this.grid.getSelectionModel().selectRows(recordIds);
     },
 
     isGridSelected: function (grid, title, message) {
@@ -62,6 +81,7 @@ Ext.define('Ext.objectpack.SelectWindow', {
         }
 
         if (this.callbackUrl) {
+            // NR необходимо заменить на UI.callAction
             Ext.Ajax.request({
                 url: this.callbackUrl,
                 success: function (res) {

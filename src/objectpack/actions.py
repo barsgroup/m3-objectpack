@@ -264,7 +264,14 @@ class ObjectListWindowAction(BaseWindowAction):
     Базовый Action показа окна списка объектов
     """
     is_select_mode = False
-    """Режим показа окна (True - выбор, False - список)"""
+    """Режим показа окна
+    (True - выбор одного значения,
+    False - список)"""
+
+    is_multi_select_mode = False
+    """Режим показа окна
+    (True - выбор нескольких значений,
+    False - список)"""
 
     perm_code = 'view'
     """Код доступа"""
@@ -272,6 +279,7 @@ class ObjectListWindowAction(BaseWindowAction):
     def set_window_params(self):
         params = self.win_params
         params['is_select_mode'] = self.is_select_mode
+        params['multi_select'] = self.is_multi_select_mode
         params['pack'] = self.parent
         params['title'] = self.parent.title
         params['height'] = self.parent.height
@@ -306,6 +314,14 @@ class ObjectSelectWindowAction(ObjectListWindowAction):
         self.win_params['read_only'] = True
         self.win_params['column_name_on_select'] = (
             self.parent.column_name_on_select)
+
+
+class ObjectMultiSelectWindowAction(ObjectSelectWindowAction):
+    """
+    Базовый Action показа окна списка выбора нескольких объектов из списка
+    """
+
+    is_multi_select_mode = True
 
 
 #==============================================================================
@@ -1156,12 +1172,16 @@ class ObjectPack(BasePack, ISelectablePack):
         self.list_window_action = ObjectListWindowAction()
         #: Экшен показа окна со списком для выбора объектов
         self.select_window_action = ObjectSelectWindowAction()
+         #: Экшен показа окна со списком для выбора объектов
+        self.multi_select_window_action = ObjectMultiSelectWindowAction()
+
         #: Экшен с получения данных объектов / редактирование строк
         self.rows_action = ObjectRowsAction()
         # Но привязать их все равно нужно
         self.actions.extend([
             self.list_window_action,
             self.select_window_action,
+            self.multi_select_window_action,
             self.rows_action
         ])
         if self.add_window and not self.read_only:
