@@ -1276,3 +1276,4 @@ class MasterDetailWindow(BaseWindow):
         params['master_pack'].configure_grid(self.master_grid)
         params['detail_pack'].configure_grid(self.detail_grid)
         self.master_param_name = params['master_pack'].id_param_name
+        self.choose_master_msg = params.get('choose_master_msg')

@@ -33,9 +33,23 @@ Ext.define('Ext.objectpack.MasterDetailWindow', {
             newOptions[win.masterParamName] = (m && m.id) || 0;
             options.params = Ext.applyIf(newOptions, options.params);
         });
+        win.detailGrid.on('beforenewrequest', function(){
+            if (!win.getMaster()) {
+                Ext.Msg.show({
+                    title: 'Внимание!',
+                    msg: win.chooseMasterMsg,
+                    buttons: Ext.MessageBox.CANCEL,
+                    icon: Ext.MessageBox.ERROR,
+                });
+                return false;
+            };
+        });
     },
 
     bind: function(data) {
         this.masterParamName = data['master_param_name'];
+        this.chooseMasterMsg = data['choose_master_msg'] || (
+            'Сначала выберите родительский элемент!'
+        );
     },
 });
