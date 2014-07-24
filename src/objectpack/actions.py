@@ -1279,13 +1279,13 @@ class ObjectPack(BasePack, ISelectablePack):
         :rtype: dict
         """
         result = super(ObjectPack, self).declare_context(action)
-        if action in (
-            self.edit_window_action,
-            self.save_action
-        ):
-            result = {self.id_param_name: {'type': tools.int_or_none}}
+        if action is self.save_action:
+            result = {self.id_param_name: {'type': 'int_or_none',
+                                           'default': None}}
+        elif action is self.edit_window_action:
+            result = {self.id_param_name: {'type': 'int'}}
         elif action is self.delete_action:
-            result = {self.id_param_name: {'type': tools.int_list}}
+            result = {self.id_param_name: {'type': 'int_list'}}
         return result
 
     def get_default_action(self):
