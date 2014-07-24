@@ -1824,7 +1824,7 @@ class ObjectPack(BasePack, ISelectablePack):
         :return: (Объект модели self.model, create_new)
         :rtype: tuple
         """
-        obj_id = getattr(context, self.id_param_name)
+        obj_id = getattr(context, self.id_param_name, None)
         create_new = not obj_id
         record = self.get_row(obj_id)
         return record, create_new
