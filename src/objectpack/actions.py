@@ -1571,7 +1571,6 @@ class ObjectPack(BasePack, ISelectablePack):
             raise ApplicationLogicException(
                 self.MSG_DOESNOTEXISTS)
         model = self.serialize(obj)
-        model['_new'] = create_new
         return model
 
     def serialize(self, obj):
