@@ -32,6 +32,8 @@ def register_actions():
         actions.GaragePack(),
         actions.ToolPack(),
         actions.StaffPack(),
+
+        actions.ROStaffPack(),
     ])
 
 

@@ -204,16 +204,16 @@ class FilterByField(AbstractFilter):
     u"""
     Фильтр на основе поля модели
     """
-    #: Соответсвие парсеров и стандартных полей модели
+    #: Отображение стандартных полей модели в парсеры и лукапы
     parsers_map = [
-        (models.DateField, 'date'),
-        (models.TimeField, 'time'),
-        (models.DateTimeField, 'datetime'),
-        (models.BooleanField, 'boolean'),
-        (models.FloatField, 'float'),
-        (models.DecimalField, 'decimal'),
-        ((models.IntegerField, models.ForeignKey), 'int'),
-        ((models.TextField, models.CharField), 'unicode'),
+        (models.DateField, 'date', None),
+        (models.TimeField, 'time', None),
+        (models.DateTimeField, 'datetime', None),
+        (models.BooleanField, 'boolean', None),
+        (models.FloatField, 'float', None),
+        (models.DecimalField, 'decimal', None),
+        ((models.IntegerField, models.ForeignKey), 'int', None),
+        ((models.TextField, models.CharField), 'unicode', '%s__icontains'),
     ]
 
     _model = None
@@ -231,32 +231,40 @@ class FilterByField(AbstractFilter):
         :type model: django.db.models.Model
         :param filed_name: имя поля модели
         :type field_name: str
-        :param lookup: строка-lookup для DjangoORM,
+        :param lookup: либо строка-lookup для DjangoORM,
+            допускающая шаблоны вида "%s__lte",
             либо функция вида (lookup_param -> Q-object)
         :param tooltip: текст всплывающей подсказки
         :type tooltip: str
         :param field_fabric_params: Параметры для инициализации контрола фильтра
         :type field_fabric_params: dict
         """
+        field_name = field_name.replace('.', '__')
         self._model = model
         self._field_name = field_name
-        self._lookup = lookup or (lambda x: models.Q(**{field_name: x}))
         self._tooltip = tooltip
         self._field_fabric_params = field_fabric_params
-        fld = self._model._meta.get_field(self._field_name)
-        for bases, parser_key in self.parsers_map:
-            if isinstance(fld, bases):
+        for bases, parser_key, default_lookup in self.parsers_map:
+            if isinstance(self.field, bases):
                 self._parser = DeclarativeActionContext._parsers[parser_key]
                 break
         else:
             raise TypeError('Unsupported field type: %r' % fld)
+        lookup = lookup or default_lookup
+        if lookup:
+            # шаблонизация лукапа, если петтерн указан
+            if not callable(lookup) and '%s' in lookup:
+                lookup = lookup % field_name
+        else:
+            lookup = lambda x: models.Q(**{field_name: x})
+        self._lookup = lookup
 
     def get_script(self):
         """
         .. seealso:: :mod:`objectpack.filters.AbstractFilter.get_script`
         """
         control = _create_control_for_field(
-            self._model._meta.get_field(self._field_name),
+            self.field,
             **self._field_fabric_params
         )
         setattr(control, 'filterName', self._uid)
@@ -269,6 +277,18 @@ class FilterByField(AbstractFilter):
         control._config.pop('value', None)  # value не должно попадать, иначе контролы подсветяться
         control._config.pop('defaultValue', None)  # для ComboBoxWithStore
         return control
+
+    @property
+    def field(self):
+        path = self._field_name.split('__')
+        def get(model, fld, path):
+            res = model._meta.get_field(fld)
+            if path:
+                return get(res.rel.to, path[0], path[1:])
+            return res
+        res = get(self._model, path[0], path[1:])
+        self.__dict__['field'] = res # кэшируем
+        return res
 
 
 class CustomFilter(AbstractFilter):

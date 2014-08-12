@@ -12,9 +12,6 @@ import models
 import ui
 
 
-_PF = partial(FilterByField, models.Person)
-
-
 #==============================================================================
 # PersonObjectPack
 #==============================================================================
@@ -102,6 +99,8 @@ class CFPersonObjectPack(objectpack.ObjectPack):
 
     filter_engine_clz = ColumnFilterEngine
 
+    F = partial(FilterByField, model)
+
     columns = [
         {
             'data_index': 'fullname',
@@ -109,22 +108,21 @@ class CFPersonObjectPack(objectpack.ObjectPack):
             'sortable': True,
             'sort_fields': ('name', 'surname'),
             'filter': (
-                _PF('name', 'name__icontains') &
-                _PF('surname', 'surname__icontains')
+                F('name') & F('surname')
             )
         },
         {
             'data_index': 'date_of_birth',
             'header': u'Дата рождения',
             'filter': (
-                _PF('date_of_birth', 'date_of_birth__gte', tooltip=u'с') &
-                _PF('date_of_birth', 'date_of_birth__lte', tooltip=u'по')
+                F('date_of_birth', '%s__gte', tooltip=u'с') &
+                F('date_of_birth', '%s__lte', tooltip=u'по')
             )
         },
         {
             'data_index': 'gender',
             'header': u'Пол',
-            'filter': _PF('gender')
+            'filter': F('gender')
         }
     ]
 
@@ -270,6 +268,35 @@ class StaffPack(objectpack.SlavePack):
 
         self.replace_action('new_window_action', self.select_person_action)
         self.actions.append(self.save_staff_action)
+
+
+class ROStaffPack(objectpack.ObjectPack):
+    """
+    Сотрудники гаража для отображения на раб.столе
+    Демонстрирует колоночные фильтры с лукапом вглубь
+    """
+    model = models.GarageStaff
+
+    add_to_menu = add_to_desktop = True
+
+    filter_engine_clz = ColumnFilterEngine
+
+    F = partial(FilterByField, model)
+
+    columns = [
+        {
+            'header': u'ФИО',
+            'data_index': 'person',
+            'filter': (
+                F('person__name') & F('person__surname')
+            )
+        },
+        {
+            'header': u'Гараж',
+            'data_index': 'garage',
+            'filter': F('garage__name')
+        },
+    ]
 
 
 class SelectPersonAction(objectpack.SelectorWindowAction):
