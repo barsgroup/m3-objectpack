@@ -23,9 +23,12 @@ Ext.define('Ext.objectpack.MasterDetailWindow', {
         win.detailGrid = win.find('itemId', 'detail_grid')[0];
         win.masterGrid.getSelectionModel().on('selectionchange', function(){
             var m = win.getMaster();
-            win.getContext()[win.masterParamName] = m && m.id || 0;
-            win.detailGrid.getStore().reload();
+            if (m !== undefined) {
+                win.getContext()[win.masterParamName] = m;
+                win.detailGrid.getStore().reload();
+            }
         });
+
         win.detailGrid.getStore().on('beforeload', function(st, options) {
             var m = win.getMaster(),
                 newOptions = {};
@@ -33,6 +36,9 @@ Ext.define('Ext.objectpack.MasterDetailWindow', {
             newOptions[win.masterParamName] = (m && m.id) || 0;
             options.params = Ext.applyIf(newOptions, options.params);
         });
+
+        return;
+
         win.detailGrid.on('beforenewrequest', function(){
             if (!win.getMaster()) {
                 Ext.Msg.show({
