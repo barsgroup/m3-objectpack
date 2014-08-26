@@ -37,8 +37,6 @@ Ext.define('Ext.objectpack.MasterDetailWindow', {
             options.params = Ext.applyIf(newOptions, options.params);
         });
 
-        return;
-
         win.detailGrid.on('beforenewrequest', function(){
             if (!win.getMaster()) {
                 Ext.Msg.show({
