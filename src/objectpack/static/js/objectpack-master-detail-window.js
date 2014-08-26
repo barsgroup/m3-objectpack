@@ -24,7 +24,7 @@ Ext.define('Ext.objectpack.MasterDetailWindow', {
         win.masterGrid.getSelectionModel().on('selectionchange', function(){
             var m = win.getMaster();
             if (m !== undefined) {
-                win.getContext()[win.masterParamName] = m;
+                win.getContext()[win.masterParamName] = m.id;
                 win.detailGrid.getStore().reload();
             }
         });
