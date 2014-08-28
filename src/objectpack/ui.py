@@ -182,7 +182,10 @@ class BaseListWindow(BaseWindow):
             text=u'Закрыть',
             handler='function(){Ext.getCmp("%s").close();}' % self.client_id
         )
-        self._mro_exclude_list.append(self.close_btn)
+        self._mro_exclude_list.extend([
+            self.close_btn,
+            self.grid.top_bar.button_refresh
+        ])
 
     def _do_layout(self):
         """
@@ -336,6 +339,15 @@ class BaseSelectWindow(BaseListWindow):
         self.column_name_on_select = params['column_name_on_select']
         self.grid.handler_dblclick = 'selectValue'
 
+
+class BaseMultiSelectWindow(BaseSelectWindow):
+    """
+    Окно множественного выбора в ExtMultiSelectWindow
+    """
+    def set_params(self, params):
+        super(BaseMultiSelectWindow, self).set_params(params)
+        self._enable_multi_select()
+        self.template_globals = 'multi-select-window.js'
 
 #==============================================================================
 # ColumnsConstructor
