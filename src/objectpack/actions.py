@@ -1178,9 +1178,6 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         self.list_window_action = ObjectListWindowAction()
         #: Экшен показа окна со списком для выбора объектов
         self.select_window_action = ObjectSelectWindowAction()
-         #: Экшен показа окна со списком для выбора объектов
-        self.multi_select_window_action = ObjectMultiSelectWindowAction()
-
         #: Экшен с получения данных объектов / редактирование строк
         self.multi_select_window_action = ObjectMultiSelectWindowAction()
         #: Экшен с получения данных объектов / редактирование строк

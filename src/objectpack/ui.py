@@ -357,10 +357,11 @@ class BaseMultiSelectWindow(BaseSelectWindow):
     """
     Окно множественного выбора в ExtMultiSelectWindow
     """
+    _xtype = 'objectpack-multi-select-window'
+
     def set_params(self, params):
         super(BaseMultiSelectWindow, self).set_params(params)
         self._enable_multi_select()
-        self.template_globals = 'multi-select-window.js'
 
 #==============================================================================
 # ColumnsConstructor
