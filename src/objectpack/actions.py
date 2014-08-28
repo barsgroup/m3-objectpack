@@ -17,8 +17,8 @@ from django.db.models import fields as dj_fields
 from django.utils.encoding import force_unicode
 
 from m3 import actions as m3_actions
-from m3.actions.interfaces import ISelectablePack
 from m3.actions import DeclarativeActionContext as _DAC
+from m3.actions.interfaces import ISelectablePack, IMultiSelectablePack
 from m3 import RelatedError, ApplicationLogicException
 from m3.db import safe_delete, tools as dbtools
 from m3_ext.ui.fields.complex import ExtSearchField
@@ -68,6 +68,7 @@ class BaseAction(m3_actions.Action):
 
     def get_perm_code(self, subpermission=None):
         """
+        Возвращает код права
 
         :param subpermission: Код подправа доступа
         :type subpermission: str
@@ -320,9 +321,8 @@ class ObjectMultiSelectWindowAction(ObjectSelectWindowAction):
     """
     Базовый Action показа окна списка выбора нескольких объектов из списка
     """
-
-    is_multi_select_mode = True
-
+    def create_window(self):
+        self.win = self.parent.multi_select_window()
 
 #==============================================================================
 # ObjectEditWindowAction
@@ -869,7 +869,7 @@ class BasePack(m3_actions.ActionPack):
 #==============================================================================
 # ObjectPack
 #==============================================================================
-class ObjectPack(BasePack, ISelectablePack):
+class ObjectPack(BasePack, IMultiSelectablePack):
     """
     Пак с экшенам, реализующими специфичную для работы с моделью действиями по
     добавлению, редактированию, удалению (CRUD actions)
@@ -1117,9 +1117,15 @@ class ObjectPack(BasePack, ISelectablePack):
     Класс отвечающий за отображение окна со списком объектов
     """
 
-    select_window = ui.BaseSelectWindow  # Форма выбора @UndefinedVariable
+    select_window = ui.BaseSelectWindow  # Форма выбора
     """
     Класс отвечающий за отображение окна выбора из списка объектов
+    """
+
+    multi_select_window = ui.BaseMultiSelectWindow  # Форма выбора
+    """
+    Класс отвечающий за отображение окна множественного выбора
+    из списка объектов
     """
 
     width, height = 600, 400
@@ -1175,6 +1181,8 @@ class ObjectPack(BasePack, ISelectablePack):
          #: Экшен показа окна со списком для выбора объектов
         self.multi_select_window_action = ObjectMultiSelectWindowAction()
 
+        #: Экшен с получения данных объектов / редактирование строк
+        self.multi_select_window_action = ObjectMultiSelectWindowAction()
         #: Экшен с получения данных объектов / редактирование строк
         self.rows_action = ObjectRowsAction()
         # Но привязать их все равно нужно
@@ -1428,6 +1436,18 @@ class ObjectPack(BasePack, ISelectablePack):
         """
         return self.select_window_action.get_absolute_url()
 
+    def get_multi_select_url(self):
+        """
+        Возвращает адрес формы выбора из списка элементов справочника.
+
+        .. note::
+            Используется для присвоения адресов в прикладном приложении
+
+        :return: url экшена показа окна выбора из списка объектов
+        :rtype: str
+        """
+        return self.multi_select_window_action.get_absolute_url()
+
     def get_edit_url(self):
         """
         Возвращает адрес формы редактирования элемента справочника
@@ -1456,6 +1476,10 @@ class ObjectPack(BasePack, ISelectablePack):
         :rtype: str
         """
         return self.get_rows_url()
+
+    def get_display_dict(self, key, value_field='id', display_field='name'):
+        print key, value_field, display_field
+        return []
 
     def get_not_found_exception(self):
         """
