@@ -120,6 +120,7 @@ class _UIFabric(object):
     """
     pack_method = ''  # для метода для расширения UI
     pack_flag = ''  # флаг расширения UI простым путём (напр.для справочников)
+    icon_flag = '' # флаг иконки
     # метод расширения UI (_add_to_XXX, обернутый в staticmethod, если нужно)
     ui_extend_method = lambda *args: None
 
@@ -176,7 +177,11 @@ class _UIFabric(object):
         try:
             assert pack.title
             if getattr(pack, self.pack_flag, False):
-                return self.Item(name=pack.title, pack=pack)
+                # дефолтная иконка из m3_ext.ui.app_ui.DesktopLauncher
+                return self.Item(
+                    name=pack.title, 
+                    pack=pack, 
+                    icon=getattr(pack, self.icon_flag, 'default-launcher'))
             else:
                 return None
         except (AttributeError, AssertionError):
@@ -250,6 +255,7 @@ class MainMenu(_BaseMenu):
     """
     pack_method = 'extend_menu'
     pack_flag = 'add_to_menu'
+    icon_flag = 'icon_to_menu'
     ui_extend_method = staticmethod(_add_to_menu)
 
     TO_ROOT = None
@@ -304,6 +310,7 @@ class TopMenu(MainMenu):
     """
     pack_method = 'extend_top_menu'
     pack_flag = 'add_to_top_menu'
+    icon_flag = 'icon_to_top_menu'
     ui_extend_method = staticmethod(_add_to_top_menu)
 
 
@@ -316,4 +323,5 @@ class Desktop(_UIFabric):
     """
     pack_method = 'extend_desktop'
     pack_flag = 'add_to_desktop'
+    icon_flag = 'icon_to_desktop'
     ui_extend_method = staticmethod(_add_to_desktop)
