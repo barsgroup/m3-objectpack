@@ -41,6 +41,10 @@ class ObservableMixin(object):
         """
         Вызов action под наблюдением
         """
+        if not self._observer._is_configured:
+            # конфижим листенеры только понеобходимости
+            self._observer.configure()
+
         stack = stack[:]
         self._observer._prepare_for_listening(action, request, stack)
 
@@ -123,7 +127,7 @@ class Observer(object):
     # уровни детализации отладочного логировния
     LOG_NONE, LOG_WARNINGS, LOG_CALLS, LOG_MORE = 0, 1, 2, 3
 
-    class _BeforAfterPack:
+    class _BeforeAfterPack:
         """
         Обертка для списка слушателей, реализующая вызов before/after
         в соответствии с приоритетом, определяемым порякрм слушателей
@@ -186,6 +190,8 @@ class Observer(object):
         self._model_register = {}
         self._pack_instances_by_name = {}
 
+        self._is_configured = False
+
     def get(self, model_name):
         """
         Поиск экземпляра ActionPack для модели по имени её класса.
@@ -229,9 +235,9 @@ class Observer(object):
 
         return name
 
-    def _reconfigure(self):
+    def configure(self):
         """
-        Перестройка дерева сопоставления экшнов со слушателями
+        Построение дерева сопоставления экшнов со слушателями
         """
         self._action_listeners = {}
         # слушатели сортируются по приоритету
@@ -250,6 +256,8 @@ class Observer(object):
                         'Action linked:\n\tshort_name\t "%s"'
                         '\n\tListener\t %r' % (name, listener))
             self._action_listeners[name] = action_listeners
+
+        self._is_configured = True
 
     def _populate_pack(self, pack):
         """
@@ -299,7 +307,8 @@ class Observer(object):
                     'because this name registered for %r!'
                     % (name, action, self._actions[name]))
             self._actions[name] = action
-        self._reconfigure()
+
+        self._is_configured = False
 
     def subscribe(self, listener):
         """
@@ -324,7 +333,7 @@ class Observer(object):
             self.LOG_MORE,
             'Listener registered:\n\tListener %r' % listener)
 
-        self._reconfigure()
+        self._is_configured = False
 
         return listener
 
@@ -414,7 +423,7 @@ class Observer(object):
         # если подписчики есть, в стек паков добавляется "пак",
         # реализующий подписку на before/after
         if listeners:
-            stack.insert(0, self._BeforAfterPack(
+            stack.insert(0, self._BeforeAfterPack(
                 action, listeners,
                 # инжекция логирования
                 logger=lambda msg: self._log(self.LOG_CALLS, msg)
