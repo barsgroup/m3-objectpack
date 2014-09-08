@@ -741,6 +741,10 @@ def _create_control_for_field(f, model_register=None, **kwargs):
 
     elif isinstance(f, django_models.IntegerField):
         ctl = ext.ExtNumberField(**kwargs)
+        ctl.allow_decimals = False
+        if isinstance(f, (django_models.PositiveIntegerField,
+                          django_models.PositiveSmallIntegerField)):
+            ctl.allow_negative = False
 
     elif isinstance(f, django_models.FloatField):
         ctl = ext.ExtNumberField(**kwargs)
