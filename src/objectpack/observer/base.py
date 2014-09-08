@@ -41,9 +41,7 @@ class ObservableMixin(object):
         """
         Вызов action под наблюдением
         """
-        if not self._observer._is_configured:
-            # конфижим листенеры только понеобходимости
-            self._observer.configure()
+        self._observer.configure()
 
         stack = stack[:]
         self._observer._prepare_for_listening(action, request, stack)
@@ -235,10 +233,18 @@ class Observer(object):
 
         return name
 
-    def configure(self):
+    def configure(self, force=False):
         """
         Построение дерева сопоставления экшнов со слушателями
+        Если observer был сконфигурирован ранее и в него ничего не добавили,
+        то построение выполнится, только если передан аргумент `force=True`
+
+        :param bool force: Форсировать конфигурирование
         """
+        # конфижим листенеры только понеобходимости
+        if self._is_configured and not force:
+            return
+
         self._action_listeners = {}
         # слушатели сортируются по приоритету
         listeners = [
