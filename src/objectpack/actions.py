@@ -15,6 +15,7 @@ import json
 import warnings
 
 from django.db.models import fields as dj_fields
+from django.core import exceptions as dj_exceptions
 from django.utils.encoding import force_unicode
 
 from m3 import actions as m3_actions
@@ -559,7 +560,10 @@ class ObjectRowsAction(BaseAction):
             col, subcol = (col.split('.', 1) + [None])[:2]
             # ------- если есть подиндекс - идем вглубь
             if subcol:
-                obj = getattr(obj, col, None)
+                try:
+                    obj = getattr(obj, col, None)
+                except dj_exceptions.ObjectDoesNotExist:
+                    obj = None
                 sub_dict = result.setdefault(col, {})
                 parse_data_indexes(obj, subcol, sub_dict)
             else:
@@ -572,12 +576,17 @@ class ObjectRowsAction(BaseAction):
                 ):
                     fld = None
                 # получаем значение
-                obj = getattr(obj, col, None)
+                try:
+                    obj = getattr(obj, col, None)
+                except dj_exceptions.ObjectDoesNotExist:
+                    obj = None
                 if fld:
                     try:
                         obj = obj.display()
                     except AttributeError:
-                        if fld.choices:
+                        # аттрибут choises существует у Field
+                        # но отсутствует у RelatedObject
+                        if hasattr(fld, 'choices') and fld.choices:
                             # если получаемый атрибут - поле, имеющее choices
                             # пробуем найти соответствующий значению вариант
                             for ch in fld.choices:
