@@ -11,7 +11,7 @@ def read(fname):
 
 setup(
     name="objectpack",
-    version="3.0.0",
+    version="3.0.1",
     license='License :: OSI Approved :: MIT License',
     description=read('DESCRIPTION'),
     author="Alexey Pirogov",
