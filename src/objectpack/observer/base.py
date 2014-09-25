@@ -273,7 +273,7 @@ class Observer(object):
         """
         # каждый отдельный Pack должен регистрироваться ровно один раз
         # уникльность Pack определяется следующим ключом
-        pack_name = pack.get_short_name()
+        pack_name = tools._name_class(pack.__class__) 
         if pack_name in self._pack_instances_by_name:
             # попытка перерегистрации отмечается предупреждением
             raise RuntimeError(
