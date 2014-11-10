@@ -10,7 +10,7 @@ syntax: glob
 docs/_build/*
 src/build/*
 src/dist/*
-src/objectpack.egg-info/*
+*.egg-info/*
 reports/*
 tests/objectpack_demo/.coverage
 glob:tests/env/*
