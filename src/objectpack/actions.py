@@ -9,7 +9,6 @@
 
 import copy
 import datetime
-import inspect
 import types
 import json
 import warnings
@@ -19,7 +18,7 @@ from django.core import exceptions as dj_exceptions
 from django.utils.encoding import force_unicode
 
 from m3 import actions as m3_actions
-from m3.actions.interfaces import ISelectablePack, IMultiSelectablePack
+from m3.actions.interfaces import IMultiSelectablePack
 from m3 import RelatedError, ApplicationLogicException
 from m3.db import safe_delete
 from m3_ext.ui.fields.complex import ExtSearchField
@@ -973,8 +972,20 @@ class ObjectPack(BasePack, IMultiSelectablePack):
                'width':200,
                'header':u'Родитель',
                'renderer':'parent_render'
+               'select_related': ('parent',),
             },
         ]
+    """
+
+    select_related = None
+    """
+    Перечень related полей, для передачи в Manager.select_related.
+
+    Если None и в columns не будет найдено related полей, то в rows_action
+    select_related не будет выполняться.
+
+    Если любая пустая коллекция, то вызовется select_related без параметров,
+    что может сказаться на производительности
     """
 
     filter_engine_clz = filters.MenuFilterEngine
@@ -1172,6 +1183,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         self._columns_flat = []
         self._all_search_fields = (self.search_fields or [])[:]
         self._sort_fields = {}
+        self._select_related_fields = (self.select_related or [])[:]
 
         def flatify(cols):
             for c in cols:
@@ -1187,7 +1199,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
                         sort_fields = c.get('sort_fields', [field])
                         try:
                             sort_fields = list(sort_fields)
-                        except:
+                        except TypeError:
                             sort_fields = [sort_fields]
                         self._sort_fields[data_index] = sort_fields
                     # поле для фильтрации
@@ -1195,9 +1207,22 @@ class ObjectPack(BasePack, IMultiSelectablePack):
                         search_fields = c.get('search_fields', [field])
                         try:
                             search_fields = list(search_fields)
-                        except:
+                        except TypeError:
                             search_fields = [search_fields]
                         self._all_search_fields.extend(search_fields)
+                    # related fields
+                    related_fields = c.get("select_related")
+                    if not related_fields:
+                        lookup = "__".join(tools.get_related_fields(
+                            self.model, data_index.split(".")))
+                        related_fields = lookup and [lookup] or []
+                    try:
+                        related_fields = list(related_fields)
+                    except TypeError:
+                        related_fields = [related_fields]
+                    for f in related_fields:
+                        if f not in self._select_related_fields:
+                            self._select_related_fields.append(f)
         flatify(self.columns)
 
         # подключение механизма фильтрации
@@ -1582,7 +1607,10 @@ class ObjectPack(BasePack, IMultiSelectablePack):
                 return query.filter(done=True)
 
         """
-        return self.model.objects.all().select_related()
+        query = self.model.objects.all()
+        if self._select_related_fields or self.select_related is not None:
+            query = query.select_related(*self._select_related_fields)
+        return query
 
     def get_search_fields(self, request=None, context=None):
         """

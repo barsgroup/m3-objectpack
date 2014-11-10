@@ -7,6 +7,8 @@ import datetime
 from functools import wraps
 
 from django.db import transaction
+from django.db.models.fields import FieldDoesNotExist
+from django.db.models.fields.related import RelatedField
 
 
 #==============================================================================
@@ -432,6 +434,7 @@ def int_or_zero(s):
     """
     return 0 if not s else int(s)
 
+
 def int_or_none(s):
     """
     >>> int_or_none('')
@@ -441,9 +444,39 @@ def int_or_none(s):
     """
     return None if not s else int(s)
 
+
 def int_list(s):
     """
     >>> int_list('10,20, 30')
     [10, 20, 30]
     """
     return [int(i.strip()) for i in s.split(',')]
+
+
+def get_related_fields(model, fields):
+    """
+    >>> from django.contrib.auth.models import Permission
+    >>> get_related_fields(Permission, ["content_type", "name"])
+    ["content_type"]
+
+    :param model: Django Model
+    :type model: django.db.models.Model
+    :param fields: Path to extract foreign object attribute
+    :type fields: list
+    """
+    result = []
+    field_name = fields.pop(0)
+    if fields:
+        try:
+            field = model._meta.get_field(field_name)
+        except (FieldDoesNotExist, KeyError, AttributeError):
+            # KeyError - исключение в objectpack.ModelProxy
+            # FieldDoesNotExist - в django Model
+            # AttributeError - у модели может не быть меты или метода get_field
+            # в случае если это VirtualModel или любая иная фейковая модель
+            pass
+        else:
+            if isinstance(field, RelatedField):
+                result.append(field_name)
+                result.extend(get_related_fields(field.rel.to, fields))
+    return result
