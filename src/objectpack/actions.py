@@ -1199,7 +1199,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
                         sort_fields = c.get('sort_fields', [field])
                         try:
                             sort_fields = list(sort_fields)
-                        except Exception:
+                        except TypeError:
                             sort_fields = [sort_fields]
                         self._sort_fields[data_index] = sort_fields
                     # поле для фильтрации
@@ -1207,7 +1207,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
                         search_fields = c.get('search_fields', [field])
                         try:
                             search_fields = list(search_fields)
-                        except Exception:
+                        except TypeError:
                             search_fields = [search_fields]
                         self._all_search_fields.extend(search_fields)
                     # related fields
@@ -1218,7 +1218,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
                         related_fields = lookup and [lookup] or []
                     try:
                         related_fields = list(related_fields)
-                    except Exception:
+                    except TypeError:
                         related_fields = [related_fields]
                     for f in related_fields:
                         if f not in self._select_related_fields:
