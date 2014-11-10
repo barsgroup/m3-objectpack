@@ -314,6 +314,9 @@ class Observer(object):
                     % (name, action, self._actions[name]))
             self._actions[name] = action
 
+        for subpack in pack.subpacks:
+            self._populate_pack(subpack)
+
         self._is_configured = False
 
     def subscribe(self, listener):
