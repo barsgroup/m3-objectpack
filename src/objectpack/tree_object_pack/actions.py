@@ -27,6 +27,8 @@ class TreeObjectPack(objectpack.ObjectPack):
     def __init__(self, *args, **kwargs):
         super(TreeObjectPack, self).__init__(*args, **kwargs)
         self.replace_action('rows_action', TreeObjectRowsAction())
+        self.autocomplete_action = objectpack.ObjectRowsAction()
+        self.actions.append(self.autocomplete_action)
 
     def get_rows_query(self, request, context):
         result = super(TreeObjectPack, self).get_rows_query(request, context)
@@ -79,6 +81,9 @@ class TreeObjectPack(objectpack.ObjectPack):
         elif action is self.rows_action:
             decl['filter'] = {'type': 'unicode', 'default': ''}
         return decl
+
+    def get_autocomplete_url(self):
+        return self.autocomplete_action.get_absolute_url()
 
 
 class TreeObjectRowsAction(objectpack.ObjectRowsAction):
