@@ -749,6 +749,11 @@ def _create_control_for_field(f, model_register=None, **kwargs):
     elif isinstance(f, django_models.FloatField):
         ctl = ext.ExtNumberField(**kwargs)
         ctl.allow_decimals = True
+        
+    elif isinstance(f, django_models.DecimalField):
+        ctl = ext.ExtNumberField(**kwargs)
+        ctl.allow_decimals = True
+        ctl.decimal_precision = f.decimal_places
 
     elif isinstance(f, (
             django_models.DateTimeField,
