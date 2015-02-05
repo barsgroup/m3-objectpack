@@ -410,6 +410,8 @@ class ObjectSaveAction(BaseAction):
                 self.obj, self.create_new, self.request, self.context)
         except (exceptions.ValidationError, exceptions.OverlapError) as err:
             raise ApplicationLogicException(unicode(err))
+        except dj_exceptions.ValidationError as err:
+            raise ApplicationLogicException(u'<br/>'.join(err.messages))
 
     def run(self, request, context):
         """
