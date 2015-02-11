@@ -10,7 +10,7 @@ deploy:
   user: bars-travis
   distributions: sdist
   on: 
-    tags: false
+    tags: true
     all_branches: true
   provider: pypi
   password: 
