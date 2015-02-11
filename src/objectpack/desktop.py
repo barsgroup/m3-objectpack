@@ -1,4 +1,4 @@
-#coding:utf-8
+# coding:utf-8
 """
 :Created: 23.07.2012
 :Author: pirogov
@@ -7,9 +7,9 @@ from m3 import actions
 from m3_ext.ui import app_ui
 
 
-#==============================================================================
+# =============================================================================
 # uificate_the_controller
-#==============================================================================
+# =============================================================================
 def uificate_the_controller(
         controller, metarole=app_ui.GENERIC_USER, icon_collection=None,
         menu_root=None, top_menu_root=None):
@@ -38,7 +38,7 @@ def uificate_the_controller(
             menu_root=top_menu_root)
 
 
-#==============================================================================
+# =============================================================================
 def _add_to(metarole, to_, items):
     #if _users.metaroles.get_metarole(metarole)
     for item in items:
@@ -73,9 +73,9 @@ def _add_to_top_menu(metarole, *items):
     _add_to(metarole, app_ui.DesktopLoader.TOPTOOLBAR, items)
 
 
-#==============================================================================
+# =============================================================================
 # DesktopItem
-#==============================================================================
+# =============================================================================
 class _DesktopItem(app_ui.DesktopShortcut):
     """
     Элемент UI с запоминанием кода права
