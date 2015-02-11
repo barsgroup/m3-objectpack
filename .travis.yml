@@ -7,10 +7,10 @@ deploy:
   distributions: sdist
   on: 
     tags: false
-    branches:
-      only:
-        - "2.x"
-        - "3.x"
   provider: pypi
   password: 
     secure: Yz7w7nTE0Xvc1Nquiq+J+G9yNHGnAcd6p4vY09f2nyBU2EfWLI3ZdYsAbecXEthDZE86cwL1DhumBKT65rOrhI/xyXG6/KbDWrPdbXV5ctwPmFoQ79idEg+1Id8kD+l8tEjgBgrDUmLUneaJozEYyLHw6a85CD61QcHFKbpDw3s=
+branches:
+  only:
+    - "2.x"
+    - "3.x"
