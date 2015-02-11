@@ -745,10 +745,7 @@ def _create_control_for_field(f, model_register=None, **kwargs):
     elif isinstance(f, django_models.BooleanField):
         ctl = ext.ExtCheckBox(**kwargs)
 
-    elif isinstance(f, (
-            django_models.CharField,
-            # время вводится в StringField
-            django_models.TimeField)):
+    elif isinstance(f, django_models.CharField):
         ctl = ext.ExtStringField(max_length=f.max_length, **kwargs)
 
     elif isinstance(f, django_models.TextField):
@@ -764,6 +761,11 @@ def _create_control_for_field(f, model_register=None, **kwargs):
     elif isinstance(f, django_models.FloatField):
         ctl = ext.ExtNumberField(**kwargs)
         ctl.allow_decimals = True
+        
+    elif isinstance(f, django_models.DecimalField):
+        ctl = ext.ExtNumberField(**kwargs)
+        ctl.allow_decimals = True
+        ctl.decimal_precision = f.decimal_places
 
     elif isinstance(f, (
             django_models.DateTimeField,
@@ -771,6 +773,11 @@ def _create_control_for_field(f, model_register=None, **kwargs):
         params = {'format': 'd.m.Y'}
         params.update(kwargs)
         ctl = ext.ExtDateField(**params)
+
+    elif isinstance(f, django_models.TimeField):
+        params = {'format': 'H:i', 'increment': 5}
+        params.update(kwargs)
+        ctl = ExtTimeField(**params)
 
     elif isinstance(f, django_models.ForeignKey):
         ctl = _create_dict_select_field(f, model_register, **kwargs)
