@@ -1,0 +1,13 @@
+language: python
+python: 
+- "2.6"
+- "2.7"
+deploy: 
+  user: bars-travis
+  distributions: sdist
+  on: 
+    all_branches: true
+    tags: false
+  provider: pypi
+  password: 
+    secure: Yz7w7nTE0Xvc1Nquiq+J+G9yNHGnAcd6p4vY09f2nyBU2EfWLI3ZdYsAbecXEthDZE86cwL1DhumBKT65rOrhI/xyXG6/KbDWrPdbXV5ctwPmFoQ79idEg+1Id8kD+l8tEjgBgrDUmLUneaJozEYyLHw6a85CD61QcHFKbpDw3s=
