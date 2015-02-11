@@ -6,14 +6,11 @@
 """
 
 import abc
-
 from operator import or_, and_
 
 from django.db import models
 from django.utils import simplejson
-
 from m3.actions import DeclarativeActionContext
-
 from .ui import _create_control_for_field
 from .tools import str_to_date
 
@@ -239,7 +236,8 @@ class FilterByField(AbstractFilter):
             либо функция вида (lookup_param -> Q-object)
         :param tooltip: текст всплывающей подсказки
         :type tooltip: str
-        :param field_fabric_params: Параметры для инициализации контрола фильтра
+        :param field_fabric_params: Параметры для инициализации
+        контрола фильтра
         :type field_fabric_params: dict
         """
         field_name = field_name.replace('.', '__')
@@ -281,13 +279,15 @@ class FilterByField(AbstractFilter):
     @property
     def field(self):
         path = self._field_name.split('__')
+
         def get(model, fld, path):
             res = model._meta.get_field(fld)
             if path:
                 return get(res.rel.to, path[0], path[1:])
             return res
+
         res = get(self._model, path[0], path[1:])
-        self.__dict__['field'] = res # кэшируем
+        self.__dict__['field'] = res  # кэшируем
         return res
 
 
@@ -429,7 +429,8 @@ class ColumnFilterEngine(AbstractFilterEngine):
 
     def configure_grid(self, grid):
         """
-        .. seealso:: :mod:`objectpack.filters.AbstractFilterEngine.configure_grid`
+        .. seealso::
+            :mod:`objectpack.filters.AbstractFilterEngine.configure_grid`
         """
         grid.plugins.append('new Ext.ux.grid.GridHeaderFilters()')
 
@@ -443,7 +444,8 @@ class ColumnFilterEngine(AbstractFilterEngine):
 
     def apply_filter(self, query, request, context):
         """
-        .. seealso:: :mod:`objectpack.filters.AbstractFilterEngine.apply_filter`
+        .. seealso::
+            :mod:`objectpack.filters.AbstractFilterEngine.apply_filter`
         """
         q = models.Q()
         for _filter in self._columns.itervalues():

@@ -1,4 +1,4 @@
-#coding:utf-8
+# coding:utf-8
 """
 Обсервер и контроллеры
 """
@@ -11,8 +11,6 @@ def logger(msg):
 
 # Наблюдатель
 obs = observer.Observer()
-    #logger=logger, verbose_level=observer.Observer.LOG_MORE)
-
 
 action_controller = observer.ObservableController(obs, "/controller")
 

@@ -1,10 +1,9 @@
-#coding:utf-8
+# coding:utf-8
 """
 Виртуальная модель и proxy-обертка для работы с группой моделей
 """
 import copy
 from collections import Iterable
-
 from itertools import ifilter, ifilterfalse, islice, imap
 
 from django.db.models import query, manager
@@ -22,24 +21,26 @@ def kwargs_only(*keys):
                     ' for this function' % (
                         ', '.join('"%s"' % k for k in wrong_keys)))
             return fn(self, args, **kwargs)
+
         return inner
+
     return wrapper
 
 
 _call_if_need = lambda x: x() if callable(x) else x
 
 
-#==============================================================================
+# ==============================================================================
 # VirtualModelManager
-#==============================================================================
+# =============================================================================
 class VirtualModelManager(object):
     """
     Имитация QueryManager`а Django для VirtualModel
     """
     _operators = {
         'contains': lambda val: lambda x: val in x,
-        'iexact': lambda val: lambda x, y = val.lower(): x.lower() == y,
-        'icontains': lambda val: lambda x, y = val.lower(): y in x.lower(),
+        'iexact': lambda val: lambda x, y=val.lower(): x.lower() == y,
+        'icontains': lambda val: lambda x, y=val.lower(): y in x.lower(),
         'lte': lambda val: lambda x: x <= val,
         'gte': lambda val: lambda x: x >= val,
         'lt': lambda val: lambda x: x < val,
@@ -178,7 +179,9 @@ class VirtualModelManager(object):
                             if res:
                                 return res
                         return 0
+
                     return inner
+
                 proc = make_proc(cmp=make_cmp_fn(zip(getters, dirs)))
 
             procs.append(proc)
@@ -222,9 +225,9 @@ class VirtualModelManager(object):
         return len(list(self))
 
 
-#==============================================================================
+# =============================================================================
 # VirtualModel
-#==============================================================================
+# =============================================================================
 class VirtualModel(object):
     """
     Виртуальная модель, реализующая Django-ORM-совместимый API, для
@@ -303,9 +306,9 @@ class VirtualModel(object):
         )
 
 
-#==============================================================================
+# =============================================================================
 # model_proxy_metaclass
-#==============================================================================
+# =============================================================================
 class ModelProxyMeta(type):
     """
     Метакласс для ModelProxy
@@ -331,7 +334,8 @@ class ModelProxyMeta(type):
                 self._attr = attr
 
             def __get__(self, inst, clazz):
-                assert inst is None  # дескриптор должен работать только для класса
+                # дескриптор должен работать только для класса
+                assert inst is None
                 cache = getattr(clazz, self._CACHING_ATTR, None)
                 if not cache:
                     cache = self._collect_metadata()
@@ -339,7 +343,8 @@ class ModelProxyMeta(type):
                 return cache[self._attr]
 
             def _collect_metadata(self):
-                # сбор полей основной модели и указанных моделей, связанных с ней
+                # сбор полей основной модели и указанных моделей,
+                # связанных с ней
                 def add_prefix(field, prefix):
                     field = copy.copy(field)
                     field.attname = '%s.%s' % (prefix, field.attname)
@@ -441,11 +446,12 @@ class ModelProxyMeta(type):
                         def inner(*args, **kwargs):
                             result = fn(*args, **kwargs)
                             if isinstance(
-                                    result,
-                                    (manager.Manager, query.QuerySet)):
+                                    result, (manager.Manager, query.QuerySet)):
                                 return self.__class__(result, self._proxy_cls)
                             return result
+
                         return inner
+
                     if callable(result):
                         return wrapped(result)
                     return result
@@ -458,11 +464,13 @@ class ModelProxyMeta(type):
         # создание класса Proxy
         return super(ModelProxyMeta, cls).__new__(cls, name, bases, dic)
 
+
 model_proxy_metaclass = ModelProxyMeta
 
-#==============================================================================
+
+# =============================================================================
 # ModelProxy
-#==============================================================================
+# =============================================================================
 class ModelProxy(object):
     """
     Proxy-объект инкапсулирующий в себе несколько моделей
@@ -486,7 +494,9 @@ class ModelProxy(object):
                     result = old_save(*args, **kwargs)
                     setattr(parent, attr, child.id)
                     return result
+
                 return inner
+
             # если объект не указан - создается новый
             obj = self.model()
             # список объектов, созданных при заполнении связанных объектов

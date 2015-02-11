@@ -7,7 +7,7 @@ import models
 
 
 class GarageTab(objectpack.ObjectTab.fabricate(
-    model=models.Garage, field_list=('name',))):
+        model=models.Garage, field_list=('name',))):
 
     def init_components(self, *args, **kwargs):
         super(GarageTab, self).init_components(*args, **kwargs)
