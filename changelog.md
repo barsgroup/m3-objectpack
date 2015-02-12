@@ -1,11 +1,13 @@
 # История изменений
 
+**3.0.1.3**
 **2.0.22.5**
 - Автодекларация start/limit для rows_action в случае allow_paging=True
 
 **2.0.22.4**
 - Исправление pep8
 
+**3.0.1.2**
 **2.0.22.3**
 - Генерация элемента управления ExtNumberField для поля модели DecimalField
 - Генерация элемента управления ExtTimeField для поля модели TimeField (вместо ExtStringField)
