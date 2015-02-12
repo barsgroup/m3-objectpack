@@ -250,7 +250,7 @@ class FilterByField(AbstractFilter):
                 self._parser = DeclarativeActionContext._parsers[parser_key]
                 break
         else:
-            raise TypeError('Unsupported field type: %r' % fld)
+            raise TypeError('Unsupported field type: %r' % self.field)
         lookup = lookup or default_lookup
         if lookup:
             # шаблонизация лукапа, если петтерн указан
