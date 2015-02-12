@@ -1270,6 +1270,12 @@ class ObjectPack(BasePack, IMultiSelectablePack):
             result = {self.id_param_name: {'type': tools.int_or_zero}}
         elif action is self.delete_action:
             result = {self.id_param_name: {'type': tools.int_list}}
+        elif action is self.rows_action:
+            if self.allow_paging:
+                result.update(
+                    start={'type': 'int', 'default': 0},
+                    limit={'type': 'int', 'default': 25},
+                )
         return result
 
     def get_default_action(self):
