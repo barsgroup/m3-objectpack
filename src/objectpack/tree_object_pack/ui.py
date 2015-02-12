@@ -1,4 +1,4 @@
-#coding: utf-8
+# coding: utf-8
 """
 UI для работы с древовидными списками
 Author: Rinat F Sabitov

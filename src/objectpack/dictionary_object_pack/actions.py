@@ -1,4 +1,4 @@
-#coding: utf-8
+# coding: utf-8
 """
 File: actions.py
 Author: Rinat F Sabitov

@@ -1,4 +1,4 @@
-#coding: utf-8
+# coding: utf-8
 """
 :Created: 23.07.2012
 
@@ -16,7 +16,6 @@ import warnings
 from django.db.models import fields as dj_fields
 from django.core import exceptions as dj_exceptions
 from django.utils.encoding import force_unicode
-
 from m3 import actions as m3_actions
 from m3.actions import DeclarativeActionContext as _DAC
 from m3.actions.interfaces import IMultiSelectablePack
@@ -25,16 +24,15 @@ from m3.db import safe_delete, tools as dbtools
 from m3_ext.ui.fields.complex import ExtSearchField
 from m3_ext.ui import results as ui_results
 
-
 import ui
 import tools
 import exceptions
 import filters
 
 
-#==============================================================================
+# =============================================================================
 # BaseAction
-#==============================================================================
+# =============================================================================
 class BaseAction(m3_actions.Action):
     """
     Базовый класс для всех actions.
@@ -122,9 +120,9 @@ class BaseAction(m3_actions.Action):
         return arg
 
 
-#==============================================================================
+# =============================================================================
 # BaseWindowAction
-#==============================================================================
+# =============================================================================
 class BaseWindowAction(BaseAction):
     """
     Базовый Action показа окна
@@ -258,9 +256,9 @@ class BaseWindowAction(BaseAction):
         return result
 
 
-#==============================================================================
+# =============================================================================
 # ObjectListWindowAction
-#==============================================================================
+# =============================================================================
 class ObjectListWindowAction(BaseWindowAction):
     """
     Базовый Action показа окна списка объектов
@@ -299,9 +297,9 @@ class ObjectListWindowAction(BaseWindowAction):
             context=self.context)
 
 
-#==============================================================================
+# =============================================================================
 # ObjectSelectWindowAction
-#==============================================================================
+# =============================================================================
 class ObjectSelectWindowAction(ObjectListWindowAction):
     """
     Базовый Action показа окна списка выбора объекта из списка
@@ -322,12 +320,14 @@ class ObjectMultiSelectWindowAction(ObjectSelectWindowAction):
     """
     Базовый Action показа окна списка выбора нескольких объектов из списка
     """
+
     def create_window(self):
         self.win = self.parent.multi_select_window()
 
-#==============================================================================
+
+# =============================================================================
 # ObjectEditWindowAction
-#==============================================================================
+# =============================================================================
 class ObjectEditWindowAction(BaseWindowAction):
     """
     Базовый Action показа окна редактирования объекта.
@@ -368,9 +368,9 @@ class ObjectEditWindowAction(BaseWindowAction):
             self.parent.get_editing_model(request, context)
         )
 
-#==============================================================================
+# =============================================================================
 # ObjectAddWindowAction
-#==============================================================================
+# =============================================================================
 class ObjectAddWindowAction(ObjectEditWindowAction):
     """
     Базовый Action показа окна добавления объекта.
@@ -396,9 +396,9 @@ class ObjectAddWindowAction(ObjectEditWindowAction):
                 request=self.request,
                 context=self.context))
 
-#==============================================================================
+# =============================================================================
 # ObjectSaveAction
-#==============================================================================
+# =============================================================================
 class ObjectSaveAction(BaseAction):
     """
     Базовый Action сохранения отредактированного объекта
@@ -489,13 +489,14 @@ class ObjectSaveAction(BaseAction):
         return m3_actions.OperationResult()
 
 
-#==============================================================================
+# =============================================================================
 # ObjectRowsAction
-#==============================================================================
+# =============================================================================
 class ObjectRowsAction(BaseAction):
     """
     Базовый Action получения данных для отображения в окне списка объектов
     """
+
     def set_query(self):
         """
         Метод получает первоначальную выборку данных в виде QuerySet
@@ -668,7 +669,7 @@ class ObjectRowsAction(BaseAction):
                     obj = force_unicode(obj)
                 result[col] = obj
 
-        #заполним объект данными по дата индексам
+        # заполним объект данными по дата индексам
         for col in self.get_column_data_indexes():
             parse_data_indexes(obj, col, result_dict)
 
@@ -744,9 +745,9 @@ class ObjectRowsAction(BaseAction):
         return result
 
 
-#==============================================================================
+# =============================================================================
 # ObjectDeleteAction
-#==============================================================================
+# =============================================================================
 class ObjectDeleteAction(BaseAction):
     """
     Действие по удалению объекта
@@ -806,9 +807,9 @@ class ObjectDeleteAction(BaseAction):
         return m3_actions.OperationResult()
 
 
-#==============================================================================
+# =============================================================================
 # BasePack
-#==============================================================================
+# =============================================================================
 class BasePack(m3_actions.ActionPack):
     """
     Потомок ActionPack, реализующий автогенерацию short_name, url
@@ -831,19 +832,19 @@ class BasePack(m3_actions.ActionPack):
 
     # @classmethod
     # def get_short_name(cls):
-    #     """
-    #     Имя пака для поиска в ControllerCache
-    #     """
-    #     name = cls.__dict__.get('_auto_short_name')
-    #     if not name:
-    #         name = '%s/%s' % (
-    #             inspect.getmodule(cls).__name__.replace(
-    #                 '.actions', ''
-    #             ).replace(
-    #                 '.', '/').lower(),
-    #             cls.__name__.lower())
-    #         cls._auto_short_name = name
-    #     return name
+    # """
+    # Имя пака для поиска в ControllerCache
+    # """
+    # name = cls.__dict__.get('_auto_short_name')
+    # if not name:
+    # name = '%s/%s' % (
+    # inspect.getmodule(cls).__name__.replace(
+    # '.actions', ''
+    # ).replace(
+    # '.', '/').lower(),
+    # cls.__name__.lower())
+    # cls._auto_short_name = name
+    # return name
 
     # @property
     # @tools.cached_to('__cached_short_name')
@@ -877,9 +878,9 @@ class BasePack(m3_actions.ActionPack):
         return ''.join(reversed(path))
 
 
-#==============================================================================
+# =============================================================================
 # ObjectPack
-#==============================================================================
+# =============================================================================
 class ObjectPack(BasePack, IMultiSelectablePack):
     """
     Пак с экшенам, реализующими специфичную для работы с моделью действиями по
@@ -1234,8 +1235,8 @@ class ObjectPack(BasePack, IMultiSelectablePack):
             self.save_action = None
 
         if self.can_delete is None:
-            self.can_delete = (
-                self.add_window or self.edit_window) and not self.read_only
+            self.can_delete = (self.add_window
+                               or self.edit_window) and not self.read_only
         if self.can_delete:
             #: Экшен удаления объектовы
             self.delete_action = ObjectDeleteAction()
@@ -1287,6 +1288,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
                     for f in related_fields:
                         if f not in self._select_related_fields:
                             self._select_related_fields.append(f)
+
         flatify(self.columns)
 
         # подключение механизма фильтрации
@@ -1328,6 +1330,9 @@ class ObjectPack(BasePack, IMultiSelectablePack):
             result = {self.id_param_name: {'type': 'int'}}
         elif action is self.delete_action:
             result = {self.id_param_name: {'type': 'int_list'}}
+        elif action is self.rows_action:
+            if self.allow_paging:
+                result.update(start={'type': 'int'}, limit={'type': 'int'})
         return result
 
     def get_default_action(self):
@@ -1363,10 +1368,11 @@ class ObjectPack(BasePack, IMultiSelectablePack):
                 try:
                     text = getattr(row, self.column_name_on_select)
                 except AttributeError:
-                    raise Exception((
+                    raise Exception(
                         u'Не получается получить поле {0} для '
-                        u'DictSelectField.pack = {1}'
-                    ).format(attr_name, self))
+                        u'DictSelectField.pack = {1}'.format(
+                            attr_name, self)
+                    )
 
             # getattr может возвращать метод, например verbose_name
             if callable(text):
@@ -1445,7 +1451,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         """
         return "%s: %s" % (self.model._meta.verbose_name.capitalize(), action)
 
-    #==================== ФУНКЦИИ ВОЗВРАЩАЮЩИЕ АДРЕСА =====================
+    # ==================== ФУНКЦИИ ВОЗВРАЩАЮЩИЕ АДРЕСА =====================
     def get_list_url(self):
         """
         Возвращает адрес формы списка элементов справочника.
@@ -1512,7 +1518,8 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         return self.get_rows_url()
 
     def get_display_dict(self, key, value_field='id', display_field='name'):
-        print key, value_field, display_field
+        print
+        key, value_field, display_field
         return []
 
     def get_not_found_exception(self):
@@ -1576,7 +1583,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         cc.configure_grid(grid)
 
         if self.get_search_fields():
-            #поиск по гриду если есть по чему искать
+            # поиск по гриду если есть по чему искать
             search_field = ExtSearchField(
                 empty_text=u'Поиск',
                 width=200,
@@ -1923,12 +1930,12 @@ class ObjectPack(BasePack, IMultiSelectablePack):
             result = obj.safe_delete()
         else:
             result = safe_delete(obj)
-        #в случае успеха safe_delete возвращет true
+        # в случае успеха safe_delete возвращет true
         if not result:
-            raise RelatedError((
+            raise RelatedError(
                 u'Не удалось удалить элемент {0}. '
-                u'Возможно на него есть ссылки.'
-            ).format(obj_id))
+                u'Возможно на него есть ссылки.'.format(
+                    obj_id))
         return obj
 
     def get_filter_plugin(self):
@@ -1954,8 +1961,8 @@ class ObjectPack(BasePack, IMultiSelectablePack):
                     f_options = f_options()
                 params['options'] = "[%s]" % ','.join(
                     (("'%s'" % item)
-                        if isinstance(item, basestring) else
-                        ((item is None and '[]') or ("['%s','%s']" % item)))
+                     if isinstance(item, basestring) else
+                     ((item is None and '[]') or ("['%s','%s']" % item)))
                     for item in f_options)
                 filter_items.append("""{
                     type:'%(type)s',
@@ -1967,9 +1974,9 @@ class ObjectPack(BasePack, IMultiSelectablePack):
             """ % ','.join(filter_items)
 
 
-#==============================================================================
+# =============================================================================
 # SelectorWindowAction
-#==============================================================================
+# =============================================================================
 class SelectorWindowAction(BaseAction):
     """
     Экшн показа окна выбора с пользовательским экшном обработки выбранных
@@ -2087,8 +2094,8 @@ class SelectorWindowAction(BaseAction):
         return ui_results.ExtUIScriptResult(win, new_context)
 
 
-def multiline_text_window_result(
-        data, success=True, title=u'', width=600, height=500):
+def multiline_text_window_result(data, success=True, title=u'', width=600,
+                                 height=500):
     """
     Формирование OpersionResult в виде многострочного окна,
     с размерами :width x :height и заголовком :title,
@@ -2132,8 +2139,8 @@ def multiline_text_window_result(
                 msg_win.show();
             })()
             """ % (
-            title, width, height,
-            data.replace("\n", r"\n").replace(r"'", r'"'))
+                title, width, height,
+                data.replace("\n", r"\n").replace(r"'", r'"'))
         )
     )
 

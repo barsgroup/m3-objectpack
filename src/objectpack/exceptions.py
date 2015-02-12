@@ -3,13 +3,14 @@
 Классы исключений, обрабатываемых ObjectPack
 """
 
+
 class OverlapError(Exception):
     """
     Исключние пересечения интервальных моделей
     """
     def __init__(self, objects, header=(
             u'Имеются пересечения со следующими записями:')):
-        assert objects, u"Не указаны объекты, с которыми произошло пересечение!"
+        assert objects, u"Не указаны объекты, с которыми произошло пересечение"
         self._header = header
         self._objects = objects
 
