@@ -344,7 +344,7 @@ class ObjectEditWindowAction(BaseWindowAction):
         params['read_only'] = read_only
         params['title'] = self.parent.format_window_title(
             u'Просмотр' if read_only else
-            #u'Добавление' if create_new else
+            # u'Добавление' if create_new else
             u'Редактирование'
         )
 
@@ -367,6 +367,7 @@ class ObjectEditWindowAction(BaseWindowAction):
             'get_editing_model',
             self.parent.get_editing_model(request, context)
         )
+
 
 # =============================================================================
 # ObjectAddWindowAction
@@ -395,6 +396,7 @@ class ObjectAddWindowAction(ObjectEditWindowAction):
                 create_new=True,
                 request=self.request,
                 context=self.context))
+
 
 # =============================================================================
 # ObjectSaveAction
@@ -2144,7 +2146,8 @@ def multiline_text_window_result(data, success=True, title=u'', width=600,
         )
     )
 
-#-----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
 class MasterDetailWindowAction(BaseWindowAction):
     """
     Окно, предоставляющее интерфейс "master-detail"

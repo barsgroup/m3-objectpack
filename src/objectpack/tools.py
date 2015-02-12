@@ -436,6 +436,7 @@ def int_or_zero(raw_str):
     """
     return 0 if not raw_str else int(raw_str)
 
+
 def int_or_none(raw_str):
     """
     >>> int_or_none('')
@@ -444,6 +445,7 @@ def int_or_none(raw_str):
     10
     """
     return None if not raw_str else int(raw_str)
+
 
 def int_list(raw_str):
     """

@@ -272,7 +272,8 @@ class FilterByField(AbstractFilter):
         control.allow_blank = True
         control.hide_clear_trigger = False
 
-        control._config.pop('value', None)  # value не должно попадать, иначе контролы подсветяться
+        # value не должно попадать, иначе контролы подсветятся
+        control._config.pop('value', None)
         control._config.pop('defaultValue', None)  # для ComboBoxWithStore
         return control
 

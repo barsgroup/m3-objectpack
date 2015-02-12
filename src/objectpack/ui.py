@@ -607,7 +607,7 @@ class ModelEditWindow(BaseEditWindow):
         super(ModelEditWindow, self)._do_layout()
 
         # автоматически вычисляемая высота окна
-        #self.height = None
+        # self.height = None
         self.layout = self.FORM
         self.layout_config = {'autoHeight': True}
         self.form.layout_config = {'autoHeight': True}
@@ -1271,9 +1271,10 @@ deny_blank.__doc__ = """
 
     """
 
-#==============================================================================
+
+# =============================================================================
 # BaseMasterDetailWindow
-#==============================================================================
+# =============================================================================
 class MasterDetailWindow(BaseWindow):
     """
     Основа для окна master-detail
