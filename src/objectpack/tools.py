@@ -390,10 +390,8 @@ def istraversable(x):
     """
     возвращает True, если объект :attr:`x` позволяет обход себя в цикле `for`
     """
-    return (
-        hasattr(x, '__iter__')
-        or hasattr(x, '__next__')
-        or hasattr(x, '__getitem__')
+    return hasattr(x, '__iter__') or hasattr(x, '__next__') or hasattr(
+        x, '__getitem__'
     )
 
 
