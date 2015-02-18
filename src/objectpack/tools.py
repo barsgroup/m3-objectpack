@@ -393,7 +393,6 @@ def istraversable(obj):
     """
     return hasattr(obj, '__iter__') or hasattr(obj, '__next__') or hasattr(
         obj, '__getitem__')
- 
 
 
 # =============================================================================
