@@ -11,7 +11,7 @@ def read(fname):
 
 setup(
     name="m3-objectpack",
-    version="3.0.1.3",
+    version="3.0.1.4",
     license='MIT',
     description=read('DESCRIPTION'),
     author="Alexey Pirogov",

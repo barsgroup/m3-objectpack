@@ -96,9 +96,7 @@ class BaseAction(m3_actions.Action):
         :rtype: bool
         """
         if self.perm_code is not None:
-            result = (
-                self.parent.need_check_permission
-                and
+            result = self.parent.need_check_permission and (
                 self.perm_code in self.parent.sub_permissions
             )
         else:
@@ -1237,8 +1235,8 @@ class ObjectPack(BasePack, IMultiSelectablePack):
             self.save_action = None
 
         if self.can_delete is None:
-            self.can_delete = (self.add_window
-                               or self.edit_window) and not self.read_only
+            self.can_delete = (
+                self.add_window or self.edit_window) and not self.read_only
         if self.can_delete:
             #: Экшен удаления объектовы
             self.delete_action = ObjectDeleteAction()
