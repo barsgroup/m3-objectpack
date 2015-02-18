@@ -764,7 +764,7 @@ def _create_control_for_field(f, model_register=None, **kwargs):
     elif isinstance(f, django_models.TimeField):
         params = {'format': 'H:i', 'increment': 5}
         params.update(kwargs)
-        ctl = ExtTimeField(**params)
+        ctl = ext.ExtTimeField(**params)
 
     elif isinstance(f, django_models.ForeignKey):
         ctl = _create_dict_select_field(f, model_register, **kwargs)
