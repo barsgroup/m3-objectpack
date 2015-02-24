@@ -1036,6 +1036,16 @@ class ObjectPack(BasePack, IMultiSelectablePack):
     Включить пагинацию
     """
 
+    _DEFAULT_PAGING_START = 0
+    """
+    Декларируемое значение сдвига начала пагинации по-умолчанию
+    при allow_paging=True и непереданном клиентом значения `start`
+    """
+    _DEFAULT_PAGING_LIMIT = 25
+    """
+    Декларируемое значение количества записей при пагинации по-умолчанию
+    при allow_paging=True и непереданном клиентом значения `limit`
+    """
     read_only = False
     """
     Пак будет настраивать грид на возможность редактирования
@@ -1270,7 +1280,16 @@ class ObjectPack(BasePack, IMultiSelectablePack):
             result = {self.id_param_name: {'type': tools.int_list}}
         elif action is self.rows_action:
             if self.allow_paging:
-                result.update(start={'type': 'int'}, limit={'type': 'int'})
+                result.update(
+                    start={
+                        'type': 'int',
+                        'default': self._DEFAULT_PAGING_START
+                    },
+                    limit={
+                        'type': 'int',
+                        'default': self._DEFAULT_PAGING_LIMIT
+                    }
+                )
         return result
 
     def get_default_action(self):
