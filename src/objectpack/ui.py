@@ -736,7 +736,7 @@ def _create_control_for_field(f, model_register=None, **kwargs):
         ctl = ext.ExtStringField(max_length=f.max_length, **kwargs)
 
     elif isinstance(f, django_models.TextField):
-        ctl = ext.ExtTextArea(**kwargs)
+        ctl = ext.ExtTextArea(max_length=f.max_length, **kwargs)
 
     elif isinstance(f, django_models.IntegerField):
         ctl = ext.ExtNumberField(**kwargs)
