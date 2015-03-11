@@ -101,6 +101,27 @@ class BaseAction(m3_actions.Action):
             result = False
         return result
 
+    def ensure_permission(self, request, subpermission):
+        """
+        Проверка наличия 'не своего' подправа subpermission,
+        если пак предполагает проверку прав и подправо sub_permission описано
+
+        Для случая, когда есть необходимость из одного экшна проверить наличие
+        подправа на другой экшн
+
+        :param request:
+        :type request: django.http.HttpRequest
+        :param subpermission: Код подправа доступа
+        :type subpermission: str
+
+        :raise: ApplicationLogicException
+        """
+        if self.parent.need_check_permission and (
+            subpermission in self.parent.sub_permissions
+        ) and not self.parent.has_perm(request, subpermission):
+            raise ApplicationLogicException(
+                u'У вас недостаточно прав для выполнения этого действия!')
+
     @staticmethod
     def handle(verb, arg):
         """
@@ -667,6 +688,14 @@ class ObjectRowsAction(BaseAction):
         new_self.context = context
 
         if request.REQUEST.get('xaction') not in ['read', None]:
+            # проверка на подправо редактировать
+            if self.parent.edit_window_action:
+                subpermission = self.parent.edit_window_action.perm_code
+            else:
+                # экшн редактирования не задан в паке
+                subpermission = 'edit'
+            self.ensure_permission(request, subpermission)
+
             data = json.loads(request.REQUEST.get('rows'))
             if not isinstance(data, list):
                 data = [data]
