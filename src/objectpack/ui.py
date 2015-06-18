@@ -1269,5 +1269,5 @@ class ComboBoxScrollWithStore(ComboBoxWithStore):
 
         base_config = self._get_config_str()
         params = self._get_params_str()
-        return 'createAdvancedScrollComboBox({%s},{%s})' % \
-            (base_config, params)
+        return 'createAdvancedScrollComboBox({%s},{%s})' % (
+            base_config, params)
