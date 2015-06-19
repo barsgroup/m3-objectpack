@@ -1253,3 +1253,21 @@ deny_blank.__doc__ = """
         controls = map(allow_blank, controls)
 
     """
+
+
+# =============================================================================
+# ComboBoxScrollWithStore
+# =============================================================================
+class ComboBoxScrollWithStore(ComboBoxWithStore):
+    """
+    Потомок m3-комбобокса со вcтроенным стором c динамической подгрузкой списка
+    при прокрутке
+    """
+
+    def render(self):
+        super(ComboBoxScrollWithStore, self).render()
+
+        base_config = self._get_config_str()
+        params = self._get_params_str()
+        return 'createAdvancedScrollComboBox({%s},{%s})' % (
+            base_config, params)

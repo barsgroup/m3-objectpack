@@ -1475,7 +1475,6 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         return self.get_rows_url()
 
     def get_display_dict(self, key, value_field='id', display_field='name'):
-        print
         key, value_field, display_field
         return []
 
