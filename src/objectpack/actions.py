@@ -407,6 +407,10 @@ class ObjectSaveAction(BaseAction):
                 return
             self.parent.save_row(
                 self.obj, self.create_new, self.request, self.context)
+
+            # возможность обработать сохранение подписчиками
+            self.handle('post_save', (self.obj, self.context))
+
         except (exceptions.ValidationError, exceptions.OverlapError) as err:
             raise ApplicationLogicException(unicode(err))
         except dj_exceptions.ValidationError as err:
