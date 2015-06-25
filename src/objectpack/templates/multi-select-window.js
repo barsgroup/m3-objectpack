@@ -42,7 +42,7 @@ Ext.apply(win, {
 });
 
 function isGridSelected(grid, title, message){
-    res = true;
+    var res = true;
     if (!grid.getSelectionModel().hasSelection() ) {
         Ext.Msg.show({
            title: title,
