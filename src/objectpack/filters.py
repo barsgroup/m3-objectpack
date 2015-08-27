@@ -268,6 +268,12 @@ class FilterByField(AbstractFilter):
             self.field,
             **self._field_fabric_params
         )
+        if 'model_register' in self._field_fabric_params:
+            # в качестве настроек контрола фильтра передан
+            # model_register, значит предполагается выбор из окна справочника
+            # для выбора из окна справочника требуется наличие
+            # actionContextJson у контрола
+            control.action_context = DeclarativeActionContext()
         control._put_config_value('filterName', self._uid)
         control._put_config_value('tooltip', self._tooltip or control.label)
         control.name = self._uid
