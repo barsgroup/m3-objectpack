@@ -6,10 +6,10 @@
 """
 
 import abc
+import json
 from operator import or_, and_
 
 from django.db import models
-from django.utils import simplejson
 from m3.actions import DeclarativeActionContext
 from .ui import _create_control_for_field
 from .tools import str_to_date
@@ -371,7 +371,7 @@ class MenuFilterEngine(AbstractFilterEngine):
     def apply_filter(self, query, request, context):
 
         if hasattr(context, 'q'):
-            request_filter = simplejson.loads(context.q)
+            request_filter = json.loads(context.q)
 
             q = models.Q()
             for item in request_filter:

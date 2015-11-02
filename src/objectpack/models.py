@@ -352,7 +352,7 @@ class ModelProxyMeta(type):
 
                 def submeta(meta, path):
                     for field in path.split('.'):
-                        meta = meta.get_field(field).related.parent_model._meta
+                        meta = meta.get_field(field).related.model._meta
                     return meta
 
                 meta = model._meta
@@ -507,7 +507,7 @@ class ModelProxy(object):
                 for item in path.split('.'):
                     # получение связанной модели
                     sub_model = sub_model._meta.get_field(
-                        item).related.parent_model
+                        item).related.model
                     # объект может быть уже заполнен, при частично
                     # пересекающихся путях в relations
                     # в этом случае новый объект не создается,

@@ -9,7 +9,7 @@ def register_urlpatterns():
     """
     Регистрация конфигурации урлов для приложения m3.contrib.users
     """
-    return urls.defaults.patterns(
+    return urls.patterns(
         '',
         (r'^op_static/(?P<path>.*)$',
          'django.views.static.serve',
