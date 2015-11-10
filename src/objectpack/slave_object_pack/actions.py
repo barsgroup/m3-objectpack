@@ -55,7 +55,6 @@ class SlavePack(objectpack.ObjectPack):
             self.save_action
         ):
             # для экшнов декларируются id родителей
-            result = result or {}
             for p in self._parents:
                 result[p[0]] = {'type': 'int'}
         return result
