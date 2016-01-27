@@ -724,7 +724,7 @@ def _create_control_for_field(f, model_register=None, **kwargs):
     """
     создает контрол для поля f = models.Field from model
     """
-    name = f.attname
+    name = str(f.attname)
 
     if f.choices:
         ctl = make_combo_box(data=list(f.choices), **kwargs)
