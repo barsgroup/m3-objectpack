@@ -400,8 +400,14 @@ class ModelProxyMeta(type):
                     try:
                         self._query = self._manager._clone()
                     except AttributeError:
-                        self._query = self._manager
-                return self._query.select_related(*relations_for_select)
+                        self._query = self._manager.all()
+
+                query = self._query
+                if query._fields is None:
+                    # Если query не values или values_list
+                    # добавим select_related
+                    query = query.select_related(*relations_for_select)
+                return query
 
             def __get__(self, inst, clz):
                 if inst:
