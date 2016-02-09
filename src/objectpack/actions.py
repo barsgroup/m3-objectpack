@@ -405,6 +405,8 @@ class ObjectSaveAction(BaseAction):
                 # кто-то в цепочке слушателей обработал сохранение объекта
                 # и больше ничего делать не нужно
                 return
+            finally:
+                del self.obj.AlreadySaved
             self.parent.save_row(
                 self.obj, self.create_new, self.request, self.context)
 
