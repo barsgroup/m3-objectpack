@@ -1867,7 +1867,10 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         :return: Удалённый объект
         :rtype: django.db.models.Model
         """
-        obj = self.model.objects.get(id=obj_id)
+        try:
+            obj = self.model.objects.get(id=obj_id)
+        except self.parent.get_not_found_exception():
+            raise ApplicationLogicException(self.parent.MSG_DOESNOTEXISTS)
         result = True
         if hasattr(obj, 'safe_delete'):
             result = obj.safe_delete()
@@ -1877,8 +1880,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         if not result:
             raise RelatedError(
                 u'Не удалось удалить элемент {0}. '
-                u'Возможно на него есть ссылки.'.format(
-                    obj_id))
+                u'Возможно на него есть ссылки.'.format(obj_id))
         return obj
 
     def get_filter_plugin(self):
