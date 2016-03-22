@@ -1867,8 +1867,8 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         """
         try:
             obj = self.model.objects.get(id=obj_id)
-        except self.parent.get_not_found_exception():
-            raise ApplicationLogicException(self.parent.MSG_DOESNOTEXISTS)
+        except self.get_not_found_exception():
+            raise ApplicationLogicException(self.MSG_DOESNOTEXISTS)
         result = True
         if hasattr(obj, 'safe_delete'):
             result = obj.safe_delete()
