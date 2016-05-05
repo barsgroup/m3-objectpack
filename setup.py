@@ -21,7 +21,6 @@ def _read(fname):
 
 setup(
     name="m3-objectpack",
-    version="2.0.23.5",
     license='MIT',
     description=_read('DESCRIPTION'),
     author="Alexey Pirogov",
@@ -42,4 +41,11 @@ setup(
     include_package_data=True,
     long_description=_read('README'),
     install_requires=_get_requirements('REQUIREMENTS'),
+    dependency_links=(
+        'http://pypi.bars-open.ru/simple/m3-builder',
+    ),
+    setup_requires=(
+        'm3-builder>=1.0.1',
+    ),
+    set_build_info=os.path.dirname(__file__),
 )
