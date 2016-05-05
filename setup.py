@@ -31,4 +31,5 @@ setup(
     packages=find_packages('src'),
     include_package_data=True,
     long_description=read('README'),
+    install_requires=read('REQUIREMENTS'),
 )
