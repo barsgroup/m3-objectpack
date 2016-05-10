@@ -1,6 +1,17 @@
 # История изменений
 
+**2.2.1**
+
+- Корректировка импортов из ``django.conf.urls`` --- импорты из
+  ``django.conf.urls.defaults`` заменены на импорты из ``django.conf.urls`` в
+  связи с тем, что в Django 1.4 функции из ``django.conf.urls.defaults`` были
+  [перенесены](https://docs.djangoproject.com/en/1.9/releases/1.4/#django-conf-urls-defaults)
+  в ``django.conf.urls``, а в Django 1.6 модуль ``django.conf.urls.defaults``
+  был удален.
+- Минимально поддерживаемая версия Django --- 1.4.
+
 **2.2.0**
+
 - Для обеспечения совместимости с Django>=1.7 вместо `django.utils.simplejson`
   задействован модуль `json`.
 

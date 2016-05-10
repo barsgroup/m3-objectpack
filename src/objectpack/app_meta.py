@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
-
+# coding: utf-8
 import os
 
-from django.conf import urls
+from django.conf.urls import patterns
 
 
 def register_urlpatterns():
     """
     Регистрация конфигурации урлов для приложения m3.contrib.users
     """
-    return urls.defaults.patterns(
+    return patterns(
         '',
         (r'^op_static/(?P<path>.*)$',
          'django.views.static.serve',
