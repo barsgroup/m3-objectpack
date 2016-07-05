@@ -20,6 +20,7 @@ from m3 import actions as m3_actions
 from m3.actions.interfaces import IMultiSelectablePack
 from m3 import RelatedError, ApplicationLogicException
 from m3.db import safe_delete
+from m3_django_compat import ModelOptions
 from m3_ext.ui.fields.complex import ExtSearchField
 from m3_ext.ui import results as ui_results
 import ui
@@ -574,8 +575,9 @@ class ObjectRowsAction(BaseAction):
             else:
                 # --- подиндекса нет - получаем значение
                 # ищем поле в модели
+                opts = ModelOptions(obj)
                 try:
-                    fld = obj._meta.get_field_by_name(col)[0]
+                    fld = opts.get_field_by_name(col)[0]
                 except (
                     AttributeError, IndexError, dj_fields.FieldDoesNotExist
                 ):
