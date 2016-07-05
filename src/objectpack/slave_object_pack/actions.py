@@ -1,8 +1,8 @@
-# coding:utf-8
+# coding: utf-8
 """
 Инструменарий для упрощённого создания ActionPack`ов для зависимых моделей
 """
-
+from m3_django_compat import ModelOptions
 import objectpack
 
 
@@ -29,9 +29,10 @@ class SlavePack(objectpack.ObjectPack):
         """
         if self.__parents_cached:
             return self.__parents_cached
+        opts = ModelOptions(self.model)
         result = self.__parents_cached = []
         for parent in self.parents:
-            f = self.model._meta.get_field(parent)
+            f = opts.get_field(parent)
             # pack ищется в реестре "модель-pack", который должен
             pack = self._get_model_pack(f.rel.to.__name__)
             if pack:
