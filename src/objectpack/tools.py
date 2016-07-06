@@ -1,14 +1,11 @@
 # coding: utf-8
-"""
-Created on 23.07.2012
-@author: pirogov
-"""
 import datetime
 from functools import wraps
 
 from django.db import transaction
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.fields.related import RelatedField
+from m3_django_compat import ModelOptions
 
 
 # =============================================================================
@@ -468,7 +465,7 @@ def get_related_fields(model, fields):
     field_name = fields.pop(0)
     if fields:
         try:
-            field = model._meta.get_field(field_name)
+            field = ModelOptions(model).get_field(field_name)
         except (FieldDoesNotExist, KeyError, AttributeError):
             # KeyError - исключение в objectpack.ModelProxy
             # FieldDoesNotExist - в django Model
