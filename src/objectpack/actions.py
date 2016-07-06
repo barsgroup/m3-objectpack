@@ -575,12 +575,14 @@ class ObjectRowsAction(BaseAction):
             else:
                 # --- подиндекса нет - получаем значение
                 # ищем поле в модели
-                opts = ModelOptions(obj)
-                try:
-                    fld = opts.get_field_by_name(col)[0]
-                except (
-                    AttributeError, IndexError, dj_fields.FieldDoesNotExist
-                ):
+                if obj:
+                    opts = ModelOptions(obj)
+                    try:
+                        fld = opts.get_field_by_name(col)[0]
+                    except (AttributeError, IndexError,
+                            dj_fields.FieldDoesNotExist):
+                        fld = None
+                else:
                     fld = None
                 # получаем значение
                 try:
