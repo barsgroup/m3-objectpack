@@ -1,16 +1,13 @@
 # coding: utf-8
-"""
-Действия для работы с древовидными справочниками
-Author: Rinat F Sabitov
-"""
-
+u"""Действия для работы с древовидными справочниками."""
 import objectpack
 
 from objectpack import tools
 
 from m3 import actions as m3_actions
+from m3_django_compat import get_request_params
 
-import ui
+from . import ui
 
 
 class TreeObjectPack(objectpack.ObjectPack):
@@ -33,7 +30,7 @@ class TreeObjectPack(objectpack.ObjectPack):
     def get_rows_query(self, request, context):
         result = super(TreeObjectPack, self).get_rows_query(request, context)
         # данные грузятся поуровнево только есть не указан фильтр
-        filter_in_params = bool(request.REQUEST.get('filter'))
+        filter_in_params = bool(get_request_params(request).get('filter'))
         if not filter_in_params:
             # данные подгружаются "поуровнево", для чего
             # запрос содержит id узла, из которого поддерево "растет"
