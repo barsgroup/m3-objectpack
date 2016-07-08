@@ -3,10 +3,10 @@
 Инструменарий для упрощённого создания ActionPack`ов для зависимых моделей
 """
 from m3_django_compat import ModelOptions
-import objectpack
+from objectpack.actions import ObjectPack
 
 
-class SlavePack(objectpack.ObjectPack):
+class SlavePack(ObjectPack):
     """
     "Ведомый" набор действий. Используется чаще всего для грида внутри
     окна редактирования объекта, отображающего объеты,

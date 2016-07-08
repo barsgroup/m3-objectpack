@@ -1,11 +1,12 @@
 # coding: utf-8
-import datetime
 from functools import wraps
+import datetime
 
 from django.db import transaction
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.fields.related import RelatedField
 from m3_django_compat import ModelOptions
+from m3_django_compat import get_request_params
 
 
 # =============================================================================
@@ -218,7 +219,7 @@ def extract_int(request, key):
     1
     """
     try:
-        return int(request.REQUEST.get(key, ''))
+        return int(get_request_params(request).get(key, ''))
     except ValueError:
         return None
 
@@ -237,7 +238,8 @@ def extract_int_list(request, key):
     >>> extract_int_list(request, 'list')
     [1, 2, 3, 4]
     """
-    return map(int, filter(None, request.REQUEST.get(key, '').split(',')))
+    request_params = get_request_params(request)
+    return map(int, filter(None, request_params.get(key, '').split(',')))
 
 
 def str_to_date(s):
@@ -268,7 +270,7 @@ def extract_date(request, key, as_date=False):
     (в таком виде приходит от ExtDateField)
     и приведение к Django-формату (YYYY-MM-DD)
     """
-    res = str_to_date(request.REQUEST.get(key))
+    res = str_to_date(get_request_params(request).get(key))
     if res and as_date:
         res = res.date()
     return res

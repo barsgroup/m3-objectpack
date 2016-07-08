@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-Меахнизмы фильтрации справочников/реестров на базе ObjectPack
-
-.. moduleauthor:: Ахмадиев Т., Пирогов А.
-"""
+# coding: utf-8
+u"""Меахнизмы фильтрации справочников/реестров на базе ObjectPack."""
 from operator import or_, and_
 import abc
 import json
@@ -11,6 +7,7 @@ import json
 from django.db import models
 from m3.actions import DeclarativeActionContext
 from m3_django_compat import ModelOptions
+from m3_django_compat import get_request_params
 
 from .tools import str_to_date
 from .ui import _create_control_for_field
@@ -456,5 +453,5 @@ class ColumnFilterEngine(AbstractFilterEngine):
         """
         q = models.Q()
         for _filter in self._columns.itervalues():
-            q &= _filter.get_q(request.REQUEST)
+            q &= _filter.get_q(get_request_params(request))
         return query.filter(q)

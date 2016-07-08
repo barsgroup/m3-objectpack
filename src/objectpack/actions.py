@@ -1,12 +1,5 @@
 # coding: utf-8
-"""
-:Created: 23.07.2012
-
-:Author: pirogov
-
-Этот модуль содержит главный класс библиотеки и набор actions для него
-"""
-
+u"""Этот модуль содержит главный класс библиотеки и набор actions для него."""
 import copy
 import datetime
 import types
@@ -20,13 +13,14 @@ from m3 import actions as m3_actions
 from m3.actions.interfaces import IMultiSelectablePack
 from m3 import RelatedError, ApplicationLogicException
 from m3.db import safe_delete
+from m3_django_compat import get_request_params
 from m3_django_compat import ModelOptions
 from m3_ext.ui.fields.complex import ExtSearchField
 from m3_ext.ui import results as ui_results
-import ui
-import tools
-import exceptions
-import filters
+from . import ui
+from . import tools
+from . import exceptions
+from . import filters
 
 
 # =============================================================================
@@ -674,8 +668,9 @@ class ObjectRowsAction(BaseAction):
         new_self.request = request
         new_self.context = context
 
-        if request.REQUEST.get('xaction') not in ['read', None]:
-            data = json.loads(request.REQUEST.get('rows'))
+        request_params = get_request_params(request)
+        if request_params.get('xaction') not in ['read', None]:
+            data = json.loads(request_params.get('rows'))
             if not isinstance(data, list):
                 data = [data]
             success, message = self.handle_row_editing(
@@ -1716,7 +1711,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         """
         return m3_actions.utils.apply_search_filter(
             query,
-            request.REQUEST.get('filter'),
+            get_request_params(request).get('filter'),
             self.get_search_fields()
         )
 
@@ -1735,9 +1730,10 @@ class ObjectPack(BasePack, IMultiSelectablePack):
             Обычно не требует перекрытия
 
         """
-        sorting_key = request.REQUEST.get('sort')
+        request_params = get_request_params(request)
+        sorting_key = request_params.get('sort')
         if sorting_key:
-            reverse = request.REQUEST.get('dir') == 'DESC'
+            reverse = request_params.get('dir') == 'DESC'
             sort_order = self.get_sort_order(
                 data_index=sorting_key,
                 reverse=reverse)
