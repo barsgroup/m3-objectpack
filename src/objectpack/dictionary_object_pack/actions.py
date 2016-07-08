@@ -1,14 +1,9 @@
 # coding: utf-8
-"""
-File: actions.py
-Author: Rinat F Sabitov
-Description:
-"""
-
-import objectpack
+from objectpack.actions import ObjectPack
+from objectpack.ui import ModelEditWindow
 
 
-class DictionaryObjectPack(objectpack.ObjectPack):
+class DictionaryObjectPack(ObjectPack):
     """
     Набор действий для простых справочников
     """
@@ -33,7 +28,7 @@ class DictionaryObjectPack(objectpack.ObjectPack):
         """
         if not any([self.edit_window, self.add_window]):
             self.edit_window = self.add_window = (
-                objectpack.ui.ModelEditWindow.fabricate(self.model)
+                ModelEditWindow.fabricate(self.model)
             )
         super(DictionaryObjectPack, self).__init__(*args, **kwargs)
 

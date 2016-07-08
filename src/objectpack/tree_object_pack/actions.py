@@ -1,16 +1,17 @@
 # coding: utf-8
 u"""Действия для работы с древовидными справочниками."""
-import objectpack
-
-from objectpack import tools
-
 from m3 import actions as m3_actions
 from m3_django_compat import get_request_params
+
+from objectpack.actions import ObjectPack
+from objectpack.actions import ObjectRowsAction
+from objectpack.tools import extract_int
+from objectpack.tools import int_or_none
 
 from . import ui
 
 
-class TreeObjectPack(objectpack.ObjectPack):
+class TreeObjectPack(ObjectPack):
     """
     Набор действий для работы с объектами,
     находящимися в древовидной иерархии.
@@ -24,7 +25,7 @@ class TreeObjectPack(objectpack.ObjectPack):
     def __init__(self, *args, **kwargs):
         super(TreeObjectPack, self).__init__(*args, **kwargs)
         self.replace_action('rows_action', TreeObjectRowsAction())
-        self.autocomplete_action = objectpack.ObjectRowsAction()
+        self.autocomplete_action = ObjectRowsAction()
         self.actions.append(self.autocomplete_action)
 
     def get_rows_query(self, request, context):
@@ -34,7 +35,7 @@ class TreeObjectPack(objectpack.ObjectPack):
         if not filter_in_params:
             # данные подгружаются "поуровнево", для чего
             # запрос содержит id узла, из которого поддерево "растет"
-            current_node_id = objectpack.extract_int(
+            current_node_id = extract_int(
                 request, self.id_param_name)
             if current_node_id < 0:
                 # если корневой узел поддерева не указан, будут выводиться
@@ -76,14 +77,14 @@ class TreeObjectPack(objectpack.ObjectPack):
         ):
             # id может и не прийти,
             # если добавление производится в корень
-            decl['parent_id'] = {'type': tools.int_or_none, 'default': None}
+            decl['parent_id'] = {'type': int_or_none, 'default': None}
         return decl
 
     def get_autocomplete_url(self):
         return self.autocomplete_action.get_absolute_url()
 
 
-class TreeObjectRowsAction(objectpack.ObjectRowsAction):
+class TreeObjectRowsAction(ObjectRowsAction):
     """
     Получение данных для древовидного списка объектов
     """

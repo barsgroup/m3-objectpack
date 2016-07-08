@@ -1,12 +1,10 @@
 # coding: utf-8
-"""
-Модели
-"""
+u"""Модели."""
 import datetime
 
 from django.db import models
 
-import objectpack
+from objectpack.models import VirtualModel
 
 
 # =============================================================================
@@ -53,7 +51,7 @@ class Person(models.Model):
 # =============================================================================
 # FakeModel
 # =============================================================================
-class FakeModel(objectpack.VirtualModel):
+class FakeModel(VirtualModel):
     """
     Виртуальная модель со столбцами field1, field2,...
     """
@@ -71,7 +69,7 @@ class FakeModel(objectpack.VirtualModel):
 # =============================================================================
 # TreeNode
 # =============================================================================
-class TreeNode(objectpack.VirtualModel):
+class TreeNode(VirtualModel):
     """
     Виртуальная модель, представляющая собой дерево
     """

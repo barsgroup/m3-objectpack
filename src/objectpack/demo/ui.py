@@ -1,17 +1,19 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
+from m3_ext.ui.fields.complex import ExtMultiSelectField
+from objectpack.ui import ObjectGridTab
+from objectpack.ui import ObjectTab
+from objectpack.ui import TabbedEditWindow
 
-import objectpack
-import controller
-
-import models
+from . import controller
+from . import models
 
 
-class GarageTab(objectpack.ObjectTab.fabricate(
+class GarageTab(ObjectTab.fabricate(
         model=models.Garage, field_list=('name',))):
 
     def init_components(self, *args, **kwargs):
         super(GarageTab, self).init_components(*args, **kwargs)
-        from m3_ext.ui.all_components import ExtMultiSelectField
+
         self._staff_field = ExtMultiSelectField(
             label=u'Сотрудники (пример поля множественного выбора)')
         self._controls.append(self._staff_field)
@@ -22,17 +24,17 @@ class GarageTab(objectpack.ObjectTab.fabricate(
         self._staff_field.display_field = '__unicode__'
 
 
-class GarageEditWindow(objectpack.TabbedEditWindow):
+class GarageEditWindow(TabbedEditWindow):
     """
     Окно редактирования
     """
     tabs = [
         GarageTab,
-        objectpack.ObjectGridTab.fabricate_from_pack(
+        ObjectGridTab.fabricate_from_pack(
             pack_name='objectpack.demo.actions.StaffPack',
             pack_register=controller.obs,
         ),
-        objectpack.ObjectGridTab.fabricate_from_pack(
+        ObjectGridTab.fabricate_from_pack(
             pack_name='objectpack.demo.actions.ToolPack',
             pack_register=controller.obs
         ),
