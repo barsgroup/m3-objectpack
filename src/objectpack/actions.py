@@ -16,7 +16,7 @@ import warnings
 from django.db.models import fields as dj_fields
 from django.core import exceptions as dj_exceptions
 from django.utils.encoding import force_unicode
-from m3 import actions as m3_actions
+from m3 import date2str, actions as m3_actions
 from m3.actions.interfaces import IMultiSelectablePack
 from m3 import RelatedError, ApplicationLogicException
 from m3.db import safe_delete
@@ -609,9 +609,9 @@ class ObjectRowsAction(BaseAction):
                         obj = obj()
 
                 if isinstance(obj, datetime.datetime):
-                    obj = obj.strftime('%d.%m.%Y %H:%M:%S')
+                    obj = date2str(obj, '%d.%m.%Y %H:%M:%S')
                 elif isinstance(obj, datetime.date):
-                    obj = obj.strftime('%d.%m.%Y')
+                    obj = date2str(obj, '%d.%m.%Y')
 
                 if obj is None:
                     # None выводится пустой строкой
