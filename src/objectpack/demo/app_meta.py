@@ -1,5 +1,5 @@
 # coding: utf-8
-from django.conf.urls import patterns
+from django.conf.urls import url
 from objectpack import desktop
 
 from . import actions
@@ -10,10 +10,7 @@ def register_urlpatterns():
     """
     Регистрация конфигурации урлов для приложения
     """
-    return patterns(
-        "",
-        controller.action_controller.urlpattern
-    )
+    return [url(*controller.action_controller.urlpattern)]
 
 
 def register_actions():
