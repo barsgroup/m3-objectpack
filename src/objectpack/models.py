@@ -2,12 +2,14 @@
 """
 Виртуальная модель и proxy-обертка для работы с группой моделей
 """
-import copy
 from collections import Iterable
 from itertools import ifilter, ifilterfalse, islice, imap
+import copy
 
 from django.db.models import query, manager
+
 from m3_django_compat import ModelOptions
+from m3_django_compat import get_related
 
 
 def kwargs_only(*keys):
@@ -354,7 +356,7 @@ class ModelProxyMeta(type):
                 def submeta(meta, path):
                     for field in path.split('.'):
                         field = ModelOptions(meta.model).get_field(field)
-                        meta = field.related.parent_model._meta
+                        meta = get_related(field).parent_model._meta
                     return meta
 
                 meta = model._meta
@@ -508,8 +510,8 @@ class ModelProxy(object):
                 sub_obj, sub_model = obj, self.model
                 for item in path.split('.'):
                     # получение связанной модели
-                    sub_model = ModelOptions(sub_model).get_field(
-                        item).related.parent_model
+                    field = ModelOptions(sub_model).get_field(item)
+                    sub_model = get_related(field).parent_model
                     # объект может быть уже заполнен, при частично
                     # пересекающихся путях в relations
                     # в этом случае новый объект не создается,

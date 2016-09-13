@@ -1,5 +1,5 @@
 Django>=1.4.0
 m3-builder>=1.0.1
-m3-django-compat>=1.2.1
+m3-django-compat>=1.2.3
 m3-core>=2.2.3,<3.0.0
 m3-ui>=2.2.2,<3.0.0
