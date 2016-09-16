@@ -10,6 +10,7 @@ from m3_ext.ui.fields.simple import ExtStringField
 from m3_ext.ui.fields.simple import ExtTextArea
 from m3_ext.ui.fields.simple import ExtTimeField
 
+from objectpack.ui import ComboBoxWithStore
 from objectpack.ui import _create_control_for_field
 
 from .models import TestModel
@@ -45,6 +46,13 @@ class CreateControlForFieldTestCase(SimpleTestCase):
         self.assertFalse(control.allow_negative)
         self.assertFalse(control.allow_decimals)
         self.assertEquals(control.max_value, 400)
+
+    def test_choices_fields(self):
+        u"""Проверка генерации контролов для целочисленных полей."""
+        field = TestModel._meta.get_field('choices_field')
+        control = _create_control_for_field(field)
+        self.assertIsInstance(control, ComboBoxWithStore)
+        self.assertEquals(set(control.data), set(field.choices))
 
     def test_float_field(self):
         u"""Проверка контрола для поля ввода вещественных чисел."""
