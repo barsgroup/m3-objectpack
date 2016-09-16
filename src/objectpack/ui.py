@@ -4,9 +4,14 @@
 
 :author: pirogov
 """
+from datetime import datetime
 import inspect
 
 from django.db import models as django_models
+from django.core.validators import MaxLengthValidator
+from django.core.validators import MinLengthValidator
+from django.core.validators import MaxValueValidator
+from django.core.validators import MinValueValidator
 
 from m3_ext.ui import all_components as ext
 from m3_ext.ui import windows as ext_windows
@@ -721,11 +726,9 @@ class GenerationError(Exception):
 
 
 def _create_control_for_field(f, model_register=None, **kwargs):
-    """
-    создает контрол для поля f = models.Field from model
-    """
-    name = f.attname
-
+    u"""Возвращает контрол для поля модели."""
+    name = str(f.attname)
+    # -------------------------------------------------------------------------
     if f.choices:
         ctl = make_combo_box(data=list(f.choices), **kwargs)
 
@@ -777,27 +780,76 @@ def _create_control_for_field(f, model_register=None, **kwargs):
 
     else:
         raise GenerationError(u'Не могу создать контрол для %s' % f)
-
+    # -------------------------------------------------------------------------
     ctl.name = name
     ctl.label = unicode(f.verbose_name or name)
     ctl.allow_blank = f.blank
 
     if ctl.allow_blank and hasattr(ctl, 'hide_clear_trigger'):
         ctl.hide_clear_trigger = False
+    # -------------------------------------------------------------------------
+    # Установка минимального и максимального значения поля ввода.
 
-    # простановка значения по-умолчанию, если таковое указано для поля
+    if isinstance(f, (django_models.IntegerField,
+                      django_models.FloatField,
+                      django_models.DecimalField,
+                      django_models.DateField,
+                      django_models.TimeField)):
+        for validator in f.validators:
+            if (
+                isinstance(validator, MinValueValidator) and
+                (
+                    ctl.min_value is None or
+                    ctl.min_value < validator.limit_value
+                )
+            ):
+                ctl.min_value = validator.limit_value
+
+            elif (
+                isinstance(validator, MaxValueValidator) and
+                (
+                    ctl.max_value is None or
+                    ctl.max_value > validator.limit_value
+                )
+            ):
+                ctl.max_value = validator.limit_value
+
+        if isinstance(ctl.min_value, datetime):
+            ctl.min_value = ctl.min_value.date()
+        if isinstance(ctl.max_value, datetime):
+            ctl.max_value = ctl.max_value.date()
+    # -------------------------------------------------------------------------
+    # Установка минимальной и максимальной длины значения текстового поля.
+
+    if isinstance(f, (django_models.CharField,
+                      django_models.TextField)):
+        for validator in f.validators:
+            if (
+                isinstance(validator, MinLengthValidator) and
+                (
+                    ctl.min_length is None or
+                    ctl.min_length > validator.limit_value
+                )
+            ):
+                ctl.min_length = validator.limit_value
+
+            elif isinstance(validator, MaxLengthValidator):
+                ctl.max_length = max(ctl.max_length, validator.limit_value)
+    # -------------------------------------------------------------------------
+    # Простановка значения по-умолчанию, если таковое указано для поля.
+
     default = getattr(f, 'default', None)
     if default and default is not django_models.NOT_PROVIDED:
         if callable(default):
             default = default()
         ctl.value = default
-        # если поле - combobox, то поставляется не только значение, но и текст
+        # Если поле - combobox, то поставляется не только значение, но и текст.
         if hasattr(ctl, 'display_field'):
             for k, v in (f.choices or []):
                 if default == k:
                     ctl.default_text = v
                     break
-
+    # -------------------------------------------------------------------------
     return ctl
 
 
