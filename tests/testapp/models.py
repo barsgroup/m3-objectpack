@@ -28,6 +28,15 @@ class TestModel(models.Model):
             MaxValueValidator(400),
         ]
     )
+    choices_field = models.PositiveSmallIntegerField(
+        choices=(
+            (1, u'Раз'),
+            (2, u'Два'),
+            (3, u'Три'),
+            (4, u'Четыре'),
+            (5, u'Пять'),
+        ),
+    )
     float_field = models.FloatField(
         validators=[
             MinValueValidator(-10.5),

@@ -788,41 +788,58 @@ def _create_control_for_field(f, model_register=None, **kwargs):
     if ctl.allow_blank and hasattr(ctl, 'hide_clear_trigger'):
         ctl.hide_clear_trigger = False
     # -------------------------------------------------------------------------
-    # Установка минимального и максимального значения поля ввода.
+    # Установка минимального и максимального значения поля ввода, а также
+    # минимальной и максимальной длины строки.
 
-    if isinstance(f, (django_models.IntegerField,
-                      django_models.FloatField,
-                      django_models.DecimalField,
-                      django_models.DateField,
-                      django_models.TimeField)):
-        for validator in f.validators:
-            if (
-                isinstance(validator, MinValueValidator) and
-                (
-                    ctl.min_value is None or
-                    ctl.min_value < validator.limit_value
-                )
-            ):
-                ctl.min_value = validator.limit_value
+    for validator in f.validators:
+        if (
+            hasattr(ctl, 'min_value') and
+            isinstance(validator, MinValueValidator) and
+            (
+                ctl.min_value is None or
+                ctl.min_value < validator.limit_value
+            )
+        ):
+            ctl.min_value = validator.limit_value
 
-            elif (
-                isinstance(validator, MaxValueValidator) and
-                (
-                    ctl.max_value is None or
-                    ctl.max_value > validator.limit_value
-                )
-            ):
-                ctl.max_value = validator.limit_value
+            if isinstance(ctl.min_value, datetime):
+                ctl.min_value = ctl.min_value.date()
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        if (
+            hasattr(ctl, 'max_value') and
+            isinstance(validator, MaxValueValidator) and
+            (
+                ctl.max_value is None or
+                ctl.max_value > validator.limit_value
+            )
+        ):
+            ctl.max_value = validator.limit_value
 
-        if isinstance(ctl.min_value, datetime):
-            ctl.min_value = ctl.min_value.date()
-        if isinstance(ctl.max_value, datetime):
-            ctl.max_value = ctl.max_value.date()
+            if isinstance(ctl.max_value, datetime):
+                ctl.max_value = ctl.max_value.date()
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        if (
+            hasattr(ctl, 'min_length') and
+            isinstance(validator, MinLengthValidator) and
+            (
+                ctl.min_length is None or
+                ctl.min_length > validator.limit_value
+            )
+        ):
+            ctl.min_length = validator.limit_value
+        # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        if (
+            hasattr(ctl, 'max_length') and
+            isinstance(validator, MaxLengthValidator)
+        ):
+            ctl.max_length = max(ctl.max_length, validator.limit_value)
     # -------------------------------------------------------------------------
     # Установка минимальной и максимальной длины значения текстового поля.
 
-    if isinstance(f, (django_models.CharField,
-                      django_models.TextField)):
+    if (
+        isinstance(f, (ext.ExtStringField, ext.ExtTextArea)) and
+        isinstance(f, (django_models.CharField, django_models.TextField))
+    ):
         for validator in f.validators:
             if (
                 isinstance(validator, MinLengthValidator) and
