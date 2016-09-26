@@ -54,6 +54,11 @@ class CreateControlForFieldTestCase(SimpleTestCase):
         self.assertIsInstance(control, ComboBoxWithStore)
         self.assertEquals(set(control.data), set(field.choices))
 
+        # Для комбобоксов не должно быть валидации по длине поля, т.к.
+        # проверяется длина отображаемого текста, а не значения.
+        self.assertTrue(control.min_length is None)
+        self.assertTrue(control.max_length is None)
+
     def test_float_field(self):
         u"""Проверка контрола для поля ввода вещественных чисел."""
         control = _create_control_for_field(
