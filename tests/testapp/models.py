@@ -36,6 +36,10 @@ class TestModel(models.Model):
             (4, u'Четыре'),
             (5, u'Пять'),
         ),
+        validators=[
+            MinLengthValidator(1),
+            MaxValueValidator(2),
+        ]
     )
     float_field = models.FloatField(
         validators=[
