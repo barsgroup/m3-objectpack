@@ -29,6 +29,7 @@ class BaseTreeListWindow(BaseListWindow):
         """
         super(BaseTreeListWindow, self)._init_components()
         self.grid = BaseObjectTree()
+        self.template_globals = 'tree-list-window.js'
 
 
 class BaseTreeSelectWindow(BaseSelectWindow):
