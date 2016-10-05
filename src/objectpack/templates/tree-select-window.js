@@ -1,3 +1,5 @@
+{% include 'tree-list-window.js' %}
+
 function isGridSelected(grid, title, message){
     res = true;
     if (!grid.getSelectionModel().getSelectedNode() ) {
