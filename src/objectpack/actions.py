@@ -1541,13 +1541,8 @@ class ObjectPack(BasePack, IMultiSelectablePack):
             ])
         cc.configure_grid(grid)
 
-        # TODO перенести в класс грида, сделать метод add_search_field
         if self.get_search_fields():
-            # поиск по гриду если есть по чему искать
-            grid.top_bar.search_field = ExtSearchField(
-                empty_text=u'Поиск', width=200, component_for_search=grid)
-            grid.top_bar.add_fill()
-            grid.top_bar.items.append(grid.top_bar.search_field)
+            grid.add_search_field()
 
         grid.row_id_name = self.id_param_name
         grid.allow_paging = self.allow_paging
