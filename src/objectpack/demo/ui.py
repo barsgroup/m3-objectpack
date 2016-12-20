@@ -29,11 +29,11 @@ class GarageEditWindow(objectpack.TabbedEditWindow):
     tabs = [
         GarageTab,
         objectpack.ObjectGridTab.fabricate_from_pack(
-            pack_name='objectpack.demo.actions.StaffPack',
+            pack_name='objectpack.demo/StaffPack',
             pack_register=controller.obs,
         ),
         objectpack.ObjectGridTab.fabricate_from_pack(
-            pack_name='objectpack.demo.actions.ToolPack',
+            pack_name='objectpack.demo/ToolPack',
             pack_register=controller.obs
         ),
     ]

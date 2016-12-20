@@ -22,7 +22,8 @@ class Listener(object):
 
     def after(self, request, context, response):
         # подмена заголовка окна
-        response.data.title = u'Му-ха-ха! %s' % response.data.title
+        pass
+        # response.data.title = u'Му-ха-ха! %s' % response.data.title
 
 
 @obs.subscribe
