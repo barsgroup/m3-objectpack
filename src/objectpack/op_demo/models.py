@@ -1,12 +1,9 @@
 # coding: utf-8
-"""
-Модели
-"""
+
 import datetime
+import objectpack
 
 from django.db import models
-
-import objectpack
 
 
 class Person(models.Model):

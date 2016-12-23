@@ -16,6 +16,7 @@ import warnings
 from django.db.models import fields as dj_fields
 from django.core import exceptions as dj_exceptions
 from django.utils.encoding import force_unicode
+from m3_django_compat import ModelOptions
 from m3 import actions as m3_actions
 from m3.actions import DeclarativeActionContext as _DAC
 from m3.actions.interfaces import IMultiSelectablePack
@@ -624,11 +625,14 @@ class ObjectRowsAction(BaseAction):
             else:
                 # --- подиндекса нет - получаем значение
                 # ищем поле в модели
-                try:
-                    fld = obj._meta.get_field_by_name(col)[0]
-                except (
-                    AttributeError, IndexError, dj_fields.FieldDoesNotExist
-                ):
+                if obj:
+                    opts = ModelOptions(obj)
+                    try:
+                        fld = opts.get_field_by_name(col)[0]
+                    except (AttributeError, IndexError,
+                            dj_fields.FieldDoesNotExist):
+                        fld = None
+                else:
                     fld = None
                 # получаем значение
                 try:

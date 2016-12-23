@@ -11,8 +11,10 @@ from operator import or_, and_
 
 from django.db import models
 from m3.actions import DeclarativeActionContext
-from .ui import _create_control_for_field
+from m3_django_compat import ModelOptions
+
 from .tools import str_to_date
+from .ui import _create_control_for_field
 
 
 class AbstractFilterEngine(object):
@@ -282,7 +284,7 @@ class FilterByField(AbstractFilter):
         path = self._field_name.split('__')
 
         def get(model, fld, path):
-            res = model._meta.get_field(fld)
+            res = ModelOptions(model).get_field(fld)
             if path:
                 return get(res.rel.to, path[0], path[1:])
             return res
