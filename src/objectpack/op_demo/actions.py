@@ -2,20 +2,26 @@
 
 from functools import partial
 
-import objectpack
-from m3.actions import OperationResult
+from m3.actions.results import OperationResult
 from objectpack import tree_object_pack
 
+from objectpack.actions import BaseAction
+from objectpack.actions import ObjectPack
+from objectpack.actions import SelectorWindowAction
+from objectpack.actions import MasterDetailWindowAction
+from objectpack.filters import FilterByField, ColumnFilterEngine
+from objectpack.slave_object_pack.actions import SlavePack
+from objectpack.tools import extract_int_list
+from objectpack.ui import ModelEditWindow
 from objectpack.op_demo import ui
 from objectpack.op_demo import models
 from objectpack.op_demo.controller import obs
-from objectpack.filters import FilterByField, ColumnFilterEngine
 
 
 # =============================================================================
 # PersonObjectPack
 # =============================================================================
-class PersonObjectPack(objectpack.ObjectPack):
+class PersonObjectPack(ObjectPack):
     """
     ObjectPack для модели Person
     """
@@ -24,7 +30,7 @@ class PersonObjectPack(objectpack.ObjectPack):
     add_to_desktop = True
     add_to_menu = True
 
-    edit_window = add_window = objectpack.ui.ModelEditWindow.fabricate(
+    edit_window = add_window = ModelEditWindow.fabricate(
         model, model_register=obs
     )
 
@@ -85,7 +91,7 @@ class PersonCardObjectPack(PersonObjectPack):
 # =============================================================================
 # CFPersonObjectPack
 # =============================================================================
-class CFPersonObjectPack(objectpack.ObjectPack):
+class CFPersonObjectPack(ObjectPack):
     """
     Пак физ.лиц, демонстрирующий использование колоночных фильтров
     """
@@ -130,7 +136,7 @@ class CFPersonObjectPack(objectpack.ObjectPack):
 # =============================================================================
 # BandedColumnPack
 # =============================================================================
-class BandedColumnPack(objectpack.ObjectPack):
+class BandedColumnPack(ObjectPack):
     """Демонстрация Banded Columns"""
 
     title = u'Группирующие колонки'
@@ -196,7 +202,7 @@ class TreePack(tree_object_pack.TreeObjectPack):
 # =============================================================================
 # Паки гаражей с инструментом и сотрудницами
 # =============================================================================
-class GarageMDWindowAction(objectpack.actions.MasterDetailWindowAction):
+class GarageMDWindowAction(MasterDetailWindowAction):
 
     @property
     def detail_pack(self):
@@ -211,7 +217,7 @@ class GarageMDWindowAction(objectpack.actions.MasterDetailWindowAction):
         })
 
 
-class GaragePack(objectpack.ObjectPack):
+class GaragePack(ObjectPack):
     """
     Гаражи
     """
@@ -220,7 +226,7 @@ class GaragePack(objectpack.ObjectPack):
     add_to_menu = True
     add_to_desktop = True
 
-    add_window = objectpack.ModelEditWindow.fabricate(model)
+    add_window = ModelEditWindow.fabricate(model)
     edit_window = ui.GarageEditWindow
 
     def __init__(self):
@@ -235,7 +241,7 @@ class GaragePack(objectpack.ObjectPack):
         ]
 
 
-class ToolPack(objectpack.SlavePack):
+class ToolPack(SlavePack):
     """
     Инвентарь гаража
     """
@@ -245,12 +251,12 @@ class ToolPack(objectpack.SlavePack):
 
     parents = ['garage']
 
-    add_window = edit_window = objectpack.ModelEditWindow.fabricate(
+    add_window = edit_window = ModelEditWindow.fabricate(
         model=model, field_list=('name',)
     )
 
 
-class StaffPack(objectpack.SlavePack):
+class StaffPack(SlavePack):
     """
     Сотрудники гаража
     """
@@ -270,7 +276,7 @@ class StaffPack(objectpack.SlavePack):
         self.actions.append(self.save_staff_action)
 
 
-class ROStaffPack(objectpack.ObjectPack):
+class ROStaffPack(ObjectPack):
     """
     Сотрудники гаража для отображения на раб.столе
     Демонстрирует колоночные фильтры с лукапом вглубь
@@ -299,7 +305,7 @@ class ROStaffPack(objectpack.ObjectPack):
     ]
 
 
-class SelectPersonAction(objectpack.SelectorWindowAction):
+class SelectPersonAction(SelectorWindowAction):
     """
     Экшн отображения списка физ.лиц
     """
@@ -309,14 +315,14 @@ class SelectPersonAction(objectpack.SelectorWindowAction):
         self.data_pack = self.parent._get_model_pack('Person')
 
 
-class SaveStaffAction(objectpack.BaseAction):
+class SaveStaffAction(BaseAction):
     """
     Экшн прикрепления физ.лиц к гаражу
     """
     url = r'/save_staff$'
 
     def run(self, request, context):
-        ids = objectpack.extract_int_list(request, 'id')
+        ids = extract_int_list(request, 'id')
         for i in ids:
             obj = models.GarageStaff(person_id=i)
             self.parent.save_row(obj, True, request, context)

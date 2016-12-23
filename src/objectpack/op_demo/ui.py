@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import objectpack
 from m3_ext.ui import all_components as ext
+
+from objectpack.ui import ModelEditWindow
+from objectpack.ui import TabbedEditWindow
+from objectpack.ui import ObjectGridTab
+from objectpack.ui import ObjectTab
 
 from . import controller
 from . import models
 
 
-class GarageTab(objectpack.ObjectTab.fabricate(
+class GarageTab(ObjectTab.fabricate(
         model=models.Garage, field_list=('name',))):
 
     def init_components(self, *args, **kwargs):
@@ -22,24 +26,24 @@ class GarageTab(objectpack.ObjectTab.fabricate(
         self._staff_field.display_field = '__unicode__'
 
 
-class GarageEditWindow(objectpack.TabbedEditWindow):
+class GarageEditWindow(TabbedEditWindow):
     """
     Окно редактирования
     """
     tabs = [
         GarageTab,
-        objectpack.ObjectGridTab.fabricate_from_pack(
+        ObjectGridTab.fabricate_from_pack(
             pack_name='objectpack.op_demo/StaffPack',
             pack_register=controller.obs,
         ),
-        objectpack.ObjectGridTab.fabricate_from_pack(
+        ObjectGridTab.fabricate_from_pack(
             pack_name='objectpack.op_demo/ToolPack',
             pack_register=controller.obs
         ),
     ]
 
 
-class PersonCardEditWindow(objectpack.ModelEditWindow):
+class PersonCardEditWindow(ModelEditWindow):
     """
     Окно редактирования карточки физ-лица
     """
