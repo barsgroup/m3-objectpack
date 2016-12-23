@@ -1,15 +1,15 @@
 # coding:utf-8
+
 from functools import partial
 
-from m3 import actions as m3_actions
-
 import objectpack
+from m3.actions import OperationResult
 from objectpack import tree_object_pack
-from objectpack.filters import FilterByField, ColumnFilterEngine
-from objectpack.demo.controller import obs
 
-import objectpack.demo.models as models
-import objectpack.demo.ui as ui
+from objectpack.op_demo import ui
+from objectpack.op_demo import models
+from objectpack.op_demo.controller import obs
+from objectpack.filters import FilterByField, ColumnFilterEngine
 
 
 # =============================================================================
@@ -320,4 +320,4 @@ class SaveStaffAction(objectpack.BaseAction):
         for i in ids:
             obj = models.GarageStaff(person_id=i)
             self.parent.save_row(obj, True, request, context)
-        return m3_actions.OperationResult()
+        return OperationResult()

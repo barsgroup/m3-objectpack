@@ -10,6 +10,7 @@ from operator import attrgetter as _attrgetter
 from django.db import transaction as _transaction
 from django.db.models.fields.related import RelatedField as _RelatedField
 from django.db.models.fields import FieldDoesNotExist
+from m3_django_compat import ModelOptions
 
 
 # =============================================================================
@@ -467,7 +468,7 @@ def get_related_fields(model, fields):
     field_name = fields.pop(0)
     if fields:
         try:
-            field = model._meta.get_field(field_name)
+            field = ModelOptions(model).get_field(field_name)
         except (FieldDoesNotExist, KeyError, AttributeError):
             # KeyError - исключение в objectpack.ModelProxy
             # FieldDoesNotExist - в django Model

@@ -4,10 +4,11 @@
 """
 import copy
 from collections import Iterable
-from operator import attrgetter
 from itertools import ifilter, ifilterfalse, islice, imap
 
 from django.db.models import query, manager
+from m3_django_compat import ModelOptions
+from m3_django_compat import get_related
 
 from m3.db.tools import model_to_dict as _model_to_dict
 
@@ -355,7 +356,8 @@ class ModelProxyMeta(type):
 
                 def submeta(meta, path):
                     for field in path.split('.'):
-                        meta = meta.get_field(field).related.parent_model._meta
+                        field = ModelOptions(meta.model).get_field(field)
+                        meta = get_related(field).parent_model._meta
                     return meta
 
                 meta = model._meta
@@ -369,10 +371,11 @@ class ModelProxyMeta(type):
                         fields_.append(f)
                         fields_dict[f.attname] = f
 
+                opts = ModelOptions(model)
                 # сами relations должны быть представлены в виде полей
                 # на верхнем уровне
                 for rel in relations:
-                    f = model._meta.get_field(rel)
+                    f = opts.get_field(rel)
                     fields_.append(copy.copy(f))
                     fields_dict[rel] = f
 
@@ -517,8 +520,8 @@ class ModelProxy(object):
                 sub_obj, sub_model = obj, self.model
                 for item in path.split('.'):
                     # получение связанной модели
-                    sub_model = sub_model._meta.get_field(
-                        item).related.parent_model
+                    field = ModelOptions(sub_model).get_field(item)
+                    sub_model = get_related(field).parent_model
                     # объект может быть уже заполнен, при частично
                     # пересекающихся путях в relations
                     # в этом случае новый объект не создается,
