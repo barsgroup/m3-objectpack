@@ -1,6 +1,9 @@
 # История изменений
 
 **3.1.0**
+- Добавлены изменения для совместимости с Django версии 1.9:
+    - Замена доступа к атрибуту HttpRequest.REQUEST на get_request_params()
+    - Удаление импортов из objectpack/__init__.py
 - Добавлены изменения для совместимости с Django версии 1.8:
     - Прямой вызов Model._meta.get_field(...) заменен на ModelOptions.get_field()
     - Корректировка кода в ObjectRowsAction

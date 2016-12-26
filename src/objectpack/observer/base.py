@@ -11,6 +11,7 @@ import logging
 import tools
 
 from m3 import actions as m3_actions
+from m3_django_compat import get_request_params
 
 ACTION_NAME_ATTR = '_observing_name'
 
@@ -86,7 +87,7 @@ class ObservableController(ObservableMixin, m3_actions.ActionController):
                     raise
                 else:
                     _warn('%r, url="%s"' % (e, request.path_info))
-            for k, v in request.REQUEST.items():
+            for k, v in get_request_params(request).iteritems():
                 if not hasattr(self, k):
                     setattr(self, k, v)
 

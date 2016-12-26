@@ -1,9 +1,12 @@
 # coding: utf-8
 
 import datetime
-import objectpack
 
 from django.db import models
+
+from objectpack.models import VirtualModel
+from objectpack.models import ModelProxy
+from objectpack.models import ModelProxyMeta
 
 
 class Person(models.Model):
@@ -55,8 +58,8 @@ class Person(models.Model):
         verbose_name_plural = u'Физические лица'
 
 
-class PersonCard(objectpack.ModelProxy):
-    __metaclass__ = objectpack.models.ModelProxyMeta
+class PersonCard(ModelProxy):
+    __metaclass__ = ModelProxyMeta
 
     model = Person
     relations = ['father', 'mother']
@@ -77,7 +80,7 @@ class PersonCard(objectpack.ModelProxy):
 # =============================================================================
 # FakeModel
 # =============================================================================
-class FakeModel(objectpack.VirtualModel):
+class FakeModel(VirtualModel):
     """
     Виртуальная модель со столбцами field1, field2,...
     """
@@ -95,7 +98,7 @@ class FakeModel(objectpack.VirtualModel):
 # =============================================================================
 # TreeNode
 # =============================================================================
-class TreeNode(objectpack.VirtualModel):
+class TreeNode(VirtualModel):
     """
     Виртуальная модель, представляющая собой дерево
     """
