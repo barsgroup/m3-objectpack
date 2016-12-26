@@ -1,21 +1,15 @@
 # coding: utf-8
 
-from django.conf.urls import patterns
-
+from django.conf.urls import url
 from objectpack import desktop
 
-import actions
-import controller
+from . import actions
+from . import controller
 
 
 def register_urlpatterns():
-    """
-    Регистрация конфигурации урлов для приложения
-    """
-    return patterns(
-        "",
-        controller.action_controller.urlpattern
-    )
+    u"""Регистрация URL'ов приложения."""
+    return [url(*controller.action_controller.urlpattern)]
 
 
 def register_actions():
