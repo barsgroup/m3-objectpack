@@ -356,7 +356,8 @@ class ModelProxyMeta(type):
 
                 def submeta(meta, path):
                     for field in path.split('.'):
-                        field = ModelOptions(meta.model).get_field(field)
+                        model = meta.concrete_model
+                        field = ModelOptions(model).get_field(field)
                         meta = get_related(field).parent_model._meta
                     return meta
 
