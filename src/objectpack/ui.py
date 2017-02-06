@@ -196,7 +196,7 @@ class BaseListWindow(BaseWindow):
         self.items.append(self.grid)
         self.buttons.append(self.btn_close)
 
-    def set_params(self, params):
+    def set_params(self, params, *args, **kwargs):
         """
         Принимает в параметрах пак и делегирует ему конфигурирование грида
 
@@ -210,7 +210,7 @@ class BaseListWindow(BaseWindow):
             u'Параметры окна должны содержать экземпляр ActionPack'
             u' настраивающего grid!'
         )
-        params['pack'].configure_grid(self.grid)
+        params['pack'].configure_grid(self.grid, *args, **kwargs)
 
     def add_grid_column_filter(
             self, column_name,
@@ -341,12 +341,12 @@ class BaseSelectWindow(BaseListWindow):
         self.multi_select = True
         self.grid.sm = ext.ExtGridCheckBoxSelModel()
 
-    def set_params(self, params):
+    def set_params(self, params, *args, **kwargs):
         """
         .. seealso::
             :func:`objectpack.ui.BaseWindow.set_params`
         """
-        super(BaseSelectWindow, self).set_params(params)
+        super(BaseSelectWindow, self).set_params(params, *args, **kwargs)
         if params.get('multi_select', False):
             self._enable_multi_select()
 
