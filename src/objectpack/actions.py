@@ -1490,7 +1490,15 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         """
         return self.model.DoesNotExist
 
-    def configure_grid(self, grid):
+    def get_columns(self, *args, **kwargs):
+        """Возвращает набор колонок для конфигурирования грида.
+
+        Добавлено для возможности проводить кастомизацию колонок
+        на основе переданных параметров.
+        """
+        return self.columns
+
+    def configure_grid(self, grid, *args, **kwargs):
         """
         Конфигурирует grid для работы с этим паком,
         создает колонки и задает экшены
@@ -1530,9 +1538,10 @@ class ObjectPack(BasePack, IMultiSelectablePack):
             grid.url_edit = get_url(self.edit_window_action)
             grid.url_delete = get_url(self.delete_action)
 
+        columns = self.get_columns(*args, **kwargs)
         # построение колонок классом-констуктором
         cc = self.column_constructor_fabric(
-            config=self.columns,
+            config=columns,
             ignore_attrs=[
                 'searchable',
                 'search_fields',
