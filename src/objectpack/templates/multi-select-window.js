@@ -3,8 +3,10 @@ Ext.apply(win, {
     initMultiSelect:function(selectedItems) {
         var grid = Ext.getCmp('{{ component.grid.client_id }}');
         this.checkedItems = this.extractSelectedData(selectedItems);
+        this.uncheckedItems = {};
         this.grid = grid;
 
+        grid.on('headerclick', this.onChangeAllRecordsSelection, this)
         grid.getStore().on('load', this.onGridStoreLoad, this);
         grid.getSelectionModel().on('rowselect', this.onCheckBoxSelect, this);
         grid.getSelectionModel().on('rowdeselect', this.onCheckBoxDeselect, this);
@@ -29,14 +31,38 @@ Ext.apply(win, {
     },
 
     onCheckBoxSelect:function(selModel, rowIndex, record) {
-        if (!this.checkedItems[record.data.id] ) {
-            this.checkedItems[record.data.id] = record.copy();
+        if (this.allRecordsSelected) {
+            if (this.uncheckedItems[record.id]) {
+                delete this.uncheckedItems[record.id];
+            }
+        } else {
+            if (!this.checkedItems[record.id]) {
+                this.checkedItems[record.id] = record.copy();
+            }
         }
     },
 
     onCheckBoxDeselect:function(selModel, rowIndex, record) {
-        if (this.checkedItems[record.data.id]) {
-            this.checkedItems[record.data.id] = undefined;
+        if (this.allRecordsSelected) {
+            if (this.uncheckedItems[record.id]) {
+                delete this.uncheckedItems[record.id];
+            }
+        } else {
+            if (!this.checkedItems[record.id]) {
+                this.checkedItems[record.id] = record.copy();
+            }
+        }
+    },
+
+    onChangeAllRecordsSelection:function(grid, columnIndex, event) {
+        if (columnIndex != 0)
+            return;
+
+        var headerCell = grid.getView().getHeaderCell(0);
+        var isChecked = headerCell.firstChild.hasClass('x-grid3-hd-checker-on');
+        this.allRecordsSelected = isChecked;
+        if (isChecked) {
+            this.uncheckedItems = [];
         }
     }
 });
