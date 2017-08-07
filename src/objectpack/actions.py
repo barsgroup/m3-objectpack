@@ -2,31 +2,39 @@
 u"""Этот модуль содержит главный класс библиотеки и набор actions для него."""
 import copy
 import datetime
-import types
 import json
+import types
 import warnings
 
-from django.db.models import fields as dj_fields
 from django.core import exceptions as dj_exceptions
+from django.db.models import fields as dj_fields
 from django.utils.encoding import force_unicode
-from m3 import actions as m3_actions
-from m3.actions.interfaces import IMultiSelectablePack
 from m3 import RelatedError, ApplicationLogicException
+from m3.actions import Action
+from m3.actions import ActionPack
+from m3.actions import ControllerCache
+from m3.actions.context import ActionContext
+from m3.actions.interfaces import IMultiSelectablePack
+from m3.actions.results import OperationResult
+from m3.actions.results import PreJsonResult
+from m3.actions.utils import apply_search_filter
+from m3.actions.utils import extract_int
 from m3.db import safe_delete
-from m3_django_compat import get_request_params
 from m3_django_compat import ModelOptions
+from m3_django_compat import get_request_params
 from m3_ext.ui.fields.complex import ExtSearchField
-from m3_ext.ui import results as ui_results
-from . import ui
-from . import tools
+from m3_ext.ui.results import ExtUIScriptResult
+
 from . import exceptions
 from . import filters
+from . import tools
+from . import ui
 
 
 # =============================================================================
 # BaseAction
 # =============================================================================
-class BaseAction(m3_actions.Action):
+class BaseAction(Action):
     """
     Базовый класс для всех actions.
 
@@ -212,7 +220,7 @@ class BaseWindowAction(BaseAction):
         new_self.create_window()
         new_self._apply_window_params()
         new_self.configure_window()
-        return ui_results.ExtUIScriptResult(
+        return ExtUIScriptResult(
             new_self.win, context=new_self.context)
 
 
@@ -431,7 +439,7 @@ class ObjectSaveAction(BaseAction):
         new_self.bind_win()
         new_self.bind_to_obj()
         new_self.save_obj()
-        return m3_actions.OperationResult()
+        return OperationResult()
 
 
 # =============================================================================
@@ -509,8 +517,8 @@ class ObjectRowsAction(BaseAction):
         по количеству элементов (для порционной загрузки в окно списка).
         """
         if getattr(self.parent, 'allow_paging', True):
-            offset = m3_actions.utils.extract_int(self.request, 'start')
-            limit = m3_actions.utils.extract_int(self.request, 'limit')
+            offset = extract_int(self.request, 'start')
+            limit = extract_int(self.request, 'limit')
         else:
             offset = limit = 0
         self.query = tools.QuerySplitter(self.query, offset, limit)
@@ -677,8 +685,7 @@ class ObjectRowsAction(BaseAction):
                 request=request,
                 context=context,
                 data=data)
-            result = m3_actions.OperationResult(
-                success=success, message=message)
+            result = OperationResult(success=success, message=message)
         else:
             new_self.set_query()
             new_self.apply_search()
@@ -687,7 +694,7 @@ class ObjectRowsAction(BaseAction):
             total_count = new_self.get_total_count()
             new_self.apply_limit()
             rows = new_self.get_rows()
-            result = m3_actions.PreJsonResult({
+            result = PreJsonResult({
                 'rows': rows,
                 'total': total_count
             })
@@ -753,13 +760,13 @@ class ObjectDeleteAction(BaseAction):
         new_self.request = request
         new_self.context = context
         new_self.try_delete_objs()
-        return m3_actions.OperationResult()
+        return OperationResult()
 
 
 # =============================================================================
 # BasePack
 # =============================================================================
-class BasePack(m3_actions.ActionPack):
+class BasePack(ActionPack):
     """
     Потомок ActionPack, реализующий автогенерацию short_name, url
     """
@@ -819,7 +826,7 @@ class BasePack(m3_actions.ActionPack):
         while pack is not None:
             path.append(pack.url)
             pack = pack.parent
-        for cont in m3_actions.ControllerCache.get_controllers():
+        for cont in ControllerCache.get_controllers():
             p = cont.find_pack(cls)
             if p:
                 path.append(cont.url)
@@ -1713,7 +1720,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
             Обычно не требует перекрытия
 
         """
-        return m3_actions.utils.apply_search_filter(
+        return apply_search_filter(
             query,
             get_request_params(request).get('filter'),
             self.get_search_fields()
@@ -1981,7 +1988,7 @@ class SelectorWindowAction(BaseAction):
         :type context: m3.actions.context.DeclarativeActionContext
         :rtype: m3.actions.context.ActionContext
         """
-        return m3_actions.ActionContext()
+        return ActionContext()
 
     def configure_window(self, win, request, context):
         """
@@ -2038,7 +2045,7 @@ class SelectorWindowAction(BaseAction):
             win.multi_select = True
             win._enable_multi_select()
 
-        return ui_results.ExtUIScriptResult(win, new_context)
+        return ExtUIScriptResult(win, new_context)
 
 
 def multiline_text_window_result(data, success=True, title=u'', width=600,
@@ -2063,7 +2070,7 @@ def multiline_text_window_result(data, success=True, title=u'', width=600,
     """
     if not isinstance(data, types.StringTypes):
         data = u'\n'.join(data)
-    return m3_actions.OperationResult(
+    return OperationResult(
         success=success,
         code=(
             u"""
