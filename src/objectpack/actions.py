@@ -613,9 +613,12 @@ class ObjectRowsAction(BaseAction):
                         obj = obj()
 
                 if isinstance(obj, datetime.datetime):
-                    obj = obj.strftime('%d.%m.%Y %H:%M:%S')
+                    obj = '%02d.%02d.%04d %02d:%02d:%02d' % (
+                        obj.day, obj.month, obj.year,
+                        obj.hour, obj.minute, obj.second
+                    )
                 elif isinstance(obj, datetime.date):
-                    obj = obj.strftime('%d.%m.%Y')
+                    obj = '%02d.%02d.%04d' % (obj.day, obj.month, obj.year)
 
                 if obj is None:
                     # None выводится пустой строкой
