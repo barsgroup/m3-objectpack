@@ -645,7 +645,8 @@ class ModelEditWindow(BaseEditWindow):
 def model_fields_to_controls(
         model, window,
         field_list=None, exclude_list=None,
-        model_register=None, **kwargs):
+        model_register=None,
+        keep_field_list_order=False, **kwargs):
     """
     Добавление на окно элементов формы по полям модели
 
@@ -671,6 +672,8 @@ def model_fields_to_controls(
     :param exclude_list: Список полей-исключений
     :type exclude_list: list
     :param model_register: Реестр моделей-паков
+    :param bool keep_field_list_order: Параметр необходимости учета порядка
+        переданных полей
     :param kwargs: Дополнительные параметры для передачи в
     конструктор элементов
     :type kwargs: dict
@@ -691,6 +694,8 @@ def model_fields_to_controls(
             return (lambda s: any(fn(s) for fn in matchers))
         else:
             return lambda s: True
+
+    fields_to_controls = model._meta.fields
 
     if field_list:
         # генерация функции, разрешающей обработку поля
@@ -714,7 +719,11 @@ def model_fields_to_controls(
 
             setattr(window, 'field__%s' % f.attname.replace('.', '__'), ctl)
             controls.append(ctl)
-
+    if keep_field_list_order and controls:
+        controls.sort(
+            key=lambda i: field_list.index(i.name) if i.name in (
+                field_list) else len(field_list)
+        )
     return controls
 
 
