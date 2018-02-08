@@ -1,17 +1,16 @@
-# coding:utf-8
-"""
-Created on 03.08.2012
-@author: pirogov
-"""
-import re
-import inspect
-import sys
-import logging
+# coding: utf-8
+from __future__ import absolute_import
 
-import tools
+import inspect
+import logging
+import re
+import sys
 
 from m3 import actions as m3_actions
 from m3_django_compat import get_request_params
+
+from . import tools
+
 
 ACTION_NAME_ATTR = '_observing_name'
 

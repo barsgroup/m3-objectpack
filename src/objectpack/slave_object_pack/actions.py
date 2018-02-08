@@ -2,7 +2,10 @@
 """
 Инструменарий для упрощённого создания ActionPack`ов для зависимых моделей
 """
+from __future__ import absolute_import
+
 from m3_django_compat import ModelOptions
+
 from objectpack.actions import ObjectPack
 
 

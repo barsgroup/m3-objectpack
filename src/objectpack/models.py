@@ -1,13 +1,18 @@
-# coding:utf-8
+# coding: utf-8
 """
 Виртуальная модель и proxy-обертка для работы с группой моделей
 """
+from __future__ import absolute_import
+
 from collections import Iterable
-from itertools import ifilter, ifilterfalse, islice, imap
+from itertools import ifilter
+from itertools import ifilterfalse
+from itertools import imap
+from itertools import islice
 import copy
 
-from django.db.models import query, manager
-
+from django.db.models import manager
+from django.db.models import query
 from m3_django_compat import ModelOptions
 from m3_django_compat import get_related
 

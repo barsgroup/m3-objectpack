@@ -1,4 +1,6 @@
-# coding:utf-8
+# coding: utf-8
+from __future__ import absolute_import
+
 from functools import partial
 
 from m3.actions.results import OperationResult
@@ -7,7 +9,8 @@ from objectpack import tree_object_pack
 from objectpack.actions import BaseAction
 from objectpack.actions import ObjectPack
 from objectpack.actions import SelectorWindowAction
-from objectpack.filters import FilterByField, ColumnFilterEngine
+from objectpack.filters import ColumnFilterEngine
+from objectpack.filters import FilterByField
 from objectpack.slave_object_pack.actions import SlavePack
 from objectpack.tools import extract_int_list
 from objectpack.ui import ModelEditWindow

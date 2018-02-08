@@ -1,5 +1,8 @@
 # coding: utf-8
+from __future__ import absolute_import
+
 from m3_ext.ui.fields.complex import ExtMultiSelectField
+
 from objectpack.ui import ObjectGridTab
 from objectpack.ui import ObjectTab
 from objectpack.ui import TabbedEditWindow

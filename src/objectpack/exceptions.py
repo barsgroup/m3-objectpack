@@ -1,7 +1,8 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 """
 Классы исключений, обрабатываемых ObjectPack
 """
+from __future__ import absolute_import
 
 
 class OverlapError(Exception):

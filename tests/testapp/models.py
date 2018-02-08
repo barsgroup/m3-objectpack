@@ -1,4 +1,6 @@
 # coding: utf-8
+from __future__ import absolute_import
+
 from datetime import date
 from datetime import datetime
 from datetime import time

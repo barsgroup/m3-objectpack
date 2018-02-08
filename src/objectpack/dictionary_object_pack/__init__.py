@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-"""
-File: __init__.py
-Author: Rinat F Sabitov
-Description:
-"""
+# coding: utf-8
+from __future__ import absolute_import
 
-from actions import DictionaryObjectPack
+from .actions import DictionaryObjectPack

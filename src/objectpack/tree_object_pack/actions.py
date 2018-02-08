@@ -1,5 +1,7 @@
 # coding: utf-8
 u"""Действия для работы с древовидными справочниками."""
+from __future__ import absolute_import
+
 from collections import OrderedDict
 
 from m3 import actions as m3_actions

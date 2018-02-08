@@ -1,22 +1,17 @@
 # coding: utf-8
-"""
-:created: 23.07.12
+from __future__ import absolute_import
 
-:author: pirogov
-"""
 from datetime import datetime
 import inspect
 
-from django.db import models as django_models
 from django.core.validators import MaxLengthValidator
-from django.core.validators import MinLengthValidator
 from django.core.validators import MaxValueValidator
+from django.core.validators import MinLengthValidator
 from django.core.validators import MinValueValidator
-
+from django.db import models as django_models
 from m3_ext.ui import all_components as ext
 from m3_ext.ui import windows as ext_windows
 from m3_ext.ui.misc import store as ext_store
-
 import tools
 
 

@@ -1,7 +1,8 @@
-# coding:utf-8
+# coding: utf-8
 """
 Обсервер и контроллеры
 """
+from __future__ import absolute_import
 
 from objectpack import observer
 

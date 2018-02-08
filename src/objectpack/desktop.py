@@ -1,8 +1,6 @@
-# coding:utf-8
-"""
-:Created: 23.07.2012
-:Author: pirogov
-"""
+# coding: utf-8
+from __future__ import absolute_import
+
 from m3 import actions
 from m3_ext.ui import app_ui
 

@@ -1,12 +1,11 @@
 # coding: utf-8
-"""
-UI для работы с древовидными списками
-Author: Rinat F Sabitov
-"""
+from __future__ import absolute_import
 
-from objectpack.ui import BaseListWindow, BaseSelectWindow
-from m3_ext.ui.panels import ExtObjectTree
 from m3_ext.ui import misc
+from m3_ext.ui.panels import ExtObjectTree
+
+from objectpack.ui import BaseListWindow
+from objectpack.ui import BaseSelectWindow
 
 
 class BaseObjectTree(ExtObjectTree):

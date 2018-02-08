@@ -1,5 +1,7 @@
 # coding: utf-8
 u"""Этот модуль содержит главный класс библиотеки и набор actions для него."""
+from __future__ import absolute_import
+
 import copy
 import datetime
 import json
@@ -9,7 +11,8 @@ import warnings
 from django.core import exceptions as dj_exceptions
 from django.db.models import fields as dj_fields
 from django.utils.encoding import force_unicode
-from m3 import RelatedError, ApplicationLogicException
+from m3 import ApplicationLogicException
+from m3 import RelatedError
 from m3.actions import Action
 from m3.actions import ActionPack
 from m3.actions import ControllerCache

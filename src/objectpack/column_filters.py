@@ -1,7 +1,9 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 """
 Фабрики фильтров для колонок гридов
 """
+from __future__ import absolute_import
+
 from django.db.models import Q
 
 

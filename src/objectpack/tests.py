@@ -1,15 +1,12 @@
 # coding: utf-8
-"""
-File: tests.py
-Author: Rinat F Sabitov
-Description:
-"""
+from __future__ import absolute_import
 
-import unittest
 import doctest
+import unittest
 
 from django.test import TestCase
-import tools
+
+from . import tools
 
 
 class MainTest(TestCase):

@@ -1,6 +1,9 @@
 # coding: utf-8
 u"""Меахнизмы фильтрации справочников/реестров на базе ObjectPack."""
-from operator import or_, and_
+from __future__ import absolute_import
+
+from operator import and_
+from operator import or_
 import abc
 import json
 
