@@ -3,3 +3,4 @@ recursive-exclude src *.orig
 recursive-exclude src *.pyc
 include README README.rst DESCRIPTION INSTALL.txt REQUIREMENTS
 include version.conf
+prune src/objectpack/demo
