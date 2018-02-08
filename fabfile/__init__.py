@@ -29,3 +29,6 @@ def clean():
             local('rm -f -r -d "{}"'.format(path))
 
         local('git gc --quiet')
+
+        local('rm -f -r -d "{}"'.format('.tox'))
+        local('rm -f .coverage')

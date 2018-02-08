@@ -156,7 +156,7 @@ class _UIFabric(object):
     def _populate(self, metarole, data):
         return self.ui_extend_method(
             metarole,
-            *map(lambda o: o._populate(), filter(None, self._wrap(data)))
+            *[o._populate() for o in [_f for _f in self._wrap(data) if _f]]
         )
 
     @classmethod
@@ -221,7 +221,7 @@ class _BaseMenu(_UIFabric):
             self._items = items or []
 
         def _populate(self):
-            items = map(lambda o: o._populate(), filter(None, self._items))
+            items = [o._populate() for o in [_f for _f in self._items if _f]]
             if items:
                 grp = app_ui.DesktopLaunchGroup(**self._args)
                 grp.subitems.extend(items)

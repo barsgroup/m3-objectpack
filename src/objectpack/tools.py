@@ -4,6 +4,9 @@ from __future__ import absolute_import
 from functools import wraps
 import datetime
 
+from six.moves import map
+import six
+
 from django.db import transaction
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.fields.related import RelatedField
@@ -14,7 +17,7 @@ from m3_django_compat import get_request_params
 # =============================================================================
 # QuerySplitter
 # =============================================================================
-class QuerySplitter(object):
+class QuerySplitter(six.Iterator):
     """
     Порционный загрузчик выборки в итеративном контексте
 
@@ -47,7 +50,7 @@ class QuerySplitter(object):
             return iter(self._data)
         return self
 
-    def next(self):
+    def __next__(self):
         # если уже выдали нужное кол-во, останавливаем итерацию
         if self._cnt >= self._limit:
             raise StopIteration()
@@ -138,7 +141,7 @@ class ModelCache(object):
 
     @staticmethod
     def _key_for_dict(d):
-        return tuple(sorted(d.iteritems(), key=lambda i: i[0]))
+        return tuple(sorted(six.iteritems(d), key=lambda i: i[0]))
 
     def _get_object(self, kwargs):
         try:
@@ -241,7 +244,7 @@ def extract_int_list(request, key):
     [1, 2, 3, 4]
     """
     request_params = get_request_params(request)
-    return map(int, filter(None, request_params.get(key, '').split(',')))
+    return list(map(int, [_f for _f in request_params.get(key, '').split(',') if _f]))
 
 
 def str_to_date(s):
@@ -289,7 +292,7 @@ def modify(obj, **kwargs):
     >>> cls.param1
     1
     """
-    for attr, val in kwargs.iteritems():
+    for attr, val in six.iteritems(kwargs):
         setattr(obj, attr, val)
     return obj
 

@@ -4,6 +4,10 @@ from __future__ import absolute_import
 from datetime import datetime
 import inspect
 
+from six.moves import map
+from six.moves import zip
+import six
+
 from django.core.validators import MaxLengthValidator
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinLengthValidator
@@ -12,7 +16,8 @@ from django.db import models as django_models
 from m3_ext.ui import all_components as ext
 from m3_ext.ui import windows as ext_windows
 from m3_ext.ui.misc import store as ext_store
-import tools
+
+from . import tools
 
 
 # =============================================================================
@@ -286,7 +291,7 @@ class BaseListWindow(BaseWindow):
                 if col.data_index in self.grid_filters:
                     if len(self.grid_filters[col.data_index]) == 1:
                         filter_str = self._render_filter(
-                            self.grid_filters[col.data_index].values()[0])
+                            list(self.grid_filters[col.data_index].values())[0])
                     else:
                         filters = []
                         for fltr in self.grid_filters[col.data_index].values():
@@ -434,7 +439,7 @@ class ColumnsConstructor(object):
             :return: Элемент очищенный от пустых подэлементов
                      или None, если непустых подэлементов нет
             """
-            self.items = filter(None, [i._cleaned() for i in self.items])
+            self.items = [_f for _f in [i._cleaned() for i in self.items] if _f]
             return self if self.items else None
 
         def _normalized_depth(self):
@@ -545,7 +550,7 @@ class ColumnsConstructor(object):
                 for a in (ignore_attrs or []):
                     params.pop(a, None)
 
-                params['header'] = unicode(params.pop('header', ''))
+                params['header'] = six.text_type(params.pop('header', ''))
                 if sub_cols is not None:
                     new_root = cc.BandedCol(**params)
                     root.add(new_root)
@@ -598,7 +603,7 @@ class ModelEditWindow(BaseEditWindow):
         self.form.layout_config = {'autoHeight': True}
 
         # все поля добавляются на форму растянутыми по ширине
-        self.form.items.extend(map(anchor100, self._controls))
+        self.form.items.extend(list(map(anchor100, self._controls)))
 
     def set_params(self, params):
         """
@@ -786,7 +791,7 @@ def _create_control_for_field(f, model_register=None, **kwargs):
         raise GenerationError(u'Не могу создать контрол для %s' % f)
     # -------------------------------------------------------------------------
     ctl.name = name
-    ctl.label = unicode(f.verbose_name or name)
+    ctl.label = six.text_type(f.verbose_name or name)
     ctl.allow_blank = f.blank
 
     if ctl.allow_blank and hasattr(ctl, 'hide_clear_trigger'):
@@ -960,7 +965,7 @@ class TabbedWindow(BaseWindow):
 
         # инстанцирование вкладок
         instantiate = lambda x: x() if inspect.isclass(x) else x
-        self.tabs = map(instantiate, self.tabs or [])
+        self.tabs = list(map(instantiate, self.tabs or []))
 
         # опредение вкладок не должно быть пустым
         # (проверка производится после инстанцирования,
@@ -1151,7 +1156,7 @@ class ObjectTab(WindowTab):
         """
         Заголовок вкладки
         """
-        return unicode(
+        return six.text_type(
             self.model._meta.verbose_name or
             repr(self.model)
         )
@@ -1170,7 +1175,7 @@ class ObjectTab(WindowTab):
         tab.layout_config = {'autoHeight': True}
 
         # все поля добавляются на форму растянутыми по ширине
-        tab.items.extend(map(anchor100, self._controls))
+        tab.items.extend(list(map(anchor100, self._controls)))
 
     def set_params(self, win, params):
         super(ObjectTab, self).set_params(win, params)

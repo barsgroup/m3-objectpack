@@ -5,11 +5,15 @@
 from __future__ import absolute_import
 
 from collections import Iterable
-from itertools import ifilter
-from itertools import ifilterfalse
-from itertools import imap
+from functools import reduce
 from itertools import islice
 import copy
+
+from six.moves import filter
+from six.moves import filterfalse
+from six.moves import map
+from six.moves import zip
+import six
 
 from django.db.models import manager
 from django.db.models import query
@@ -41,6 +45,30 @@ _call_if_need = lambda x: x() if callable(x) else x
 # ==============================================================================
 # VirtualModelManager
 # =============================================================================
+
+
+class ObjectWrapper(object):
+
+    """Обертка над объектами, инвертирующая результат сравнения больше/меньше.
+
+    Используется для сортировки данных в виртуальных моделях.
+    """
+
+    def __init__(self, obj, direction):
+        self.obj = obj
+        self.direction = direction
+
+    def __eq__(self, other):
+        if isinstance(other, ObjectWrapper):
+            other = other.obj
+        return self.obj == other
+
+    def __lt__(self, other):
+        if isinstance(other, ObjectWrapper):
+            other = other.obj
+        return self.obj < other if self.direction == 1 else self.obj > other
+
+
 class VirtualModelManager(object):
     """
     Имитация QueryManager`а Django для VirtualModel
@@ -84,7 +112,7 @@ class VirtualModelManager(object):
         return reduce(
             lambda arg, fn: fn(arg),
             self._procs,
-            imap(
+            map(
                 self._clz._from_id,
                 _call_if_need(
                     self._clz._get_ids(
@@ -134,7 +162,7 @@ class VirtualModelManager(object):
         if kwargs:
             fns.extend(
                 self._make_getter(key, val, allow_op=True)
-                for key, val in kwargs.iteritems()
+                for key, val in six.iteritems(kwargs)
             )
         if fns:
             procs.append(
@@ -143,10 +171,10 @@ class VirtualModelManager(object):
         return self._fork_with(procs)
 
     def filter(self, *args, **kwargs):
-        return self._filter(ifilter, args, kwargs)
+        return self._filter(filter, args, kwargs)
 
     def exclude(self, *args, **kwargs):
-        return self._filter(ifilterfalse, args, kwargs)
+        return self._filter(filterfalse, args, kwargs)
 
     def order_by(self, *args):
         procs = self._procs[:]
@@ -169,30 +197,13 @@ class VirtualModelManager(object):
             make_proc = lambda **kwargs: lambda data: (
                 iter(sorted(data, **kwargs)))
 
-            if same_dir:
-                # все ключи одного направления - сортируем по ключевой ф-ции
-                if len(getters) == 1:
-                    # ключ всего один
-                    key_fn = getters[0]
-                else:
-                    # ключей несколько, но все одного направления
-                    key_fn = lambda obj: tuple(g(obj) for g in getters)
-                proc = make_proc(key=key_fn, reverse=any_reversed)
-            else:
-                # направления ключей различны - сортируем функцией сравнения
-                def make_cmp_fn(pairs):
-                    def inner(o1, o2):
-                        for f, d in pairs:
-                            res = d * cmp(f(o1), f(o2))
-                            if res:
-                                return res
-                        return 0
+            def key_fn(obj):
+                return tuple(
+                    ObjectWrapper(getter(obj), direction)
+                    for getter, direction in zip(getters, dirs)
+                )
 
-                    return inner
-
-                proc = make_proc(cmp=make_cmp_fn(zip(getters, dirs)))
-
-            procs.append(proc)
+            procs.append(make_proc(key=key_fn))
 
         return self._fork_with(procs)
 
@@ -208,7 +219,7 @@ class VirtualModelManager(object):
 
     def values(self, *args):
         return (
-            dict(zip(args, t))
+            dict(list(zip(args, t)))
             for t in self.values_list(*args)
         )
 
@@ -221,7 +232,7 @@ class VirtualModelManager(object):
             )
         if flat:
             getter = self._make_getter(args[0])
-            return imap(getter, self)
+            return map(getter, self)
         else:
             getters = map(self._make_getter, args)
             return (tuple(g(o) for g in getters) for o in self)
@@ -230,7 +241,7 @@ class VirtualModelManager(object):
         return self
 
     def count(self):
-        return len(list(self))
+        return sum(1 for _ in self)
 
 
 # =============================================================================
@@ -480,12 +491,11 @@ model_proxy_metaclass = ModelProxyMeta
 # =============================================================================
 # ModelProxy
 # =============================================================================
-class ModelProxy(object):
+class ModelProxy(six.with_metaclass(model_proxy_metaclass, object)):
     """
     Proxy-объект инкапсулирующий в себе несколько моделей
     (для случая, когда одна модель - основная, о другие - её поля)
     """
-    __metaclass__ = model_proxy_metaclass
 
     model = None
 

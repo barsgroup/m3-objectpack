@@ -6,6 +6,8 @@ import logging
 import re
 import sys
 
+import six
+
 from m3 import actions as m3_actions
 from m3_django_compat import get_request_params
 
@@ -77,7 +79,7 @@ class ObservableController(ObservableMixin, m3_actions.ActionController):
             self.__declared = []
 
         def build(self, request, rules):
-            self.__declared = rules.keys() + self.__internal_attrs
+            self.__declared = list(rules.keys()) + self.__internal_attrs
             try:
                 m3_actions.DeclarativeActionContext.build(self, request, rules)
             except m3_actions.CriticalContextBuildingError as e:
@@ -85,7 +87,7 @@ class ObservableController(ObservableMixin, m3_actions.ActionController):
                     raise
                 else:
                     _warn('%r, url="%s"' % (e, request.path_info))
-            for k, v in get_request_params(request).iteritems():
+            for k, v in six.iteritems(get_request_params(request)):
                 if not hasattr(self, k):
                     setattr(self, k, v)
 
@@ -326,9 +328,7 @@ class Observer(object):
         priority = getattr(listener, 'priority', 0) or 0
 
         # matcher`ы по списку рег.выр. в параметре "from" слушателя
-        matchers = map(
-            lambda p: re.compile(p).match,
-            getattr(listener, 'listen', []))
+        matchers = [re.compile(p).match for p in getattr(listener, 'listen', [])]
         if matchers:
             is_listen = lambda name: any(m(name) for m in matchers)
         else:

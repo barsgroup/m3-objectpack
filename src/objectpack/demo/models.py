@@ -4,6 +4,9 @@ from __future__ import absolute_import
 
 import datetime
 
+from six.moves import range
+import six
+
 from django.db import models
 
 from objectpack.models import VirtualModel
@@ -12,6 +15,7 @@ from objectpack.models import VirtualModel
 # =============================================================================
 # Person
 # =============================================================================
+@six.python_2_unicode_compatible
 class Person(models.Model):
     """
     Физическое лицо
@@ -42,7 +46,7 @@ class Person(models.Model):
     def fullname(self):
         return u' '.join((self.name, self.surname, self.patronymic))
 
-    def __unicode__(self):
+    def __str__(self):
         return self.fullname
 
     class Meta:
@@ -60,11 +64,11 @@ class FakeModel(VirtualModel):
 
     @classmethod
     def _get_ids(cls):
-        return xrange(1, 12)
+        return range(1, 12)
 
     def __init__(self, id_obj):
         self.id = id_obj
-        for i in xrange(1, 12):
+        for i in range(1, 12):
             setattr(self, 'field%s' % i, i <= id_obj)
 
 
@@ -145,6 +149,7 @@ class TreeNode(VirtualModel):
 # =============================================================================
 # Модели гаражей с инструментом и сотрудницами
 # =============================================================================
+@six.python_2_unicode_compatible
 class Garage(models.Model):
     """
     Гараж
@@ -153,7 +158,7 @@ class Garage(models.Model):
         max_length=20,
         verbose_name=u'Наименование')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     class Meta:
@@ -161,6 +166,7 @@ class Garage(models.Model):
         verbose_name_plural = u'Гаражи'
 
 
+@six.python_2_unicode_compatible
 class GarageStaff(models.Model):
     """
     Сотрудник гаража
@@ -172,14 +178,15 @@ class GarageStaff(models.Model):
         Person,
         verbose_name=u'Физ.лицо')
 
-    def __unicode__(self):
-        return unicode(self.person)
+    def __str__(self):
+        return six.text_type(self.person)
 
     class Meta:
         verbose_name = u'Сотрудник гаража'
         verbose_name_plural = u'Сотрудники гаража'
 
 
+@six.python_2_unicode_compatible
 class GarageTool(models.Model):
     """
     Гаражный инструмент
@@ -191,7 +198,7 @@ class GarageTool(models.Model):
     garage = models.ForeignKey(
         Garage, verbose_name=u'Гараж')
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
 
     class Meta:

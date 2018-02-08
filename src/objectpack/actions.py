@@ -8,9 +8,11 @@ import json
 import types
 import warnings
 
+import six
+
 from django.core import exceptions as dj_exceptions
 from django.db.models import fields as dj_fields
-from django.utils.encoding import force_unicode
+from django.utils.encoding import force_text
 from m3 import ApplicationLogicException
 from m3 import RelatedError
 from m3.actions import Action
@@ -418,7 +420,7 @@ class ObjectSaveAction(BaseAction):
             self.handle('post_save', (self.obj, self.context))
 
         except (exceptions.ValidationError, exceptions.OverlapError) as err:
-            raise ApplicationLogicException(unicode(err))
+            raise ApplicationLogicException(six.text_type(err))
         except dj_exceptions.ValidationError as err:
             raise ApplicationLogicException(u'<br/>'.join(err.messages))
 
@@ -628,7 +630,7 @@ class ObjectRowsAction(BaseAction):
                     obj = u''
 
                 if not isinstance(obj, (int, bool)):
-                    obj = force_unicode(obj)
+                    obj = force_text(obj)
                 result[col] = obj
 
         # заполним объект данными по дата индексам
@@ -726,9 +728,9 @@ class ObjectDeleteAction(BaseAction):
         # TODO: разгрести этот УЖАС!
         try:
             self.delete_objs()
-        except RelatedError, e:
+        except RelatedError as e:
             raise ApplicationLogicException(e.args[0])
-        except Exception, e:
+        except Exception as e:
             if e.__class__.__name__ == 'IntegrityError':
                 message = (
                     u'Не удалось удалить элемент. '
@@ -935,7 +937,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         Заголовок окна справочника, если не перекрыт
         в потомках - берется из модели
         """
-        return unicode(
+        return six.text_type(
             self.model._meta.verbose_name_plural or
             self.model._meta.verbose_name or
             repr(self.model)).capitalize()
@@ -1351,7 +1353,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
             if callable(text):
                 return text()
             else:
-                return unicode(text)
+                return six.text_type(text)
 
     def get_edit_window_params(self, params, request, context):
         """
@@ -1921,7 +1923,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
                     f_options = f_options()
                 params['options'] = "[%s]" % ','.join(
                     (("'%s'" % item)
-                     if isinstance(item, basestring) else
+                     if isinstance(item, six.string_types) else
                      ((item is None and '[]') or ("['%s','%s']" % item)))
                     for item in f_options)
                 filter_items.append("""{
@@ -2074,7 +2076,7 @@ def multiline_text_window_result(data, success=True, title=u'', width=600,
     :return: Результат операции в контексте ExtJS
     :rtype: m3.actions.results.OperationResult
     """
-    if not isinstance(data, types.StringTypes):
+    if not isinstance(data, six.string_types):
         data = u'\n'.join(data)
     return OperationResult(
         success=success,

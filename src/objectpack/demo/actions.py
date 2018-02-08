@@ -2,6 +2,9 @@
 from __future__ import absolute_import
 
 from functools import partial
+from functools import reduce
+
+from six.moves import range
 
 from m3.actions.results import OperationResult
 
@@ -135,7 +138,7 @@ class BandedColumnPack(ObjectPack):
                 mk_col(c),
             ]
         },
-        xrange(2, 12),
+        range(2, 12),
         mk_col(1)
     )])(
         lambda idx: {

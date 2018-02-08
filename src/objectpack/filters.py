@@ -2,10 +2,14 @@
 u"""Меахнизмы фильтрации справочников/реестров на базе ObjectPack."""
 from __future__ import absolute_import
 
+from functools import reduce
 from operator import and_
 from operator import or_
 import abc
 import json
+
+from six.moves import map
+import six
 
 from django.db import models
 from m3.actions import DeclarativeActionContext
@@ -16,11 +20,10 @@ from .tools import str_to_date
 from .ui import _create_control_for_field
 
 
-class AbstractFilterEngine(object):
+class AbstractFilterEngine(six.with_metaclass(abc.ABCMeta, object)):
     u"""
     Прототип механизма фильтрации
     """
-    __metaclass__ = abc.ABCMeta
 
     _config = None
 
@@ -64,11 +67,10 @@ class AbstractFilterEngine(object):
         return query
 
 
-class AbstractFilter(object):
+class AbstractFilter(six.with_metaclass(abc.ABCMeta, object)):
     u"""
     Прототип класса, описывающего фильтр для потомков AbstractFilterEngine
     """
-    __metaclass__ = abc.ABCMeta
 
     _not = None
     _uid = None
@@ -344,7 +346,7 @@ class MenuFilterEngine(AbstractFilterEngine):
 
     def configure_grid(self, grid):
         filter_items = []
-        for k, v in self._columns.iteritems():
+        for k, v in six.iteritems(self._columns):
             params = {
                 'type': v.get('type', 'string'),
                 'data_index': k
@@ -354,7 +356,7 @@ class MenuFilterEngine(AbstractFilterEngine):
                 f_options = f_options()
             params['options'] = "[%s]" % ','.join(
                 (("'%s'" % item)
-                 if isinstance(item, basestring) else
+                 if isinstance(item, six.string_types) else
                  ((item is None and '[]') or ("['%s','%s']" % item)))
                 for item in f_options)
             filter_items.append("""{
@@ -404,7 +406,7 @@ class MenuFilterEngine(AbstractFilterEngine):
                     if callable(custom):
                         q &= custom(value)
                     else:
-                        q &= reduce(or_, map(make_q, custom))
+                        q &= reduce(or_, list(map(make_q, custom)))
                 else:
                     q &= make_q(field)
 
@@ -442,7 +444,7 @@ class ColumnFilterEngine(AbstractFilterEngine):
         grid.plugins.append('new Ext.ux.grid.GridHeaderFilters()')
 
         _new = {}
-        for data_index, filter_obj in self._columns.iteritems():
+        for data_index, filter_obj in six.iteritems(self._columns):
             _new[data_index] = u'[%s]' % (u','.join(filter_obj.get_script()))
 
         for col in grid.columns:
@@ -455,6 +457,6 @@ class ColumnFilterEngine(AbstractFilterEngine):
             :mod:`objectpack.filters.AbstractFilterEngine.apply_filter`
         """
         q = models.Q()
-        for _filter in self._columns.itervalues():
+        for _filter in six.itervalues(self._columns):
             q &= _filter.get_q(get_request_params(request))
         return query.filter(q)
