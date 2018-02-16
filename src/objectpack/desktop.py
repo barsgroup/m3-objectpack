@@ -83,7 +83,9 @@ class _DesktopItem(app_ui.DesktopShortcut):
         if not (is_pack or is_action):
             raise TypeError(u'pack must be instance of Action/ActionPack!')
 
-        need = lambda obj: getattr(obj, 'need_check_permission', False)
+        def need(obj):
+            return getattr(obj, 'need_check_permission', False)
+
         if is_action:
             if need(pack) and need(pack.parent):
                 code = pack.get_permission_code()
@@ -126,7 +128,9 @@ class _UIFabric(object):
     тогда автоматом проставится иконка и порядок также будет учитываться
     """
     # метод расширения UI (_add_to_XXX, обернутый в staticmethod, если нужно)
-    ui_extend_method = lambda *args: None
+    @staticmethod
+    def ui_extend_method(*args):
+        return None
 
     icons = None
 

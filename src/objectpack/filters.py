@@ -165,9 +165,11 @@ class FilterGroup(AbstractFilter):
 
     def _join(self, other, op):
         if self._operand == op:
-            wrap = lambda x: self._fork({'items': self._items + x})
+            def wrap(x):
+                return self._fork({'items': self._items + x})
         else:
-            wrap = lambda x: self.__class__(items=[self] + x, op=op)
+            def wrap(x):
+                return self.__class__(items=[self] + x, op=op)
 
         if isinstance(other, self.__class__):
             if self._operand == other._operand:
@@ -260,7 +262,8 @@ class FilterByField(AbstractFilter):
             if not callable(lookup) and '%s' in lookup:
                 lookup = lookup % field_name
         else:
-            lookup = lambda x: models.Q(**{field_name: x})
+            def lookup(x):
+                return models.Q(**{field_name: x})
         self._lookup = lookup
 
     def get_script(self):

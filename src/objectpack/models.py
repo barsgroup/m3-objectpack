@@ -39,7 +39,8 @@ def kwargs_only(*keys):
     return wrapper
 
 
-_call_if_need = lambda x: x() if callable(x) else x
+def _call_if_need(x):
+    return x() if callable(x) else x
 
 
 # ==============================================================================
@@ -130,8 +131,12 @@ class VirtualModelManager(object):
 
     @classmethod
     def _make_getter(cls, key, val=None, allow_op=False):
-        folder = lambda fn, attr: lambda obj: fn(getattr(obj, attr))
-        default_op = lambda op: lambda val: lambda obj: val == getattr(obj, op)
+        def folder(fn, attr):
+            return lambda obj: fn(getattr(obj, attr))
+
+        def default_op(op):
+            return lambda val: lambda obj: val == getattr(obj, op)
+
         key = key.split('__')
         if allow_op:
             if len(key) > 1:
@@ -140,7 +145,8 @@ class VirtualModelManager(object):
             else:
                 op = (lambda val: lambda obj: obj == val)(val)
         else:
-            op = lambda obj: obj
+            def op(obj):
+                return obj
         return reduce(folder, reversed(key), op)
 
     @classmethod
@@ -189,13 +195,10 @@ class VirtualModelManager(object):
             getters.append(self._make_getter(a))
             dirs.append(d)
 
-        same_dir = abs(sum(dirs)) == len(dirs)  # все ключи одного направления
-        any_reversed = -1 in dirs  # есть ключи обратного направления
-
         if getters:
             # генератор процедур сортировки
-            make_proc = lambda **kwargs: lambda data: (
-                iter(sorted(data, **kwargs)))
+            def make_proc(**kwargs):
+                return lambda data: iter(sorted(data, **kwargs))
 
             def key_fn(obj):
                 return tuple(
@@ -310,7 +313,8 @@ class VirtualModel(object):
                     yield d
                     cnt += 1
         else:
-            get_ids = lambda cls: data
+            def get_ids(cls):
+                return data
 
         return type(
             class_name,

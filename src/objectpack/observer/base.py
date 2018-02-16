@@ -328,12 +328,17 @@ class Observer(object):
         priority = getattr(listener, 'priority', 0) or 0
 
         # matcher`ы по списку рег.выр. в параметре "from" слушателя
-        matchers = [re.compile(p).match for p in getattr(listener, 'listen', [])]
+        matchers = [
+            re.compile(p).match
+            for p in getattr(listener, 'listen', [])
+        ]
         if matchers:
-            is_listen = lambda name: any(m(name) for m in matchers)
+            def is_listen(name):
+                return any(m(name) for m in matchers)
         else:
             # если from не указан - слушатель слушает всех
-            is_listen = lambda name: True
+            def is_listen(name):
+                return True
 
         self._registered_listeners.append(
             (priority, (is_listen, listener))
@@ -351,12 +356,13 @@ class Observer(object):
         Конфигурирует @action, инжектируя в него методы handle и handler_for,
         взаимрдействующие со слушателями @listeners
         """
-        log_call = lambda listener, verb: self._log(
-            self.LOG_CALLS,
-            'Listener call:\n\t'
-            'Action\t %r\n\tListener %r\n\tVerb\t "%s"' %
-            (action, listener, verb)
-        )
+        def log_call(listener, verb):
+            self._log(
+                self.LOG_CALLS,
+                'Listener call:\n\t'
+                'Action\t %r\n\tListener %r\n\tVerb\t "%s"' %
+                (action, listener, verb)
+            )
 
         def handle(verb, arg):
             """

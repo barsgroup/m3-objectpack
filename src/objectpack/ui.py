@@ -290,8 +290,10 @@ class BaseListWindow(BaseWindow):
             for col in self.grid.columns:
                 if col.data_index in self.grid_filters:
                     if len(self.grid_filters[col.data_index]) == 1:
-                        filter_str = self._render_filter(
-                            list(self.grid_filters[col.data_index].values())[0])
+                        grid_filter = next(six.itervalues(
+                            self.grid_filters[col.data_index]
+                        ))
+                        filter_str = self._render_filter(grid_filter)
                     else:
                         filters = []
                         for fltr in self.grid_filters[col.data_index].values():
@@ -439,7 +441,9 @@ class ColumnsConstructor(object):
             :return: Элемент очищенный от пустых подэлементов
                      или None, если непустых подэлементов нет
             """
-            self.items = [_f for _f in [i._cleaned() for i in self.items] if _f]
+            self.items = [
+                _f for _f in [i._cleaned() for i in self.items] if _f
+            ]
             return self if self.items else None
 
         def _normalized_depth(self):
@@ -964,7 +968,9 @@ class TabbedWindow(BaseWindow):
         assert tools.istraversable(self.tabs), 'Wrond type of "tabs"!'
 
         # инстанцирование вкладок
-        instantiate = lambda x: x() if inspect.isclass(x) else x
+        def instantiate(x):
+            return x() if inspect.isclass(x) else x
+
         self.tabs = list(map(instantiate, self.tabs or []))
 
         # опредение вкладок не должно быть пустым
@@ -1293,25 +1299,25 @@ def anchor100(ctl):
     return ctl
 
 
-allow_blank = lambda ctl: tools.modify(ctl, allow_blank=True)
-allow_blank.__doc__ = """
-    Устанавливает allow_blank=True у контрола и возвращает его (контрол)
+def allow_blank(ctl):
+    """Устанавливает allow_blank=True у контрола и возвращает его (контрол).
+
+    Пример использования::
+
+        controls = map(allow_blank, controls)
+    """
+    return tools.modify(ctl, allow_blank=True)
+
+
+def deny_blank(ctl):
+    """Устанавливает allow_blank=False у контрола и возвращает его (контрол).
 
     Пример использования::
 
         controls = map(allow_blank, controls)
 
     """
-
-deny_blank = lambda ctl: tools.modify(ctl, allow_blank=False)
-deny_blank.__doc__ = """
-    Устанавливает allow_blank=False у контрола и возвращает его (контрол)
-
-    Пример использования::
-
-        controls = map(allow_blank, controls)
-
-    """
+    return tools.modify(ctl, allow_blank=False)
 
 
 # =============================================================================

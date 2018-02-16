@@ -1546,7 +1546,9 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         :param grid: Грид
         :type grid: m3_ext.ui.panels.grids.ExtObjectGrid
         """
-        get_url = lambda x: x.get_absolute_url() if x else None
+        def get_url(x):
+            return x.get_absolute_url() if x else None
+
         grid.url_data = get_url(self.rows_action)
         if not self.read_only:
             grid.url_new = get_url(self.new_window_action)

@@ -11,6 +11,7 @@ from objectpack import observer
 def logger(msg):
     print("Observer: %s" % msg)
 
+
 # Наблюдатель
 obs = observer.Observer()
 

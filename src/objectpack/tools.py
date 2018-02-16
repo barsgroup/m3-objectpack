@@ -244,7 +244,10 @@ def extract_int_list(request, key):
     [1, 2, 3, 4]
     """
     request_params = get_request_params(request)
-    return list(map(int, [_f for _f in request_params.get(key, '').split(',') if _f]))
+    return list(map(
+        int,
+        (_f for _f in request_params.get(key, '').split(',') if _f)
+    ))
 
 
 def str_to_date(s):
