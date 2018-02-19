@@ -653,7 +653,7 @@ class ObjectRowsAction(BaseAction):
         :return: Список data_index колонок, для формирования json
         :rtype: list
         """
-        res = ['__unicode__', ]
+        res = ['__unicode__' if six.PY2 else '__str__', ]
         for col in getattr(self.parent, '_columns_flat', []):
             res.append(col['data_index'])
         res.append(self.parent.id_field)
@@ -950,7 +950,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
     columns = [
         {
             'header': u'Наименование',
-            'data_index': '__unicode__',
+            'data_index': '__unicode__' if six.PY2 else '__str__',
         },
     ]
     """
@@ -1034,7 +1034,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
     лежать :code:`{id_param_name: obj.id_field}`
     """
 
-    column_name_on_select = '__unicode__'
+    column_name_on_select = '__unicode__' if six.PY2 else '__str__'
     """
     Поле/метод, предоставляющее значение для отображения в DictSelectField
 

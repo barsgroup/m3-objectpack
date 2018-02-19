@@ -3,6 +3,7 @@ from __future__ import absolute_import
 
 from objectpack.actions import ObjectPack
 from objectpack.ui import ModelEditWindow
+import six
 
 
 class DictionaryObjectPack(ObjectPack):
@@ -18,7 +19,7 @@ class DictionaryObjectPack(ObjectPack):
             'searchable': True
         },
         {
-            'data_index': '__unicode__',
+            'data_index': '__unicode__' if six.PY2 else '__str__',
             'header': u'наименование',
             'searchable': True
         },

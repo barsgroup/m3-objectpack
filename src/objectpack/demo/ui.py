@@ -6,6 +6,7 @@ from m3_ext.ui.fields.complex import ExtMultiSelectField
 from objectpack.ui import ObjectGridTab
 from objectpack.ui import ObjectTab
 from objectpack.ui import TabbedEditWindow
+import six
 
 from . import controller
 from . import models
@@ -24,7 +25,9 @@ class GarageTab(ObjectTab.fabricate(
     def set_params(self, *args, **kwargs):
         super(GarageTab, self).set_params(*args, **kwargs)
         self._staff_field.pack = 'objectpack.demo.actions.StaffPack'
-        self._staff_field.display_field = '__unicode__'
+        self._staff_field.display_field = (
+            '__unicode__' if six.PY2 else '__str__'
+        )
 
 
 class GarageEditWindow(TabbedEditWindow):
