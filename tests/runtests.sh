@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-export PYTHONPATH=`dirname $0`/..
+export PYTHONPATH="$PYTHONPATH:`dirname $0`/.."
 export DJANGO_SETTINGS_MODULE='tests.settings'
 
 if [ `which django-admin.py` ] ; then
