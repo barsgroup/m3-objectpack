@@ -11,7 +11,9 @@ from m3_ext.ui.fields.simple import ExtNumberField
 from m3_ext.ui.fields.simple import ExtStringField
 from m3_ext.ui.fields.simple import ExtTextArea
 from m3_ext.ui.fields.simple import ExtTimeField
+import six
 
+from objectpack.models import VirtualModel
 from objectpack.ui import ComboBoxWithStore
 from objectpack.ui import _create_control_for_field
 
@@ -121,3 +123,43 @@ class CreateControlForFieldTestCase(SimpleTestCase):
         self.assertIsInstance(control, ExtTextArea)
         self.assertEquals(control.min_length, 50)
         self.assertEquals(control.max_length, 100)
+
+
+class VirtualModelTestCase(SimpleTestCase):
+
+    """Тесты для VirtualModel."""
+
+    def setUp(self):
+        self.data = {'1': 'first', '2': 'second', '3': 'third'}
+        self.TestVirtualModel = VirtualModel.from_data(
+            [
+                {'id': idx, 'name': name} for idx, name in
+                six.iteritems(self.data)
+            ],
+            class_name='TestVirtualModel'
+        )
+
+    def test_values(self):
+        data = [
+            {'id': idx, 'name': name} for idx, name in
+            six.iteritems(self.data)
+        ]
+        result = self.TestVirtualModel.objects.values('id', 'name')
+        self.assertEqual(
+            first=data,
+            second=list(result)
+        )
+
+    def test_values_list_with_single_field(self):
+        result = self.TestVirtualModel.objects.values_list('id', flat=True)
+        self.assertEqual(['1', '2', '3'], sorted(result))
+
+    def test_values_list_with_multi_fields(self):
+        with self.assertRaises(TypeError):
+            self.TestVirtualModel.objects.values_list('id', 'name', flat=True)
+
+        result = self.TestVirtualModel.objects.values_list('id', 'name')
+        self.assertEqual(
+            first=list(six.iteritems(self.data)),
+            second=list(result)
+        )

@@ -4,7 +4,6 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from os.path import join
-import sys
 
 from fabric.context_managers import cd
 from fabric.decorators import task
@@ -13,6 +12,7 @@ from fabric.tasks import execute
 
 from . import dist
 from . import req
+from . import run
 from . import src
 from ._settings import PROJECT_DIR
 

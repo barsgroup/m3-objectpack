@@ -237,7 +237,7 @@ class VirtualModelManager(object):
             getter = self._make_getter(args[0])
             return map(getter, self)
         else:
-            getters = map(self._make_getter, args)
+            getters = list(map(self._make_getter, args))
             return (tuple(g(o) for g in getters) for o in self)
 
     def select_related(self):
