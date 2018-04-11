@@ -75,6 +75,18 @@ class AbstractFilter(six.with_metaclass(abc.ABCMeta, object)):
     _not = None
     _uid = None
     _lookup = None
+    _default_value = None
+
+    @property
+    def default_value(self):
+        if callable(self._default_value):
+            return self._default_value()
+        else:
+            return self._default_value
+
+    @default_value.setter
+    def default_value(self, value):
+        self._default_value = value
 
     @abc.abstractmethod
     def get_script(self):
@@ -228,7 +240,7 @@ class FilterByField(AbstractFilter):
     _parser = None
 
     def __init__(
-        self, model, field_name, lookup=None, tooltip=None,
+        self, model, field_name, lookup=None, tooltip=None, default_value=None,
         **field_fabric_params
     ):
         """
@@ -241,15 +253,48 @@ class FilterByField(AbstractFilter):
             либо функция вида (lookup_param -> Q-object)
         :param tooltip: текст всплывающей подсказки
         :type tooltip: str
+        :param default_value: значение по-умолчанию
         :param field_fabric_params: Параметры для инициализации
         контрола фильтра
         :type field_fabric_params: dict
+
+        .. note: параметр default_value может быть передан как callable объект,
+                 чтобы его значение вычислялось не при инициализации пака, в
+                 котором он объявлен, а только при непосредственном вызове
+                 окна с гридом. Полезно, если значением по умолчанию должна
+                 быть текущая дата
+
+        .. hint: если требуется в качестве значения по-умолчанию проставить
+                 значение, которое зависит от параметров запроса (выбранное в
+                 виджете учреждение или дата окончания выбранного периода),
+                 это можно сделать из метода create_list_window:
+
+        .. code:
+
+            class MyPack(ObjectPack):
+                model = SomeModel
+
+                field_filter = FilterByField(SomeModel, 'some_field')
+
+                columns = [
+                    ...,
+                    {
+                        ...,
+                        'filter': field_filter
+                    }
+                ]
+
+                def create_list_window(self, request, context):
+                    some_value = get_value_by_request(request)
+                    self.field_filter.default_value = some_value
+                    return super(MyPack, self).create_list_window(...)
         """
         field_name = field_name.replace('.', '__')
         self._model = model
         self._field_name = field_name
         self._tooltip = tooltip
         self._field_fabric_params = field_fabric_params
+        self._default_value = default_value
         for bases, parser_key, default_lookup in self.parsers_map:
             if isinstance(self.field, bases):
                 self._parser = DeclarativeActionContext._parsers[parser_key]
@@ -285,7 +330,7 @@ class FilterByField(AbstractFilter):
         control.name = self._uid
         control.allow_blank = True
         control.hide_clear_trigger = False
-        control.value = None
+        control.value = self.default_value
         return [control.render()]
 
     @property
@@ -423,12 +468,12 @@ class ColumnFilterEngine(AbstractFilterEngine):
     Механизм фильтрации, реализующий UI в виде полей ввода,
     встроенных в шапку таблицы
     """
-    _filters = None
 
     def __init__(self, columns):
         """
         .. seealso:: :mod:`objectpack.filters.AbstractFilterEngine.__init__`
         """
+        self._filters = list()
         super(ColumnFilterEngine, self).__init__(columns)
 
         # генератор id с автоинкрементом
@@ -436,8 +481,12 @@ class ColumnFilterEngine(AbstractFilterEngine):
             state[0] += 1
             return state[0]
 
-        for item in columns:
-            item[1]._set_uid(auto_id)
+        for _, column_filter in columns:
+            if isinstance(column_filter, FilterGroup):
+                self._filters.extend(column_filter)
+            else:
+                self._filters.append(column_filter)
+            column_filter._set_uid(auto_id)
 
     def configure_grid(self, grid):
         """
@@ -445,7 +494,7 @@ class ColumnFilterEngine(AbstractFilterEngine):
             :mod:`objectpack.filters.AbstractFilterEngine.configure_grid`
         """
         grid.plugins.append('new Ext.ux.grid.GridHeaderFilters()')
-
+        _base_params = {}
         _new = {}
         for data_index, filter_obj in six.iteritems(self._columns):
             _new[data_index] = u'[%s]' % (u','.join(filter_obj.get_script()))
@@ -453,6 +502,14 @@ class ColumnFilterEngine(AbstractFilterEngine):
         for col in grid.columns:
             if col.data_index in _new:
                 col.extra['filter'] = _new[col.data_index]
+
+        for _filter in self._filters:
+            f_value = _filter.default_value
+            if f_value:
+                _base_params[_filter._uid] = str(f_value)
+
+        if _base_params:
+            grid.store.base_params.update(_base_params)
 
     def apply_filter(self, query, request, context):
         """
