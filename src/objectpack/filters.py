@@ -157,6 +157,9 @@ class FilterGroup(AbstractFilter):
         self._items = items
         self._operand = op
 
+    def __iter__(self):
+        return iter(self._items)
+
     def __or__(self, other):
         return self._join(other, self.OR)
 
