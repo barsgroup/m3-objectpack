@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 from functools import wraps
 import datetime
-
+import types
 from six.moves import map
 import six
 
@@ -46,7 +46,7 @@ class QuerySplitter(six.Iterator):
     def __iter__(self):
         if not self._limit:
             # перекрытие метода пропускания, заглушкой
-            self.skip_last = lambda self: None
+            self.skip_last = types.MethodType(lambda self: None, self)
             return iter(self._data)
         return self
 
