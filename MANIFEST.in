@@ -1,6 +1,10 @@
-recursive-include src *.*
-recursive-exclude src *.orig
-recursive-exclude src *.pyc
-include README README.rst DESCRIPTION INSTALL.txt REQUIREMENTS
-include version.conf
+graft src
+
+global-exclude *.pyc
+global-exclude __pycache__
 prune src/objectpack/demo
+
+include README
+include DESCRIPTION
+include REQUIREMENTS
+include version.conf
