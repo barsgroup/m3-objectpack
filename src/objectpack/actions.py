@@ -1335,7 +1335,11 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         :return: Отображаемое текстовое представление объекта
         :rtype: basestring
         """
-        row = self.get_row(key)
+        try:
+            row = self.get_row(key)
+        except self.model.DoesNotExist:
+            row = None
+
         if row is not None:
             try:
                 text = getattr(row, attr_name)
