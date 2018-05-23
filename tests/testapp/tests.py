@@ -14,6 +14,7 @@ from m3_ext.ui.fields.simple import ExtTimeField
 import six
 
 from objectpack.models import VirtualModel
+from objectpack.tools import copy_columns
 from objectpack.ui import ComboBoxWithStore
 from objectpack.ui import _create_control_for_field
 
@@ -163,3 +164,65 @@ class VirtualModelTestCase(SimpleTestCase):
             first=list(six.iteritems(self.data)),
             second=list(result)
         )
+
+
+class ToolsTestCase(SimpleTestCase):
+
+    """Тесты для инструментария из objectpack.tools."""
+
+    def test__copy_columns(self):
+        base_columns = (
+            dict(
+                data_index='number',
+                width=1,
+            ),
+            dict(
+                data_index='code',
+                header='Код',
+                width=2,
+            ),
+            dict(
+                data_index='name',
+                width=4,
+            ),
+        )
+
+        columns = copy_columns(
+            base_columns,
+            dict(
+                data_index='start_date',
+                width=100,
+                fixed=True,
+            ),
+            'code',
+            dict(
+                data_index='name',
+                title='Наименование',
+                width=5,
+            ),
+            code=dict(
+                width=100,
+                fixed=True,
+            ),
+        )
+
+        target_columns = (
+            dict(
+                data_index='start_date',
+                width=100,
+                fixed=True,
+            ),
+            dict(
+                data_index='code',
+                header='Код',
+                width=100,
+                fixed=True,
+            ),
+            dict(
+                data_index='name',
+                title='Наименование',
+                width=5,
+            ),
+        )
+
+        self.assertEqual(columns, target_columns)

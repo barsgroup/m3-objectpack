@@ -1,6 +1,6 @@
 # coding: utf-8
 from __future__ import absolute_import
-
+from collections import Mapping
 from functools import wraps
 import datetime
 import types
@@ -487,3 +487,122 @@ def get_related_fields(model, fields):
                 result.append(field_name)
                 result.extend(get_related_fields(field.rel.to, fields))
     return result
+
+
+def copy_columns(columns, *args, **kwargs):
+    """Копирует параметры столбцов базового пака с одновременной модификацией.
+
+    Предназначена для использования при расширении базовых классов паков.
+
+    .. code-block:: python
+
+       class BasePack:
+           columns = (
+               dict(
+                   data_index='number',
+                   width=1,
+               ),
+               dict(
+                   data_index='code',
+                   width=2,
+               ),
+               dict(
+                   data_index='name',
+                   width=4,
+               ),
+           )
+
+       class Pack(BasePack)
+           columns = copy_columns(
+               BasePack.columns,
+               dict(  # новый столбец
+                   data_index='start_date',
+                   width=100,
+                   fixed=True,
+               ),
+               'code',  # место для вставки столбца code из базового класса
+               dict(  # столбец name из базового класса с новыми параметрами
+                   data_index='name',
+                   title='Наименование',
+                   width=5,
+               ),
+               code=dict(  # новые значения для параметров поля code
+                   width=100,
+               ),
+           )
+
+    :param columns: имена столбцов
+    :param args: параметры новых столбцов или имена столбцов базового класса.
+    :param params: новые параметры столбцов базового класса.
+
+    :rtype: tuple or dict
+    """
+    assert all(isinstance(col, Mapping) for col in columns), columns
+
+    def get_column(name):
+        for column in columns:
+            if column['data_index'] == name:
+                result = column
+                break
+        else:
+            result = None
+        return result
+
+    def process_arg(arg):
+        if isinstance(arg, str):
+            # строка с именем столбца указывает его позицию.
+            column = get_column(arg)
+            if column is None:
+                column = dict(data_index=arg)
+            if arg in kwargs:
+                assert 'data_index' not in kwargs[arg], kwargs[arg]
+                column = column.copy()
+                column.update(kwargs[arg])
+            result = column
+
+        elif isinstance(arg, Mapping):
+            assert 'data_index' in arg, arg
+            data_index = arg['data_index']
+            column = get_column(data_index)
+            if column is not None:
+                column = column.copy()
+                column.update(arg)
+                arg = column
+            if data_index in kwargs:
+                assert 'data_index' not in kwargs[arg], kwargs[arg]
+                arg.update(kwargs[data_index])
+            result = arg
+
+        else:
+            raise ValueError(arg)
+
+        return result
+
+    def process_kwarg(data_index, params):
+        column = get_column(data_index)
+        if column is None:
+            result = dict(
+                data_index=data_index,
+                **params
+            )
+        elif params is True:
+            result = column
+        elif isinstance(params, Mapping):
+            column = column.copy()
+            column.update(params)
+            result = column
+        else:
+            raise ValueError((data_index, params))
+
+        return result
+
+    if args:
+        # указаны позиционные аргументы, значит они и определяют порядок.
+        return tuple(map(process_arg, args))
+
+    else:
+        return tuple(
+            process_kwarg(data_index, params)
+            for data_index, params in kwargs.items()
+            if params is not None
+        )
