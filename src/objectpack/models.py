@@ -568,3 +568,44 @@ class ModelProxy(six.with_metaclass(model_proxy_metaclass, object)):
 
     def safe_delete(self):
         raise NotImplementedError()
+
+
+class MultipleDateMixin(object):
+    """Миксин для моделей, представляющие связь объекта и нескольких дат.
+
+    Используется совместно с ``objectpack.ui.ExtMultipleDateField``, когда к
+    объекту должно быть привязано несколько дат. Например:
+
+    class Program(BaseModel):
+        dates = models.ManyToMany(
+            ProgramDateBegin, related_names='programs'
+        )
+
+    class ProgramDateBegin(MultipleDateMixin, BaseModel):
+        program = models.ForeignKey(EducationProgram)
+        date = models.DateField()
+
+        multi_date_field = 'date'
+        related_model_field = 'program'
+
+    class ProgramEditWindow(ModelEditWindow):
+        field_list = ( dates, ... )
+        # для поля Program.dates отрендерится датапикер с множественным выбором
+
+    При биндинге формы для объекта Program для поля dates будет создан
+    компонент датапикера с множественным выбором дат - так к программе
+    будут привязаны несколько дат.
+
+    multi_date_fields определяет, какое поле модели является полем
+    множественного выбора дат.
+    related_model_field определяет по какому полю модель привязана к основному
+    объекту.
+    """
+
+    multi_date_fields = ''
+    related_model_field = ''
+
+    def get_date_value(self):
+        """Возвращает даты, в виде списка через запятую."""
+        res = getattr(self, self.multi_date_fields, '')
+        return res

@@ -2,6 +2,7 @@
 from __future__ import absolute_import
 
 from datetime import datetime
+from itertools import chain
 import inspect
 
 from six.moves import map
@@ -17,6 +18,8 @@ from m3_ext.ui import all_components as ext
 from m3_ext.ui import windows as ext_windows
 from m3_ext.ui.misc import store as ext_store
 
+from objectpack.models import ModelProxy
+from objectpack.models import MultipleDateMixin
 from . import tools
 
 
@@ -686,6 +689,7 @@ def model_fields_to_controls(
     """
     def make_checker(patterns):
         matchers = []
+
         for pattern in patterns:
             if pattern.endswith('*'):
                 fn = (lambda p: lambda s: s.startswith(p))(pattern[:-1])
@@ -714,6 +718,7 @@ def model_fields_to_controls(
             ]))
 
     controls = []
+
     for f in model._meta.fields:
         if is_valid(f.attname):
             try:
@@ -723,6 +728,20 @@ def model_fields_to_controls(
 
             setattr(window, 'field__%s' % f.attname.replace('.', '__'), ctl)
             controls.append(ctl)
+
+    many_to_many = (
+        model.model._meta.many_to_many if issubclass(model, ModelProxy)
+        else model._meta.many_to_many
+    )
+    for f in many_to_many:
+        try:
+            ctl = _create_control_for_field(f, model_register, **kwargs)
+        except GenerationError:
+            continue
+
+        setattr(window, 'field__%s' % f.attname.replace('.', '__'), ctl)
+        controls.append(ctl)
+
     if keep_field_list_order and controls:
         controls.sort(
             key=lambda i: field_list.index(i.name) if i.name in (
@@ -741,6 +760,7 @@ class GenerationError(Exception):
 def _create_control_for_field(f, model_register=None, **kwargs):
     u"""Возвращает контрол для поля модели."""
     name = str(f.attname)
+
     # -------------------------------------------------------------------------
     if f.choices:
         ctl = make_combo_box(data=list(f.choices), **kwargs)
@@ -776,6 +796,12 @@ def _create_control_for_field(f, model_register=None, **kwargs):
         params = {'format': 'd.m.Y'}
         params.update(kwargs)
         ctl = ext.ExtDateField(**params)
+
+    elif isinstance(f, django_models.ManyToManyField):
+        if issubclass(f.related_model, MultipleDateMixin):
+            params = {'format': 'd.m.Y'}
+            params.update(kwargs)
+            ctl = ext.ExtMultipleDateField(**params)
 
     elif isinstance(f, django_models.TimeField):
         params = {'format': 'H:i', 'increment': 5}
