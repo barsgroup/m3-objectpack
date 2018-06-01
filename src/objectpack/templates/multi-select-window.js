@@ -27,14 +27,15 @@ Ext.apply(win, {
     },
 
     onAllStoreLoad: function(store, records, options){
-        pageCount = Math.ceil(
-            store.getTotalCount()/this.grid.getBottomToolbar().pageSize
-        );
         var message=String.format(
-            'Выбрано {0} элементов на {1} страницах',
-            store.getTotalCount(),
-            pageCount
-        );
+            'Выбрано {0} элементов', store.getTotalCount());
+        if (this.grid.allowPaging){
+            pageCount = Math.ceil(
+                store.getTotalCount()/this.grid.getBottomToolbar().pageSize
+            );
+            message += String.format(' на {0} страницах', pageCount);
+        }
+
         store.each(function(record){
             win.checkedItems[record.id] = record;
         });
