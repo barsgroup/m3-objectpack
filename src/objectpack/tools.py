@@ -1,17 +1,19 @@
 # coding: utf-8
 from __future__ import absolute_import
+
 from collections import Mapping
+from copy import deepcopy
 from functools import wraps
 import datetime
 import types
-from six.moves import map
-import six
 
 from django.db import transaction
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.fields.related import RelatedField
 from m3_django_compat import ModelOptions
 from m3_django_compat import get_request_params
+from six.moves import map
+import six
 
 
 # =============================================================================
@@ -554,9 +556,11 @@ def copy_columns(columns, *args, **kwargs):
             column = get_column(arg)
             if column is None:
                 column = dict(data_index=arg)
+            else:
+                column = deepcopy(column)
+
             if arg in kwargs:
                 assert 'data_index' not in kwargs[arg], kwargs[arg]
-                column = column.copy()
                 column.update(kwargs[arg])
             result = column
 
@@ -565,7 +569,7 @@ def copy_columns(columns, *args, **kwargs):
             data_index = arg['data_index']
             column = get_column(data_index)
             if column is not None:
-                column = column.copy()
+                column = deepcopy(column)
                 column.update(arg)
                 arg = column
             if data_index in kwargs:
@@ -588,7 +592,7 @@ def copy_columns(columns, *args, **kwargs):
         elif params is True:
             result = column
         elif isinstance(params, Mapping):
-            column = column.copy()
+            column = deepcopy(column)
             column.update(params)
             result = column
         else:
