@@ -246,6 +246,9 @@ class VirtualModelManager(object):
     def count(self):
         return sum(1 for _ in self)
 
+    def __len__(self):
+        return self.count()
+
 
 # =============================================================================
 # VirtualModel
