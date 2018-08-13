@@ -1,5 +1,10 @@
 # История изменений
 
+**2.2.25**
+- Багфикс в методе `TreeObjectPack.apply_search`: в Python 3 некорректно
+  обрабатывались значения `None`.
+- Добавлена поддержка `NullBooleanField` в функцию `_create_control_for_field`.
+
 **2.2.24**
 - Багфикс определения количества объектов VirtualModel.
 

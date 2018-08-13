@@ -745,7 +745,9 @@ def _create_control_for_field(f, model_register=None, **kwargs):
     if f.choices:
         ctl = make_combo_box(data=list(f.choices), **kwargs)
 
-    elif isinstance(f, django_models.BooleanField):
+    elif isinstance(
+        f, (django_models.BooleanField, django_models.NullBooleanField)
+    ):
         ctl = ext.ExtCheckBox(**kwargs)
 
     elif isinstance(f, django_models.CharField):

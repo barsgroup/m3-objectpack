@@ -46,7 +46,8 @@ class TreeObjectPack(ObjectPack):
         :return: Отфильтрованный QuerySet.
         :rtype: django.db.models.query.QuerySet
         """
-        if extract_int(request, self.id_param_name) > 0:
+        id_param_name = extract_int(request, self.id_param_name)
+        if id_param_name and id_param_name > 0:
             return query
 
         return super(
