@@ -5,7 +5,6 @@ from __future__ import absolute_import
 import copy
 import datetime
 import json
-import types
 import warnings
 
 import six
@@ -25,9 +24,9 @@ from m3.actions.results import PreJsonResult
 from m3.actions.utils import apply_search_filter
 from m3.actions.utils import extract_int
 from m3.db import safe_delete
+from m3_django_compat import atomic
 from m3_django_compat import ModelOptions
 from m3_django_compat import get_request_params
-from m3_ext.ui.fields.complex import ExtSearchField
 from m3_ext.ui.results import ExtUIScriptResult
 
 from . import exceptions
@@ -424,6 +423,7 @@ class ObjectSaveAction(BaseAction):
         except dj_exceptions.ValidationError as err:
             raise ApplicationLogicException(u'<br/>'.join(err.messages))
 
+    @atomic
     def run(self, request, context):
         """
         Тело Action, вызывается при обработке запроса к серверу
