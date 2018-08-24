@@ -1254,7 +1254,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
                         if f not in self._select_related_fields:
                             self._select_related_fields.append(f)
 
-        flatify(self.columns)
+        flatify(self.get_columns())
 
         # подключение механизма фильтрации
         self._filter_engine = self.filter_engine_clz([
@@ -1515,6 +1515,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         Добавлено для возможности проводить кастомизацию колонок
         на основе переданных параметров.
         """
+        
         return self.columns
 
     def configure_grid(self, grid, *args, **kwargs):
