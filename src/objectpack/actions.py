@@ -1515,7 +1515,6 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         Добавлено для возможности проводить кастомизацию колонок
         на основе переданных параметров.
         """
-        
         return self.columns
 
     def configure_grid(self, grid, *args, **kwargs):
