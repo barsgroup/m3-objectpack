@@ -38,6 +38,7 @@ setup(
         'Framework :: Django :: 1.9',
         'Framework :: Django :: 1.10',
         'Framework :: Django :: 1.11',
+        'Framework :: Django :: 2.0',
     ],
     package_dir={'': 'src'},
     packages=find_packages('src'),
@@ -51,7 +52,7 @@ setup(
     ),
     install_requires=(
         'six>=1.11,<2',
-        'Django>=1.4,<2',
+        'Django>=1.4,<2.1',
         'm3-builder>=1.2,<2',
         'm3-django-compat>=1.5.1,<2',
         'django>=1.4,<2',
