@@ -5,6 +5,7 @@
 from __future__ import absolute_import
 
 from m3_django_compat import ModelOptions
+from m3_django_compat import get_related
 
 from objectpack.actions import ObjectPack
 
@@ -37,7 +38,8 @@ class SlavePack(ObjectPack):
         for parent in self.parents:
             f = opts.get_field(parent)
             # pack ищется в реестре "модель-pack", который должен
-            pack = self._get_model_pack(f.rel.to.__name__)
+            model = get_related(f).parent_model
+            pack = self._get_model_pack(model.__name__)
             if pack:
                 result.append((
                     pack.id_param_name,

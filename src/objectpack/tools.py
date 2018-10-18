@@ -12,6 +12,7 @@ from django.db.models.fields import FieldDoesNotExist
 from django.db.models.fields.related import RelatedField
 from m3_django_compat import ModelOptions
 from m3_django_compat import get_request_params
+from m3_django_compat import get_related
 from six.moves import map
 import six
 
@@ -487,7 +488,9 @@ def get_related_fields(model, fields):
         else:
             if isinstance(field, RelatedField):
                 result.append(field_name)
-                result.extend(get_related_fields(field.rel.to, fields))
+                result.extend(get_related_fields(
+                    get_related(field).parent_model, fields)
+                )
     return result
 
 

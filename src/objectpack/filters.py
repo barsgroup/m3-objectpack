@@ -15,6 +15,7 @@ from django.db import models
 from m3.actions import DeclarativeActionContext
 from m3_django_compat import ModelOptions
 from m3_django_compat import get_request_params
+from m3_django_compat import get_related
 
 from .tools import str_to_date
 from .ui import _create_control_for_field
@@ -343,7 +344,8 @@ class FilterByField(AbstractFilter):
         def get(model, fld, path):
             res = ModelOptions(model).get_field(fld)
             if path:
-                return get(res.rel.to, path[0], path[1:])
+                model = get_related(res).parent_model
+                return get(model, path[0], path[1:])
             return res
 
         res = get(self._model, path[0], path[1:])

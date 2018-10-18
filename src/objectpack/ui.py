@@ -13,6 +13,7 @@ from django.core.validators import MaxValueValidator
 from django.core.validators import MinLengthValidator
 from django.core.validators import MinValueValidator
 from django.db import models as django_models
+from m3_django_compat import get_related
 from m3_ext.ui import all_components as ext
 from m3_ext.ui import windows as ext_windows
 from m3_ext.ui.misc import store as ext_store
@@ -878,7 +879,7 @@ def _create_dict_select_field(f, model_register=None, **kwargs):
     :param kwargs: Параметры для передачи в конструктор ExtDictSelectField
     :type kwargs: dict
     """
-    related_model = f.rel.to.__name__
+    related_model = get_related(f).parent_model.__name__
 
     pack = (model_register or {}).get(related_model)
 
