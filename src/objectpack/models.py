@@ -67,7 +67,15 @@ class ObjectWrapper(object):
     def __lt__(self, other):
         if isinstance(other, ObjectWrapper):
             other = other.obj
-        return self.obj < other if self.direction == 1 else self.obj > other
+
+        is_obj_not_none = self.obj is not None
+        is_other_not_none = other is not None
+        if is_obj_not_none and is_other_not_none:
+            first, second = self.obj, other
+        else:
+            first, second = is_obj_not_none, is_other_not_none
+
+        return first < second if self.direction == 1 else first > second
 
 
 class VirtualModelManager(object):
