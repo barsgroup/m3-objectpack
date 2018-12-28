@@ -13,7 +13,7 @@ function isGridSelected(grid, title, message){
 }
 
 function selectValue(){
-    var id, displayText;
+    var id, displayText, additionalData = {};
 
     var grid = Ext.getCmp('{{ component.grid.client_id}}');
     if (!isGridSelected(grid, 'Выбор элемента', 'Выберите элемент из списка') ) {
@@ -32,8 +32,16 @@ function selectValue(){
         id = ids.join(',');
         displayText = displayTexts.join(', ');
     {% else %}
-        id = grid.getSelectionModel().getSelected().id;
-        displayText = grid.getSelectionModel().getSelected().get("{{ component.column_name_on_select }}");
+        var selected = grid.getSelectionModel().getSelected();
+        id = selected.id;
+        displayText = selected.get("{{ component.column_name_on_select }}");
+        // {# Формирует словарь дополнительных данных для передачи в обработчик afterselect #}
+        var keysForData = JSON.parse('{{ component.additional_data_names|escapejs }}'.replace(/'/gi, '"'));
+        for (var i = 0; i < keysForData.length; i++){
+            var key = keysForData[i];
+            var data = selected.get(key);
+            additionalData[key] = data;
+        }
     {% endif %}
 
     var win = Ext.getCmp('{{ component.client_id }}');
@@ -58,7 +66,7 @@ function selectValue(){
     {% else %}
         if (id!=undefined && displayText!=undefined){
             win.fireEvent('select_value', id, displayText); // deprecated
-            win.fireEvent('closed_ok', id, displayText); 
+            win.fireEvent('closed_ok', id, displayText, additionalData);
         };
         win.close();
     {% endif %}
