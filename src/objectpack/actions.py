@@ -277,7 +277,11 @@ class ObjectSelectWindowAction(ObjectListWindowAction):
         # В окне выбора можно только ВЫБИРАТЬ!
         self.win_params['read_only'] = True
         self.win_params['column_name_on_select'] = (
-            self.parent.column_name_on_select)
+            self.parent.column_name_on_select
+        )
+        self.win_params['additional_data_names'] = (
+            self.parent.additional_data_names
+        )
 
 
 class ObjectMultiSelectWindowAction(ObjectSelectWindowAction):
@@ -1036,11 +1040,16 @@ class ObjectPack(BasePack, IMultiSelectablePack):
 
     column_name_on_select = '__unicode__' if six.PY2 else '__str__'
     """
-    Поле/метод, предоставляющее значение для отображения в DictSelectField
+    Поле/метод, предоставляющее значение для отображения в ExtDictSelectField
 
     .. attention::
 
         ПОКА НЕ РАБОТАЕТ извлечение вложенных полей - конфликт с ExtJS
+    """
+    additional_data_names = []
+    """
+    Дополнительные атрибуты строки, которые будут переданы в обработчик 
+    afterselect соответствующего поля ExtDictSelectField
     """
 
     search_fields = None
