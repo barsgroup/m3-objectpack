@@ -1048,7 +1048,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
     """
     additional_data_names = []
     """
-    Дополнительные атрибуты строки, которые будут переданы в обработчик 
+    Дополнительные атрибуты строки, которые будут переданы в обработчик
     afterselect соответствующего поля ExtDictSelectField
     """
 
