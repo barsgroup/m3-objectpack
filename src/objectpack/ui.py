@@ -345,7 +345,7 @@ class BaseSelectWindow(BaseListWindow):
             self._enable_multi_select()
         self.template_globals = 'select-window.js'
         self.column_name_on_select = params['column_name_on_select']
-        self.additional_data_names = params['additional_data_names']
+        self.additional_data_names = params.get('additional_data_names', [])
         self.grid.handler_dblclick = 'selectValue'
 
 
