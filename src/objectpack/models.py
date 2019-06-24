@@ -80,7 +80,7 @@ class ObjectWrapper(object):
 
 class VirtualModelManager(object):
     """
-    Имитация QueryManager`а Django для VirtualModel
+    Имитация QueryManager`а Django для VirtualModel.
     """
     _operators = {
         'contains': lambda val: lambda x: val in x,
@@ -92,6 +92,9 @@ class VirtualModelManager(object):
         'gt': lambda val: lambda x: x > val,
         'isnull': lambda val: lambda x: (x is None or x.id is None) == val,
         'in': lambda vals: lambda x: x in vals,
+        'overlap': lambda vals: (
+            lambda searched_vals: set(searched_vals) & set(vals)
+        ),
     }
 
     def __init__(self, model_clz=None, procs=None, **kwargs):
@@ -266,6 +269,10 @@ class VirtualModel(object):
     Виртуальная модель, реализующая Django-ORM-совместимый API, для
     работы с произвольными данными.
 
+    Менеджер поддерживает дополнительный лукап:
+      - overlap: для проверки пересечения iterable-поля объекта виртуальной
+            модели и передаваемого iterable-объекта.
+
     Пример модели:
     >>> M = VirtualModel.from_data(
     ...     lambda: (
@@ -283,6 +290,29 @@ class VirtualModel(object):
     6
     >>> list(M.objects.filter(x=0).order_by("-y").values_list("y", flat=True))
     [40, 30, 20, 10, 0]
+
+    Пример фильтрации по ``overlap``:
+
+    >>> M = VirtualModel.from_data(
+    ...     lambda: (
+    ...         {'related_objects_values': [x, y * 10], 'y': y * 10}
+    ...         for x in range(3)
+    ...         for y in range(3)
+    ...     ),
+    ...     auto_ids=True
+    ... )
+
+    Найти все объекты, у которых в ``related_objects_values``
+    пересекается c [2, 20].
+    >>> list(M.objects.filter(
+    ...     related_objects_values__overlap=[2, 20]
+    ... ).values('related_objects_values'))
+    [{'related_objects_values': [0, 20]},
+     {'related_objects_values': [1, 20]},
+     {'related_objects_values': [2, 0]},
+     {'related_objects_values': [2, 10]},
+     {'related_objects_values': [2, 20]}]
+
     """
 
     class DoesNotExist(Exception):
