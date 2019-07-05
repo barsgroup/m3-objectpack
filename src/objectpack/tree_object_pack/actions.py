@@ -59,13 +59,14 @@ class TreeObjectPack(ObjectPack):
         # данные подгружаются "поуровнево", для чего
         # запрос содержит id узла, из которого поддерево "растет"
         current_node_id = extract_int(request, self.id_param_name)
+        is_root_node = current_node_id is None or current_node_id < 0
         filter_in_params = bool(get_request_params(request).get('filter'))
         # при применении поиска на корневом узле, берутся все записи
-        if filter_in_params and current_node_id < 0:
+        if filter_in_params and is_root_node:
             return result
 
-        if current_node_id < 0:
-            # если корневой узел поддерева не указан, будут выводиться
+        if is_root_node:
+            # если узел поддерева является корневым, то будут выводиться
             # деревья самого верхнего уровня (не имеющие родителей)
             current_node_id = None
 
