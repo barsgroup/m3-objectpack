@@ -85,7 +85,10 @@ class VirtualModelManager(object):
     _operators = {
         'contains': lambda val: lambda x: val in x,
         'iexact': lambda val: lambda x, y=val.lower(): x.lower() == y,
-        'icontains': lambda val: lambda x, y=val.lower(): y in x.lower(),
+        'icontains': (
+            lambda val: lambda x, y=val.lower(): y in x.lower() if x
+            else False
+        ),
         'lte': lambda val: lambda x: x <= val,
         'gte': lambda val: lambda x: x >= val,
         'lt': lambda val: lambda x: x < val,
