@@ -1,5 +1,8 @@
 # История изменений
 
+**2.2.33**
+- Багфикс в `VirtualModelManager._operators`, доработан фильтр 'icontains'.
+
 **2.2.32**
 - Багфикс в `TreeObjectPack.get_rows_query`, доработано определение
   корневого узла.
