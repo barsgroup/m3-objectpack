@@ -1,5 +1,8 @@
 # История изменений
 
+**2.2.34**
+- Исправлено получение логгера в `objectpack.observer.base`.
+
 **2.2.33**
 - Багфикс в `VirtualModelManager._operators`, доработан фильтр 'icontains'.
 
