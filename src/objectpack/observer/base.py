@@ -6,10 +6,9 @@ import logging
 import re
 import sys
 
-import six
-
 from m3 import actions as m3_actions
 from m3_django_compat import get_request_params
+import six
 
 from . import tools
 
@@ -23,7 +22,7 @@ def _warn(msg, level=3):
     """
     frame = sys._getframe(level)
     fmt = '%%s (%s:%s)' % (frame.f_globals['__name__'], frame.f_lineno)
-    logging.warn(fmt % msg)
+    logging.getLogger(__package__).warning(fmt % msg)
 
 
 # =============================================================================
@@ -399,6 +398,7 @@ class Observer(object):
             в listeners. Если ни один из слушетелей не вернёт
             True, исключение считается неотловленным
             """
+
             def __init__(self):
                 self.result = None
 
