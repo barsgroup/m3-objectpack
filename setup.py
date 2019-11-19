@@ -7,7 +7,7 @@ from setuptools import setup
 
 
 def _read(file_name):
-    with open(join(dirname(__file__), file_name)) as f:
+    with open(join(dirname(__file__), file_name), encoding='utf-8') as f:
         return f.read()
 
 
