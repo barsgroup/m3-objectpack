@@ -4,20 +4,22 @@ from __future__ import absolute_import
 from datetime import datetime
 import inspect
 
-from six.moves import map
-from six.moves import zip
-import six
-
 from django.core.validators import MaxLengthValidator
 from django.core.validators import MaxValueValidator
 from django.core.validators import MinLengthValidator
 from django.core.validators import MinValueValidator
+from django.core.validators import RegexValidator
 from django.db import models as django_models
 from m3_django_compat import get_related
 from m3_ext.ui import all_components as ext
 from m3_ext.ui import windows as ext_windows
 from m3_ext.ui.misc import store as ext_store
+from six.moves import map
+from six.moves import zip
+import six
 
+from objectpack.tools import escape_js_regex
+from . import IMaskRegexField
 from . import tools
 
 
@@ -755,9 +757,21 @@ def _create_control_for_field(f, model_register=None, **kwargs):
 
     elif isinstance(f, django_models.CharField):
         ctl = ext.ExtStringField(max_length=f.max_length, **kwargs)
+        for validator in f.validators:
+            if isinstance(validator, RegexValidator):
+                regex = (
+                    validator.regex if isinstance(validator.regex, str) else
+                    validator.regex.pattern)
+                ctl.regex = escape_js_regex(regex)
 
     elif isinstance(f, django_models.TextField):
         ctl = ext.ExtTextArea(max_length=f.max_length, **kwargs)
+        for validator in f.validators:
+            if isinstance(validator, RegexValidator):
+                regex = (
+                    validator.regex if isinstance(validator.regex, str) else
+                    validator.regex.pattern)
+                ctl.regex = escape_js_regex(regex)
 
     elif isinstance(f, django_models.IntegerField):
         ctl = ext.ExtNumberField(**kwargs)
@@ -798,6 +812,10 @@ def _create_control_for_field(f, model_register=None, **kwargs):
 
     else:
         raise GenerationError(u'Не могу создать контрол для %s' % f)
+    # -------------------------------------------------------------------------
+    # Установка доп. параметров, исходя из кастомных интерфейсов
+    if isinstance(f, IMaskRegexField):
+        f.set_mask_on_control(ctl)
     # -------------------------------------------------------------------------
     ctl.name = name
     ctl.label = six.text_type(f.verbose_name or name)
