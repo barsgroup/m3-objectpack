@@ -613,3 +613,14 @@ def copy_columns(columns, *args, **kwargs):
             for data_index, params in kwargs.items()
             if params is not None
         )
+
+
+def escape_js_regex(pattern):
+    """Возвращает преобразованный regex-паттерн, пригодный для использования в
+    JavaScript.
+    :param pattern: валидное регулярное выражение в python
+    :type pattern: str
+    :return: преобразованный паттерн, пригодный для JS
+    :rtype: str
+    """
+    return pattern.replace(r'/', r'\/')
