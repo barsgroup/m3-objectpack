@@ -57,7 +57,7 @@ setup(
         'm3-django-compat>=1.5.1,<2',
         'django>=1.4,<2',
         'm3-core>=2.2.16,<3',
-        'm3-ui>=2.2.56,<3',
+        'm3-ui>=2.2.75,<3',
     ),
     set_build_info=dirname(__file__),
 )
