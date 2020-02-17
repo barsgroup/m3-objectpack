@@ -1871,7 +1871,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         record = self.get_row(obj_id)
         return record, create_new
 
-    def save_row(self, obj, create_new, request, context):
+    def save_row(self, obj, create_new, request, context, *args, **kwargs):
         """
         Сохраняет объект.
         При необходимости возбуждается ValidationError, или OverlapError,
@@ -1884,7 +1884,7 @@ class ObjectPack(BasePack, IMultiSelectablePack):
         :type request: django.http.HttpRequest
         :type context: m3.actions.context.DeclarativeActionContext
         """
-        obj.save()
+        obj.save(*args, **kwargs)
 
     def delete_row(self, obj_id, request, context):
         """
