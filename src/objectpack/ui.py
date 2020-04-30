@@ -338,12 +338,19 @@ class BaseSelectWindow(BaseListWindow):
         """
         self.grid.sm = ext.ExtGridCheckBoxSelModel()
 
+    def _enable_single_select_default(self):
+        """
+        По умолчанию в гриде единичный выбор строки
+        """
+        self.grid.sm = ext.ExtGridRowSelModel()
+
     def set_params(self, params, *args, **kwargs):
         """
         .. seealso::
             :func:`objectpack.ui.BaseWindow.set_params`
         """
         super(BaseSelectWindow, self).set_params(params, *args, **kwargs)
+        self._enable_single_select_default()
         if params.get('multi_select', False):
             self._enable_multi_select()
         self.template_globals = 'select-window.js'
