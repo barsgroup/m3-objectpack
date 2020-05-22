@@ -227,9 +227,9 @@ class FilterByField(AbstractFilter):
     """
     #: Отображение стандартных полей модели в парсеры и лукапы
     parsers_map = [
+        (models.DateTimeField, 'datetime', None),
         (models.DateField, 'date', None),
         (models.TimeField, 'time', None),
-        (models.DateTimeField, 'datetime', None),
         (models.BooleanField, 'boolean', None),
         (models.FloatField, 'float', None),
         (models.DecimalField, 'decimal', None),
