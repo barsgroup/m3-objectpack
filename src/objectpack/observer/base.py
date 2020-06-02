@@ -249,7 +249,7 @@ class Observer(object):
         self._action_listeners = {}
         # слушатели сортируются по приоритету
         listeners = [
-            l[1] for l in
+            listener_info[1] for listener_info in
             sorted(self._registered_listeners, key=lambda x: x[0])
         ]
         # зарегистрированные actions получают подписчиков
