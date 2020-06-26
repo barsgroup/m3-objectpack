@@ -623,4 +623,7 @@ def escape_js_regex(pattern):
     :return: преобразованный паттерн, пригодный для JS
     :rtype: str
     """
-    return pattern.replace(r'/', r'\/')
+    result = pattern.replace(r'/', r'\/')
+    result = result.replace(r'(?<!-)', r'')
+    result = result.replace(r'\Z', r'$')
+    return result
