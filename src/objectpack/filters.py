@@ -7,6 +7,7 @@ from operator import and_
 from operator import or_
 import abc
 import json
+import itertools
 
 from six.moves import map
 import six
@@ -499,6 +500,63 @@ class ColumnFilterEngine(AbstractFilterEngine):
             :mod:`objectpack.filters.AbstractFilterEngine.configure_grid`
         """
         grid.plugins.append('new Ext.ux.grid.GridHeaderFilters()')
+        _base_params = {}
+        _new = {}
+        for data_index, filter_obj in six.iteritems(self._columns):
+            _new[data_index] = u'[%s]' % (u','.join(filter_obj.get_script()))
+
+        for col in grid.columns:
+            if col.data_index in _new:
+                col.extra['filter'] = _new[col.data_index]
+
+        for _filter in self._filters:
+            f_value = _filter.default_value
+            if f_value:
+                _base_params[_filter._uid] = str(f_value)
+
+        if _base_params:
+            grid.store.base_params.update(_base_params)
+
+    def apply_filter(self, query, request, context):
+        """
+        .. seealso::
+            :mod:`objectpack.filters.AbstractFilterEngine.apply_filter`
+        """
+        q = models.Q()
+        for _filter in six.itervalues(self._columns):
+            q &= _filter.get_q(get_request_params(request))
+        return query.filter(q)
+
+
+class ColumnFilterEngineTree(AbstractFilterEngine):
+    u"""
+    Механизм фильтрации, реализующий UI в виде полей ввода.
+
+    Встроенны в шапку таблицы. Используется для TreeObjectPack, т.к.
+    необходим другой компонент для фильтрации в данном паке.
+    """
+
+    def __init__(self, columns):
+        """
+        .. seealso:: :mod:`objectpack.filters.AbstractFilterEngine.__init__`
+        """
+        self._filters = list()
+        super(ColumnFilterEngineTree, self).__init__(columns)
+
+        auto_id = itertools.count(start=1)
+        for _, column_filter in columns:
+            if isinstance(column_filter, FilterGroup):
+                self._filters.extend(column_filter)
+            else:
+                self._filters.append(column_filter)
+            column_filter._set_uid(auto_id.__next__)
+
+    def configure_grid(self, grid):
+        """
+        .. seealso::
+            :mod:`objectpack.filters.AbstractFilterEngine.configure_grid`
+        """
+        grid.plugins.append('new Ext.ux.tree.TreeHeaderFilters()')
         _base_params = {}
         _new = {}
         for data_index, filter_obj in six.iteritems(self._columns):

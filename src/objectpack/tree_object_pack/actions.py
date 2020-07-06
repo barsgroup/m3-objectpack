@@ -13,6 +13,7 @@ from objectpack.tools import extract_int
 from objectpack.tools import int_or_none
 
 from . import ui
+from .utils import get_is_filter_params
 
 
 class TreeObjectPack(ObjectPack):
@@ -60,9 +61,9 @@ class TreeObjectPack(ObjectPack):
         # запрос содержит id узла, из которого поддерево "растет"
         current_node_id = extract_int(request, self.id_param_name)
         is_root_node = current_node_id is None or current_node_id < 0
-        filter_in_params = bool(get_request_params(request).get('filter'))
+
         # при применении поиска на корневом узле, берутся все записи
-        if filter_in_params and is_root_node:
+        if get_is_filter_params(request) and is_root_node:
             return result
 
         if is_root_node:
@@ -159,9 +160,10 @@ class TreeObjectRowsAction(ObjectRowsAction):
         :return: Список сериализованных объектов
         :rtype: list
         """
+
         if (
             not self.parent.load_trees_on_search or
-            not get_request_params(self.request).get('filter') or
+            not get_is_filter_params(self.request) or
             extract_int(self.request, self.parent.id_param_name) > 0
         ):
             return super(TreeObjectRowsAction, self).get_rows()
