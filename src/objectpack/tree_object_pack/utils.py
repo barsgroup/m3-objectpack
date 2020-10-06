@@ -1,3 +1,4 @@
+# coding: utf-8
 from m3_django_compat import get_request_params
 
 
