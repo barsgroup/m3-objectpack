@@ -363,8 +363,8 @@ class BaseMultiSelectWindow(BaseSelectWindow):
     """
     Окно множественного выбора в ExtMultiSelectWindow
     """
-    def set_params(self, params):
-        super(BaseMultiSelectWindow, self).set_params(params)
+    def set_params(self, params, *args, **kwargs):
+        super(BaseMultiSelectWindow, self).set_params(params, *args, **kwargs)
         self._enable_multi_select()
         self.template_globals = 'multi-select-window.js'
 
