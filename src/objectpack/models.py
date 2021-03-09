@@ -349,6 +349,8 @@ class VirtualModel(object):
                     будет генерироваться автоматически
         @class_name - имя класса-потомка
         """
+        assert isinstance(class_name, six.string_types)
+
         if auto_ids:
             def get_ids(cls):
                 cnt = 1
@@ -361,7 +363,7 @@ class VirtualModel(object):
                 return data
 
         return type(
-            class_name,
+            str(class_name),
             (cls,),
             {
                 '_get_ids': classmethod(get_ids),
