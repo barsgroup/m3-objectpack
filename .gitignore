@@ -24,3 +24,5 @@ docs/api
 
 # m3-builder
 version.conf
+
+.mypy_cache

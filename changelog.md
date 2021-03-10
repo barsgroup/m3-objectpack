@@ -1,8 +1,9 @@
 # История изменений
 **2.2.46**
 - Для вызовов `type(name, bases, dict)` добавлено преобразование 
-  аргумента`name` в `str`. 
+  аргумента`name` в `str`.
   Актуально для случаев, когда приходит строка в `unicode` из Python2
+- Исправление ошибки сборки "This script does not work on Python 2.7"
 
 **2.2.45**
 - Для `BaseMultiSelectWindow` добавлена передача args и kwargs в родительский 
