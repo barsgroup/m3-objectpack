@@ -1141,10 +1141,11 @@ class ObjectGridTab(WindowTab):
                                то генерируется на основе имени
                                класса модели пака)
         """
-        assert isinstance(tab_class_name, six.string_types)
-
         tab_class_name = tab_class_name or (
             '%sTab' % pack_name.replace('/', '_'))
+
+        assert isinstance(tab_class_name, six.string_types)
+
         return type(
             str(tab_class_name), (cls,),
             {'get_pack': lambda self: (
@@ -1168,9 +1169,10 @@ class ObjectGridTab(WindowTab):
                                класса модели пака)
         :type tab_class_name: str
         """
+        tab_class_name = tab_class_name or ('%sTab' % model.__name__)
+
         assert isinstance(tab_class_name, six.string_types)
 
-        tab_class_name = tab_class_name or ('%sTab' % model.__name__)
         return type(
             str(tab_class_name), (cls,),
             {'get_pack': lambda self: model_register.get(model.__name__)}

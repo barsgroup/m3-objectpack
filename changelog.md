@@ -1,4 +1,8 @@
 # История изменений
+**2.2.47**
+- Исправление ошибки при вызове `ObjectGridTab.fabricate_from_pack` 
+  и `ObjectGridTab.fabricate` без передачи аргумента `tab_class_name`
+
 **2.2.46**
 - Для вызовов `type(name, bases, dict)` добавлено преобразование 
   аргумента`name` в `str`.
